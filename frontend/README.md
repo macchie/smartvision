@@ -57,3 +57,9 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## UI Design Notes
+
+- PrimeNG theme semantic primary color is configured as `blue` in `src/app/app.config.ts` for a cleaner professional accent system.
+- Global design tokens and shared visual primitives are defined in `src/styles.css` (Apple-inspired typography stack, glass surfaces, balanced gradient backgrounds, and reduced-motion support).
+- Dashboard and auth pages are tuned for both desktop and mobile with production-ready spacing, contrast, and responsive behavior.

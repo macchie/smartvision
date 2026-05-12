@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { LucideAngularModule, Zap, AlertCircle } from 'lucide-angular';
+import { LucideAngularModule, Camera, AlertCircle } from 'lucide-angular';
 
 @Component({
   selector: 'app-auth',
@@ -12,7 +12,7 @@ import { LucideAngularModule, Zap, AlertCircle } from 'lucide-angular';
   templateUrl: './auth.component.html',
 })
 export class AuthComponent {
-  readonly Zap = Zap;
+  readonly Camera = Camera;
   readonly AlertCircle = AlertCircle;
 
   authMode = signal<'login' | 'register'>('login');

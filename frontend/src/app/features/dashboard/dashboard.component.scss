@@ -1,0 +1,370 @@
+:host {
+  display: block;
+  font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.dashboard-shell {
+  background-color: var(--sv-bg);
+  background-image: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.7) 0%, transparent 60%);
+  color: var(--sv-text);
+}
+
+.dashboard-topbar {
+  border-bottom: 1px solid var(--sv-border);
+  background: color-mix(in srgb, var(--sv-surface) 80%, transparent);
+  box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.05);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.dashboard-orb, .dashboard-orb-primary, .dashboard-orb-secondary, .dashboard-grid-fade {
+  display: none; /* Removed for cleaner Apple look */
+}
+
+.dashboard-card {
+  border-radius: 18px;
+  background: var(--sv-surface-strong) !important;
+  border: 1px solid var(--sv-border) !important;
+  box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.03), 0 12px 34px 0 rgba(0, 0, 0, 0.02) !important;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px) scale(1.005);
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.05), 0 20px 40px 0 rgba(0, 0, 0, 0.04) !important;
+}
+
+.title-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--sv-text);
+}
+
+.title-with-icon i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--sv-text-muted);
+  background: var(--sv-bg);
+}
+
+/* Specific colors for metric cards */
+.metric-vehicles .title-with-icon i {
+  color: #2563eb;
+  background: #dbeafe;
+}
+
+.metric-people .title-with-icon i {
+  color: #0f766e;
+  background: #ccfbf1;
+}
+
+.metric-keys .title-with-icon i {
+  color: #334155;
+  background: #f1f5f9;
+}
+
+.camera-card-in .title-with-icon i {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.camera-card-out .title-with-icon i {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.glass-surface {
+  background: var(--sv-surface-strong) !important;
+  backdrop-filter: auto;
+}
+
+.metric-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Removed top border gradients for a cleaner Apple aesthetic */
+.metric-card::after {
+  display: none;
+}
+
+.camera-card {
+  border-width: 1px;
+  border-style: solid;
+}
+
+.camera-card-body {
+  position: relative;
+}
+
+.camera-overlay-icon {
+  position: absolute;
+  top: -0.6rem;
+  right: -0.6rem;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 99px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sv-surface-strong);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--sv-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.camera-overlay-icon i {
+  font-size: 1.15rem;
+}
+
+.camera-card-in {
+  border-color: #15803d !important;
+  background: linear-gradient(135deg, rgba(220, 252, 231, 0.5) 0%, var(--sv-surface-strong) 40%) !important;
+}
+
+.camera-card-in .camera-overlay-icon {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.camera-card-in .camera-overlay-icon i {
+  color: #15803d;
+}
+
+.camera-card-out {
+  border-color: #b91c1c !important;
+  background: linear-gradient(135deg, rgba(254, 226, 226, 0.5) 0%, var(--sv-surface-strong) 40%) !important;
+}
+
+.camera-card-out .camera-overlay-icon {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.camera-card-out .camera-overlay-icon i {
+  color: #b91c1c;
+}
+
+/* Specific styling for the quick action buttons to fit Apple aesthetics */
+:host ::ng-deep .quick-action-btn.p-button {
+  border-radius: 999px;
+  background-color: var(--sv-surface-strong);
+  border-color: var(--sv-border);
+  color: var(--sv-text);
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+:host ::ng-deep .quick-action-btn.p-button:hover {
+  background-color: var(--sv-bg);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+:host ::ng-deep .quick-action-btn.p-button .p-button-icon {
+  color: var(--sv-accent);
+}
+
+:host-context(.app-dark) .camera-card-in {
+  border-color: #15803d !important;
+  background: linear-gradient(135deg, rgba(21, 128, 61, 0.2) 0%, var(--sv-surface-strong) 45%) !important;
+}
+
+:host-context(.app-dark) .camera-card-out {
+  border-color: #b91c1c !important;
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.2) 0%, var(--sv-surface-strong) 45%) !important;
+}
+
+:host-context(.app-dark) .camera-card-in .camera-overlay-icon {
+  background: rgba(22, 101, 52, 0.8);
+  border-color: #15803d;
+}
+
+:host-context(.app-dark) .camera-card-out .camera-overlay-icon {
+  background: rgba(153, 27, 27, 0.8);
+  border-color: #b91c1c;
+}
+
+:host-context(.app-dark) .camera-overlay-icon {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+:host ::ng-deep .action-btn.p-button:hover {
+  background: var(--sv-accent-soft);
+}
+
+:host ::ng-deep .dashboard-table .p-datatable-thead > tr > th {
+  background: transparent;
+  color: var(--sv-text-muted);
+  font-weight: 500;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--sv-border);
+}
+
+:host ::ng-deep .dashboard-table .p-datatable-tbody > tr > td {
+  border-color: var(--sv-border);
+}
+
+:host ::ng-deep .dashboard-table .p-datatable-tbody > tr {
+  transition: background-color 0.2s ease;
+}
+
+:host ::ng-deep .dashboard-table .p-datatable-tbody > tr:hover {
+  background: var(--sv-bg);
+}
+
+:host ::ng-deep .user-menu-trigger.p-button {
+  border-color: var(--sv-border);
+}
+
+:host-context(.app-dark) .dashboard-shell {
+  background: var(--sv-bg);
+  color: var(--sv-text);
+}
+
+:host-context(.app-dark) .dashboard-topbar {
+  background: color-mix(in srgb, var(--sv-surface) 80%, transparent);
+  border-bottom: 1px solid var(--sv-border);
+  box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.5);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+:host-context(.app-dark) .dashboard-card {
+  border-color: var(--sv-border) !important;
+  background: var(--sv-surface-strong) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+:host-context(.app-dark) .title-with-icon i {
+  color: var(--sv-text-muted);
+  background: var(--sv-bg);
+}
+
+:host-context(.app-dark) .metric-vehicles .title-with-icon i {
+  color: #60a5fa;
+  background: rgba(37, 99, 235, 0.2);
+}
+
+:host-context(.app-dark) .metric-people .title-with-icon i {
+  color: #5eead4;
+  background: rgba(15, 118, 110, 0.2);
+}
+
+:host-context(.app-dark) .metric-keys .title-with-icon i {
+  color: #94a3b8;
+  background: rgba(71, 85, 105, 0.2);
+}
+
+:host-context(.app-dark) .glass-surface {
+  background: var(--sv-surface-strong) !important;
+  border-color: var(--sv-border) !important;
+}
+
+:host-context(.app-dark) .camera-card-in {
+  border-color: #15803d !important;
+  background: linear-gradient(180deg, rgba(21, 128, 61, 0.15) 0%, var(--sv-surface-strong) 45%) !important;
+}
+
+:host-context(.app-dark) .camera-card-out {
+  border-color: #b91c1c !important;
+  background: linear-gradient(180deg, rgba(153, 27, 27, 0.15) 0%, var(--sv-surface-strong) 45%) !important;
+}
+
+:host-context(.app-dark) .camera-card-in .title-with-icon i {
+  color: #4ade80;
+  background: rgba(22, 101, 52, 0.4);
+}
+
+:host-context(.app-dark) .camera-card-out .title-with-icon i {
+  color: #f87171;
+  background: rgba(153, 27, 27, 0.4);
+}
+
+:host-context(.app-dark) .camera-overlay-icon {
+  background: var(--sv-surface-strong);
+  border-color: var(--sv-border);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+:host-context(.app-dark) ::ng-deep .action-btn.p-button {
+  border-color: var(--sv-accent);
+  color: var(--sv-accent);
+}
+
+:host-context(.app-dark) ::ng-deep .action-btn.p-button:hover {
+  background: var(--sv-accent-soft);
+}
+
+:host-context(.app-dark) ::ng-deep .dashboard-table .p-datatable-thead > tr > th {
+  background: transparent;
+  color: var(--sv-text-muted);
+  border-color: var(--sv-border);
+}
+
+:host-context(.app-dark) ::ng-deep .dashboard-table .p-datatable-tbody > tr > td {
+  border-color: var(--sv-border);
+  color: var(--sv-text);
+}
+
+:host-context(.app-dark) ::ng-deep .dashboard-table .p-datatable-tbody > tr:nth-child(odd) {
+  background: var(--sv-bg);
+}
+
+@media (max-width: 767px) {
+  .dashboard-card:hover {
+    transform: none;
+    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.03) !important;
+  }
+
+  .camera-overlay-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 99px;
+  }
+}
+
+:host-context(.app-dark) ::ng-deep .dashboard-table .p-datatable-tbody > tr:hover {
+  background: #0b2535;
+}
+
+:host-context(.app-dark) ::ng-deep .user-menu-trigger.p-button {
+  border-color: #334155;
+  background: #0f172a !important;
+}
+
+:host-context(.app-dark) .dashboard-shell .text-slate-900 {
+  color: #e2e8f0 !important;
+}
+
+:host-context(.app-dark) .dashboard-shell .text-slate-700,
+:host-context(.app-dark) .dashboard-shell .text-slate-600,
+:host-context(.app-dark) .dashboard-shell .text-slate-500 {
+  color: #cbd5e1 !important;
+}
+
+:host-context(.app-dark) .dashboard-shell .bg-red-50 {
+  background: #3f1d1d !important;
+}
+
+:host-context(.app-dark) .dashboard-shell .border-red-100 {
+  border-color: #7f1d1d !important;
+}
+
+@media (max-width: 768px) {
+  :host ::ng-deep .dashboard-table .p-datatable-thead > tr > th,
+  :host ::ng-deep .dashboard-table .p-datatable-tbody > tr > td {
+    padding: 0.65rem 0.55rem;
+    font-size: 0.78rem;
+  }
+}

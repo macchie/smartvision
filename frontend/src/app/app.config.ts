@@ -7,7 +7,7 @@ import { AuthService } from './core/services/auth.service';
 
 import { routes } from './app.routes';
 
-const THEME_COLOR = 'slate';
+const THEME_COLOR = 'blue';
 
 const MyPreset = definePreset(Aura, {
     semantic: {
@@ -55,7 +55,7 @@ export const appConfig: ApplicationConfig = {
       theme: {
         preset: MyPreset,
         options: {
-          darkModeSelector: false || 'none'
+          darkModeSelector: '.app-dark'
         }
       }
     })

@@ -44,7 +44,7 @@ docker-down:
 	docker compose down
 
 docker-logs:
-	docker compose logs -f tapshift
+	docker compose logs -f smartvision
 
 # ─── Utilities ───
 

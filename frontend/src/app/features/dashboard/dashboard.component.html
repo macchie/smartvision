@@ -1,116 +1,144 @@
-<div class="min-h-screen bg-[radial-gradient(circle_at_12%_20%,#dbeafe_0,#f8fafc_30%,#e2e8f0_100%)] p-4 md:p-8">
-  <div class="mx-auto max-w-7xl space-y-6">
-    <div class="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-xl shadow-slate-300/40 backdrop-blur md:p-7">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">SmartVision Access Control</p>
-          <h1 class="mt-2 text-2xl font-black tracking-tight text-slate-900 md:text-4xl">Operational Dashboard</h1>
-          <p class="mt-2 text-sm text-slate-500">Live overview of camera events, inside presence and key circulation.</p>
-          @if (lastUpdatedAt()) {
-            <p class="mt-2 text-xs font-medium text-slate-500">Last updated: {{ lastUpdatedAt() }}</p>
-          }
-        </div>
+<div class="dashboard-shell relative min-h-screen overflow-hidden">
+  <div class="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+    <div class="dashboard-orb dashboard-orb-primary"></div>
+    <div class="dashboard-orb dashboard-orb-secondary"></div>
+    <div class="dashboard-grid-fade"></div>
+  </div>
 
-        <div class="flex items-center gap-2">
-          <p-button
-            label="Refresh"
-            icon="pi pi-refresh"
-            [loading]="refreshing()"
-            [outlined]="true"
-            severity="info"
-            (onClick)="refreshDashboard()"
-          />
-          <p-button
-            label="Sign out"
-            icon="pi pi-sign-out"
-            severity="contrast"
-            [outlined]="true"
-            (onClick)="signOut()"
-          />
+  <header class="dashboard-topbar sticky top-0 z-20 px-4 py-3 md:px-8 md:py-4">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3 md:gap-4">
+        <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-700 to-blue-600 text-white shadow-sm shadow-slate-900/20 md:h-10 md:w-10">
+          <i class="pi pi-camera text-sm"></i>
+        </span>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700 md:text-xs">SmartVision</p>
+        <h1 class="text-lg font-black tracking-tight text-slate-900 md:text-2xl">Operational Dashboard</h1>
         </div>
       </div>
 
-      @if (loadError()) {
-        <div class="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
-          {{ loadError() }}
-        </div>
-      }
+      <div class="flex items-center gap-2 md:gap-3">
+        @if (lastUpdatedAt()) {
+          <span class="hidden rounded-full border border-slate-200/80 bg-white/85 px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur md:inline-flex">
+            <i class="pi pi-clock mr-1.5"></i>
+            Updated {{ lastUpdatedAt() }}
+          </span>
+        }
+
+        <p-button
+          label="Refresh"
+          icon="pi pi-refresh"
+          [loading]="refreshing()"
+          styleClass="action-btn"
+          [outlined]="true"
+          severity="info"
+          (onClick)="refreshDashboard()"
+        />
+
+        <button
+          type="button"
+          pButton
+          class="user-menu-trigger !rounded-full !border !border-slate-200 !bg-white/95 !px-2 !py-1.5"
+          (click)="toggleUserMenu($event)"
+          aria-label="Open user menu"
+        >
+          <div class="flex items-center gap-2">
+            <p-avatar [label]="authService.userInitials" shape="circle" styleClass="!bg-slate-900 !text-white" />
+            <i class="pi pi-angle-down text-xs text-slate-500"></i>
+          </div>
+        </button>
+
+        <p-menu #userMenu [popup]="true" [model]="userMenuItems()" appendTo="body"></p-menu>
+      </div>
+    </div>
+  </header>
+
+  <div class="relative z-10 mx-auto max-w-7xl space-y-5 p-4 md:space-y-6 md:p-8">
+    
+    <!-- Quick Actions Bar -->
+    <div class="flex flex-wrap items-center gap-3">
+      <p-button styleClass="quick-action-btn" outlined icon="pi pi-car" label="Add Vehicle Access" (onClick)="quickAction('vehicle_access')" />
+      <p-button styleClass="quick-action-btn" outlined icon="pi pi-user" label="Add User Access" (onClick)="quickAction('user_access')" />
+      <p-button styleClass="quick-action-btn" outlined icon="pi pi-key" label="Distribute Key" (onClick)="quickAction('key_distribute')" />
+      <p-button styleClass="quick-action-btn" outlined icon="pi pi-check-circle" label="Collect Key" (onClick)="quickAction('key_collect')" />
     </div>
 
+    @if (loadError()) {
+      <div class="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+        <i class="pi pi-exclamation-triangle mr-2"></i>
+        {{ loadError() }}
+      </div>
+    }
+
     @if (loading()) {
-      <p-card styleClass="border border-slate-200/80 shadow-sm">
+      <p-card styleClass="dashboard-card glass-surface border border-slate-200/80 shadow-sm">
         <div class="flex items-center justify-center gap-3 py-10 text-slate-500">
-          <i class="pi pi-spin pi-spinner"></i>
+          <i class="pi pi-spin pi-spinner text-base"></i>
           <span class="text-sm font-medium">Loading dashboard data from PocketBase...</span>
         </div>
       </p-card>
     } @else {
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <p-card styleClass="h-full border border-emerald-200/70 shadow-sm">
-          <ng-template pTemplate="title">Vehicles Inside</ng-template>
-          <p class="text-4xl font-black text-emerald-600">{{ vehiclesInside() }}</p>
+        <p-card styleClass="dashboard-card glass-surface metric-card metric-vehicles h-full shadow-sm card-enter">
+          <ng-template pTemplate="title">
+            <span class="title-with-icon"><i class="pi pi-car"></i> Vehicles Inside</span>
+          </ng-template>
+          <p class="text-4xl font-black text-blue-700">{{ vehiclesInside() }}</p>
           <p class="mt-2 text-xs text-slate-500">Active vehicles that have not exited yet.</p>
         </p-card>
 
-        <p-card styleClass="h-full border border-sky-200/70 shadow-sm">
-          <ng-template pTemplate="title">People Inside</ng-template>
-          <p class="text-4xl font-black text-sky-600">{{ usersInside() }}</p>
+        <p-card styleClass="dashboard-card glass-surface metric-card metric-people h-full shadow-sm card-enter">
+          <ng-template pTemplate="title">
+            <span class="title-with-icon"><i class="pi pi-users"></i> People Inside</span>
+          </ng-template>
+          <p class="text-4xl font-black text-teal-700">{{ usersInside() }}</p>
           <p class="mt-2 text-xs text-slate-500">Individuals currently marked as inside.</p>
         </p-card>
 
-        <p-card styleClass="h-full border border-amber-200/70 shadow-sm">
-          <ng-template pTemplate="title">Keys Distributed</ng-template>
-          <p class="text-4xl font-black text-amber-600">{{ keyDistributed() }}</p>
+        <p-card styleClass="dashboard-card glass-surface metric-card metric-keys h-full shadow-sm card-enter">
+          <ng-template pTemplate="title">
+            <span class="title-with-icon"><i class="pi pi-key"></i> Keys Distributed</span>
+          </ng-template>
+          <p class="text-4xl font-black text-slate-700">{{ keyDistributed() }}</p>
           <p class="mt-2 text-xs text-slate-500">Collected keys still pending return.</p>
         </p-card>
       </div>
 
-      <p-card styleClass="border border-slate-200/90 shadow-lg shadow-slate-300/20 overflow-hidden">
-        <ng-template pTemplate="title">Latest Camera Events</ng-template>
-        <ng-template pTemplate="subtitle">Newest vehicle and people events captured by active cameras.</ng-template>
-        <p-table [value]="latestCameraEvents().slice(0, 12)" stripedRows responsiveLayout="scroll" styleClass="text-sm">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Type</th>
-              <th>Subject</th>
-              <th>Actor</th>
-              <th>Camera</th>
-              <th>Direction</th>
-              <th>Status</th>
-              <th>Reason</th>
-              <th>When</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-row>
-            <tr>
-              <td>
-                <p-tag [value]="row.accessType === 'vehicle' ? 'Vehicle' : 'Person'" [severity]="accessTypeSeverity(row.accessType)" />
-              </td>
-              <td><span class="font-semibold text-slate-900">{{ row.subject }}</span></td>
-              <td>{{ row.actor }}</td>
-              <td>{{ row.camera }}</td>
-              <td>
-                <p-tag [value]="row.direction === 'in' ? 'Ingress' : 'Egress'" [severity]="directionSeverity(row.direction)" />
-              </td>
-              <td>
-                <p-tag [value]="row.didLeave ? 'Outside' : 'Inside'" [severity]="leaveSeverity(row.didLeave)" />
-              </td>
-              <td>{{ row.reason }}</td>
-              <td>{{ row.eventTime }}</td>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="8" class="text-center text-sm text-slate-500">No camera events available.</td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </p-card>
+      @if (cameraVehicleCards().length > 0) {
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          @for (cameraEvent of cameraVehicleCards(); track cameraEvent.camera) {
+            <p-card [styleClass]="'dashboard-card glass-surface camera-card h-full shadow-sm card-enter ' + (cameraEvent.direction === 'in' ? 'camera-card-in' : 'camera-card-out')">
+              <ng-template pTemplate="title">
+                <span class="title-with-icon"><i class="pi pi-video"></i> {{ cameraEvent.camera }}</span>
+              </ng-template>
+              <div class="camera-card-body space-y-2 text-sm text-slate-600">
+                <div class="camera-overlay-icon" aria-hidden="true">
+                  <i class="pi" [ngClass]="cameraEvent.direction === 'in' ? 'pi-sign-in' : 'pi-sign-out'"></i>
+                </div>
+                <p><span class="font-semibold text-slate-900">Vehicle:</span> {{ cameraEvent.subject }}</p>
+                <p><span class="font-semibold text-slate-900">Driver:</span> {{ cameraEvent.actor }}</p>
+                <div class="flex flex-wrap items-center gap-2 pt-1">
+                  <p-tag [value]="cameraEvent.direction === 'in' ? 'Ingress' : 'Egress'" [severity]="directionSeverity(cameraEvent.direction)" />
+                  <p-tag [value]="cameraEvent.didLeave ? 'Outside' : 'Inside'" [severity]="leaveSeverity(cameraEvent.didLeave)" />
+                </div>
+                <p><span class="font-semibold text-slate-900">Reason:</span> {{ cameraEvent.reason }}</p>
+                <p><span class="font-semibold text-slate-900">When:</span> {{ cameraEvent.eventTime }}</p>
+              </div>
+            </p-card>
+          }
+        </div>
+      } @else {
+        <p-card styleClass="dashboard-card glass-surface border border-slate-200/80 shadow-sm">
+          <p class="text-sm text-slate-500"><i class="pi pi-info-circle mr-2"></i>No vehicle events are available for camera cards yet.</p>
+        </p-card>
+      }
 
       <div class="grid gap-6 lg:grid-cols-2">
-        <p-card styleClass="border border-slate-200/90 shadow-lg shadow-slate-300/20 overflow-hidden">
-          <ng-template pTemplate="title">Latest Vehicle Accesses</ng-template>
-          <p-table [value]="vehicleRows()" stripedRows responsiveLayout="scroll" styleClass="text-sm">
+        <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-lg shadow-slate-300/20 overflow-hidden">
+          <ng-template pTemplate="title">
+            <span class="title-with-icon"><i class="pi pi-car"></i> Latest Vehicle Accesses</span>
+          </ng-template>
+          <p-table [value]="vehicleRows()" stripedRows responsiveLayout="scroll" styleClass="dashboard-table text-sm">
             <ng-template pTemplate="header">
               <tr>
                 <th>Vehicle</th>
@@ -143,9 +171,11 @@
           </p-table>
         </p-card>
 
-        <p-card styleClass="border border-slate-200/90 shadow-lg shadow-slate-300/20 overflow-hidden">
-          <ng-template pTemplate="title">Latest People Accesses</ng-template>
-          <p-table [value]="userRows()" stripedRows responsiveLayout="scroll" styleClass="text-sm">
+        <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-lg shadow-slate-300/20 overflow-hidden">
+          <ng-template pTemplate="title">
+            <span class="title-with-icon"><i class="pi pi-users"></i> Latest People Accesses</span>
+          </ng-template>
+          <p-table [value]="userRows()" stripedRows responsiveLayout="scroll" styleClass="dashboard-table text-sm">
             <ng-template pTemplate="header">
               <tr>
                 <th>Person</th>
