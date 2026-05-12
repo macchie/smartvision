@@ -211,3 +211,307 @@
     }
   </div>
 </div>
+
+<p-toast></p-toast>
+<p-menu #userMenu [popup]="true" [model]="userMenuItems()"></p-menu>
+
+<!-- Vehicle Access Dialog -->
+<p-dialog 
+  header="Vehicle Access" 
+  [visible]="vehicleAccessDialog()" 
+  (visibleChange)="vehicleAccessDialog.set($event)" 
+  [modal]="true" 
+  [style]="{ width: '25rem', padding: '1rem' }">
+  <div class="flex flex-col gap-4 mt-2">
+      <div class="flex flex-col gap-2">
+          <label for="va-vehicle" class="text-sm font-semibold">Vehicle</label>
+          <p-autoComplete 
+            id="va-vehicle" 
+            [(ngModel)]="formState.vehicle" 
+            [suggestions]="suggestedVehicles()" 
+            (completeMethod)="searchVehicles($event)" 
+            field="displayName" 
+            optionLabel="displayName"
+            dataKey="id" 
+            placeholder="Search license plate..."
+            [dropdown]="true" 
+            [completeOnFocus]="true"
+            appendTo="body"
+            styleClass="w-full"
+            [fluid]="true">
+            <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+          </p-autoComplete>
+      </div>
+      <div class="flex flex-col gap-2">
+          <label for="va-driver" class="text-sm font-semibold">Driver <span class="text-[--sv-text-muted] font-normal">(Optional)</span></label>
+          <p-autoComplete 
+            id="va-driver" 
+            [(ngModel)]="formState.driver" 
+            [suggestions]="suggestedDrivers()" 
+            (completeMethod)="searchDrivers($event)" 
+            field="displayName" 
+            optionLabel="displayName"
+            dataKey="id" 
+            placeholder="Search driver..."
+            [dropdown]="true" 
+            [completeOnFocus]="true"
+            appendTo="body"
+            styleClass="w-full"
+            [fluid]="true">
+            <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+          </p-autoComplete>
+      </div>
+      <div class="flex flex-col gap-2">
+          <label for="va-camera" class="text-sm font-semibold">Camera</label>
+          <p-autoComplete 
+            id="va-camera" 
+            [(ngModel)]="formState.camera" 
+            [suggestions]="suggestedCameras()" 
+            (completeMethod)="searchCameras($event)" 
+            field="displayName" 
+            optionLabel="displayName"
+            dataKey="id" 
+            placeholder="Search camera..."
+            [dropdown]="true" 
+            appendTo="body"
+            styleClass="w-full"
+            [fluid]="true">
+            <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+          </p-autoComplete>
+      </div>
+      <div class="flex flex-col gap-2">
+          <label for="va-direction" class="text-sm font-semibold">Direction</label>
+          <p-select 
+            id="va-direction" 
+            [options]="directionOptions" 
+            [(ngModel)]="formState.didLeave" 
+            optionLabel="label" 
+            optionValue="value" 
+            appendTo="body"
+            styleClass="w-full"
+            [fluid]="true">
+            <ng-template let-item pTemplate="item">{{ item.label }}</ng-template>
+            <ng-template let-item pTemplate="selectedItem">{{ item?.label ?? 'Select Direction' }}</ng-template>
+          </p-select>
+      </div>
+      <div class="flex flex-col gap-2">
+          <label for="va-reason" class="text-sm font-semibold">Reason / Notes</label>
+          <textarea 
+            pTextarea 
+            id="va-reason" 
+            [(ngModel)]="formState.reason" 
+            rows="3" 
+            placeholder="Enter optional notes..."
+            class="w-full">
+          </textarea>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+          <p-button label="Cancel" severity="secondary" variant="text" (onClick)="vehicleAccessDialog.set(false)"></p-button>
+          <p-button label="Save Access" (onClick)="submitVehicleAccess()"></p-button>
+      </div>
+  </div>
+</p-dialog>
+
+<!-- User Access Dialog -->
+<p-dialog 
+  header="User Access" 
+  [visible]="userAccessDialog()" 
+  (visibleChange)="userAccessDialog.set($event)" 
+  [modal]="true" 
+  [style]="{ width: '25rem', padding: '1rem' }">
+  <div class="flex flex-col gap-4 mt-2">
+      <div class="flex flex-col gap-2">
+          <label for="ua-user" class="text-sm font-semibold">User</label>
+          <p-autoComplete 
+            id="ua-user" 
+            [(ngModel)]="formState.user" 
+            [suggestions]="suggestedUsers()" 
+            (completeMethod)="searchUsers($event)" 
+            field="displayName" 
+            optionLabel="displayName"
+            dataKey="id" 
+            placeholder="Search user..."
+            [dropdown]="true" 
+            [completeOnFocus]="true"
+            appendTo="body"
+            styleClass="w-full"
+            [fluid]="true">
+            <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+          </p-autoComplete>
+      </div>
+      <div class="flex flex-col gap-2">
+          <label for="ua-camera" class="text-sm font-semibold">Camera</label>
+          <p-autoComplete 
+            id="ua-camera" 
+            [(ngModel)]="formState.camera" 
+            [suggestions]="suggestedCameras()" 
+            (completeMethod)="searchCameras($event)" 
+            field="displayName" 
+            optionLabel="displayName"
+            dataKey="id" 
+            placeholder="Search camera..."
+            [dropdown]="true" 
+            appendTo="body"
+            styleClass="w-full"
+            [fluid]="true">
+            <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+          </p-autoComplete>
+      </div>
+      <div class="flex flex-col gap-2">
+          <label for="ua-direction" class="text-sm font-semibold">Direction</label>
+          <p-select 
+            id="ua-direction" 
+            [options]="directionOptions" 
+            [(ngModel)]="formState.didLeave" 
+            optionLabel="label" 
+            optionValue="value" 
+            appendTo="body"
+            styleClass="w-full"
+            [fluid]="true">
+            <ng-template let-item pTemplate="item">{{ item.label }}</ng-template>
+            <ng-template let-item pTemplate="selectedItem">{{ item?.label ?? 'Select Direction' }}</ng-template>
+          </p-select>
+      </div>
+      <div class="flex flex-col gap-2">
+          <label for="ua-reason" class="text-sm font-semibold">Reason / Notes</label>
+          <textarea 
+            pTextarea 
+            id="ua-reason" 
+            [(ngModel)]="formState.reason" 
+            rows="3" 
+            placeholder="Enter optional notes..."
+            class="w-full">
+          </textarea>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+          <p-button label="Cancel" severity="secondary" variant="text" (onClick)="userAccessDialog.set(false)"></p-button>
+          <p-button label="Save Access" (onClick)="submitUserAccess()"></p-button>
+      </div>
+  </div>
+</p-dialog>
+
+<!-- Key Distribute Dialog -->
+<p-dialog 
+  header="Distribute Key" 
+  [visible]="keyDistributeDialog()" 
+  (visibleChange)="keyDistributeDialog.set($event)" 
+  [modal]="true" 
+  [style]="{ width: '25rem', padding: '1rem' }">
+  <div class="flex flex-col gap-4 mt-2">
+      <div class="flex flex-col gap-2">
+          <label for="kd-user" class="text-sm font-semibold">User</label>
+          <p-autoComplete 
+            id="kd-user" 
+            [(ngModel)]="formState.user" 
+            [suggestions]="suggestedUsers()" 
+            (completeMethod)="searchUsers($event)" 
+            field="displayName" 
+            optionLabel="displayName"
+            dataKey="id" 
+            placeholder="Search user..."
+            [dropdown]="true" 
+            [completeOnFocus]="true"
+            appendTo="body"
+            styleClass="w-full"
+            [fluid]="true">
+            <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+          </p-autoComplete>
+      </div>
+      <div class="flex flex-col gap-2">
+          <label for="kd-room" class="text-sm font-semibold">Room</label>
+          <p-autoComplete 
+            id="kd-room" 
+            [(ngModel)]="formState.room" 
+            [suggestions]="suggestedRooms()" 
+            (completeMethod)="searchRooms($event)" 
+            field="displayName" 
+            optionLabel="displayName"
+            dataKey="id" 
+            placeholder="Search room..."
+            [dropdown]="true" 
+            appendTo="body"
+            styleClass="w-full"
+            [fluid]="true">
+            <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+          </p-autoComplete>
+      </div>
+      <div class="flex flex-col gap-2">
+          <label for="kd-reason" class="text-sm font-semibold">Reason / Notes</label>
+          <textarea 
+            pTextarea 
+            id="kd-reason" 
+            [(ngModel)]="formState.reason" 
+            rows="3" 
+            placeholder="Enter optional notes..."
+            class="w-full">
+          </textarea>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+          <p-button label="Cancel" severity="secondary" variant="text" (onClick)="keyDistributeDialog.set(false)"></p-button>
+          <p-button label="Distribute" (onClick)="submitKeyDistribute()"></p-button>
+      </div>
+  </div>
+</p-dialog>
+
+<!-- Key Collect Dialog -->
+<p-dialog 
+  header="Collect Key" 
+  [visible]="keyCollectDialog()" 
+  (visibleChange)="keyCollectDialog.set($event)" 
+  [modal]="true" 
+  [style]="{ width: '25rem', padding: '1rem' }">
+  <div class="flex flex-col gap-4 mt-2">
+      <div class="flex flex-col gap-2">
+          <label for="kc-user" class="text-sm font-semibold">Confirm Return by User</label>
+          <p-autoComplete 
+            id="kc-user" 
+            [(ngModel)]="formState.user" 
+            [suggestions]="suggestedUsers()" 
+            (completeMethod)="searchUsers($event)" 
+            field="displayName" 
+            optionLabel="displayName"
+            dataKey="id" 
+            placeholder="Search user..."
+            [dropdown]="true" 
+            [completeOnFocus]="true"
+            appendTo="body"
+            styleClass="w-full"
+            [fluid]="true">
+            <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+          </p-autoComplete>
+      </div>
+      <div class="flex flex-col gap-2">
+          <label for="kc-room" class="text-sm font-semibold">Room</label>
+          <p-autoComplete 
+            id="kc-room" 
+            [(ngModel)]="formState.room" 
+            [suggestions]="suggestedRooms()" 
+            (completeMethod)="searchRooms($event)" 
+            field="displayName" 
+            optionLabel="displayName"
+            dataKey="id" 
+            placeholder="Search room..."
+            [dropdown]="true" 
+            appendTo="body"
+            styleClass="w-full"
+            [fluid]="true">
+            <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+          </p-autoComplete>
+      </div>
+      <div class="flex flex-col gap-2">
+          <label for="kc-reason" class="text-sm font-semibold">Reason / Notes</label>
+          <textarea 
+            pTextarea 
+            id="kc-reason" 
+            [(ngModel)]="formState.reason" 
+            rows="3" 
+            placeholder="Enter optional notes..."
+            class="w-full">
+          </textarea>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+          <p-button label="Cancel" severity="secondary" variant="text" (onClick)="keyCollectDialog.set(false)"></p-button>
+          <p-button label="Collect" (onClick)="submitKeyCollect()"></p-button>
+      </div>
+  </div>
+</p-dialog>
