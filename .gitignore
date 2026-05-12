@@ -1,0 +1,39 @@
+node_modules
+dist
+build
+coverage
+logs
+*.log
+*.tmp
+*.env
+*.pid
+
+# Old Projects
+SmartVisionIonic
+SmartVisionLoopback
+
+# Build output
+backend/pb_public/*
+!backend/pb_public/.gitkeep
+
+# PocketBase data (generated at runtime)
+backend/pb_data/
+
+# PocketBase binary (platform-specific, download separately)
+backend/pocketbase
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.production
