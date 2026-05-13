@@ -13,6 +13,8 @@
   --sv-text-muted: #86868b;
   --sv-accent: #007aff;
   --sv-accent-soft: #e5f0ff;
+  --sv-radius-card: 1rem;
+  --sv-shadow-soft: 0 6px 20px -14px rgba(15, 23, 42, 0.2);
 }
 
 @layer base {
@@ -31,7 +33,10 @@
   }
   body {
     @apply selection:bg-blue-200/50 selection:text-blue-900;
-    background: var(--sv-bg);
+    background:
+      radial-gradient(1000px 520px at 8% -10%, rgba(96, 165, 250, 0.14), transparent 52%),
+      radial-gradient(900px 480px at 96% -14%, rgba(14, 165, 233, 0.1), transparent 48%),
+      linear-gradient(180deg, #f7f9fc 0%, #f3f6fb 45%, #f6f8fb 100%);
     color: var(--sv-text);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     font-weight: 400;
@@ -59,6 +64,91 @@
   }
 }
 
+/* Shared app polish for all feature pages */
+.dashboard-card,
+.glass-surface {
+  border-radius: var(--sv-radius-card);
+  border: 1px solid color-mix(in srgb, var(--sv-border) 95%, rgba(148, 163, 184, 0.16)) !important;
+  background: color-mix(in srgb, var(--sv-surface-strong) 96%, white 4%) !important;
+  box-shadow: var(--sv-shadow-soft) !important;
+}
+
+.dashboard-table {
+  overflow: hidden;
+}
+
+.dashboard-table .p-datatable-thead > tr > th {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(248, 250, 252, 0.82));
+  color: #64748b;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  padding-top: 0.85rem;
+  padding-bottom: 0.85rem;
+}
+
+.dashboard-table .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  padding-top: 0.85rem;
+  padding-bottom: 0.85rem;
+}
+
+.dashboard-table .p-datatable-tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+.dashboard-table .p-datatable-tbody > tr {
+  transition: background-color 0.12s ease;
+}
+
+.dashboard-table .p-datatable-tbody > tr:hover {
+  background: rgba(241, 245, 249, 0.7);
+}
+
+.action-btn.p-button {
+  border-radius: 0.75rem;
+}
+
+.p-dialog .p-dialog-header {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  padding-bottom: 0.95rem;
+}
+
+.p-dialog .p-dialog-content {
+  padding-top: 0.85rem;
+}
+
+.p-dialog .p-dialog-footer {
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  padding-top: 0.85rem;
+}
+
+.p-inputtext,
+.p-select,
+.p-textarea {
+  border-radius: 0.7rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-card,
+  .glass-surface {
+    border-radius: 0.8rem;
+  }
+
+  .dashboard-table .p-datatable-thead > tr > th,
+  .dashboard-table .p-datatable-tbody > tr > td {
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  .p-dialog {
+    width: min(94vw, 30rem) !important;
+    margin: 0 auto;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -68,53 +158,15 @@
   }
 }
 
-/* ── Animations ── */
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* Motion policy: keep interactions subtle and avoid decorative animations */
+.animate-pulse-ring,
+.animate-fade-in-up,
+.animate-fade-in,
+.animate-float,
+.animate-float-delayed,
+.card-enter {
+  animation: none !important;
 }
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
-}
-@keyframes pulse-ring {
-  0%   { transform: scale(0.9); opacity: 0.6; }
-  100% { transform: scale(1.4); opacity: 0; }
-}
-
-.animate-pulse-ring {
-  animation: pulse-ring 1.5s ease-out infinite;
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out both;
-}
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-.animate-float-delayed {
-  animation: float 6s ease-in-out infinite;
-  animation-delay: -3s;
-}
-
-/* Staggered card entrance */
-.card-enter { animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.card-enter:nth-child(2) { animation-delay: 0.05s; }
-.card-enter:nth-child(3) { animation-delay: 0.1s; }
-.card-enter:nth-child(4) { animation-delay: 0.15s; }
-.card-enter:nth-child(5) { animation-delay: 0.2s; }
-.card-enter:nth-child(6) { animation-delay: 0.25s; }
 
 /* Mesh gradient background for auth */
 .auth-bg {

@@ -7,6 +7,10 @@
   color: var(--sv-text);
 }
 
+.brand-mark {
+  box-shadow: 0 10px 24px -14px rgba(30, 64, 175, 0.75), 0 6px 18px rgba(15, 23, 42, 0.18);
+}
+
 .dashboard-orb {
   position: absolute;
   border-radius: 50%;
@@ -43,11 +47,27 @@
 }
 
 .dashboard-topbar {
-  background: color-mix(in srgb, var(--sv-surface) 80%, transparent);
-  border-bottom: 1px solid var(--sv-border);
-  box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.5);
+  background: color-mix(in srgb, var(--sv-surface) 88%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--sv-border) 95%, rgba(148, 163, 184, 0.16));
+  box-shadow: 0 10px 26px -18px rgba(15, 23, 42, 0.28);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.top-nav {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 2px 10px rgba(15, 23, 42, 0.05);
+}
+
+.top-nav-link {
+  line-height: 1;
+}
+
+.mobile-top-nav {
+  scrollbar-width: none;
+}
+
+.mobile-top-nav::-webkit-scrollbar {
+  display: none;
 }
 
 :host ::ng-deep .active-nav {
@@ -58,4 +78,11 @@
 
 :host ::ng-deep .user-menu-trigger.p-button {
   border-color: var(--sv-border);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 14px -10px rgba(15, 23, 42, 0.4);
+}
+
+@media (max-width: 768px) {
+  .dashboard-topbar {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
 }

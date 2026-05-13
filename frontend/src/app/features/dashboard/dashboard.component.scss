@@ -26,11 +26,11 @@
   background: var(--sv-surface-strong) !important;
   border: 1px solid var(--sv-border) !important;
   box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.03), 0 12px 34px 0 rgba(0, 0, 0, 0.02) !important;
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.15s ease;
 }
 
 .dashboard-card:hover {
-  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.05), 0 20px 40px 0 rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 6px 18px 0 rgba(0, 0, 0, 0.04), 0 14px 28px 0 rgba(0, 0, 0, 0.03) !important;
 }
 
 .title-with-icon {
@@ -159,13 +159,12 @@
   color: var(--sv-text);
   font-weight: 500;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
+  transition: background-color 0.12s ease, box-shadow 0.12s ease;
 }
 
 :host ::ng-deep .quick-action-btn.p-button:hover {
   background-color: var(--sv-bg);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
 }
 
 :host ::ng-deep .quick-action-btn.p-button .p-button-icon {
@@ -191,7 +190,7 @@
 }
 
 :host ::ng-deep .dashboard-table .p-datatable-tbody > tr {
-  transition: background-color 0.2s ease;
+  transition: background-color 0.12s ease;
 }
 
 :host ::ng-deep .dashboard-table .p-datatable-tbody > tr:hover {
