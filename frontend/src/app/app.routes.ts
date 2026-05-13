@@ -35,7 +35,7 @@ export const routes: Routes = [
       },
       {
         path: 'room-groups',
-        loadComponent: () => import('./features/room-groups/room-groups/room-groups').then(m => m.RoomGroups),
+        redirectTo: 'rooms',
       }
     ]
   },

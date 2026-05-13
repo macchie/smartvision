@@ -14,6 +14,9 @@ import { SelectModule } from 'primeng/select';
 interface RoomGroup {
   id: string;
   name: string;
+  notes?: string;
+  description?: string;
+  enabled?: boolean;
 }
 
 interface Room {
@@ -31,6 +34,13 @@ interface Room {
   };
   created: string;
   updated: string;
+}
+
+interface RoomGroupRow {
+  id: string;
+  name: string;
+  notes: string;
+  rooms: Room[];
 }
 
 type RoomGroupMap = Map<string, RoomGroup>;
@@ -53,15 +63,22 @@ type RoomGroupMap = Map<string, RoomGroup>;
   styleUrls: ['./rooms.scss']
 })
 export class Rooms implements OnInit {
-  protected readonly rooms = signal<Room[]>([]);
   protected readonly roomGroups = signal<RoomGroup[]>([]);
+  protected readonly groupRows = signal<RoomGroupRow[]>([]);
   protected readonly loading = signal(true);
-  protected readonly saving = signal(false);
+  protected readonly savingGroup = signal(false);
+  protected readonly savingRoom = signal(false);
+  protected expandedRows: Record<string, boolean> = {};
 
-  // Dialog state
-  protected dialogVisible = false;
-  protected dialogMode: 'create' | 'edit' = 'create';
-  protected formState: Partial<Room> = { number: '', name: '', notes: '', room_group: '' };
+  // Room Group dialog state
+  protected groupDialogVisible = false;
+  protected groupDialogMode: 'create' | 'edit' = 'create';
+  protected groupFormState: Partial<RoomGroup> = { name: '', notes: '' };
+
+  // Room dialog state
+  protected roomDialogVisible = false;
+  protected roomDialogMode: 'create' | 'edit' = 'create';
+  protected roomFormState: Partial<Room> = { number: '', name: '', notes: '', room_group: '' };
 
   constructor(
     private pb: PocketBaseService,
@@ -93,7 +110,8 @@ export class Rooms implements OnInit {
       }
 
       const groupsById: RoomGroupMap = new Map(groups.map(group => [group.id, group]));
-      this.rooms.set(roomsResult.value.map(room => this.normalizeRoom(room, groupsById)));
+      const normalizedRooms = roomsResult.value.map(room => this.normalizeRoom(room, groupsById));
+      this.groupRows.set(this.buildGroupRows(groups, normalizedRooms));
 
       if (groupsResult.status !== 'fulfilled') {
         this.messageService.add({
@@ -109,62 +127,119 @@ export class Rooms implements OnInit {
     }
   }
 
-  protected getRoomGroupName(room: Room): string {
-    return room.expand?.room_group?.name
-      || room.expand?.group_id?.name
-      || this.roomGroups().find(group => group.id === (room.room_group ?? room.group_id))?.name
-      || '';
+  protected openNewRoomGroup() {
+    this.groupFormState = { name: '', notes: '', enabled: true };
+    this.groupDialogMode = 'create';
+    this.groupDialogVisible = true;
   }
 
-  protected openNewRoom() {
-    this.formState = { number: '', name: '', notes: '', room_group: '', enabled: true };
-    this.dialogMode = 'create';
-    this.dialogVisible = true;
+  protected editRoomGroup(group: RoomGroupRow) {
+    this.groupFormState = {
+      id: group.id,
+      name: group.name,
+      notes: group.notes,
+      enabled: true,
+    };
+    this.groupDialogMode = 'edit';
+    this.groupDialogVisible = true;
+  }
+
+  protected hideRoomGroupDialog() {
+    this.groupDialogVisible = false;
+  }
+
+  protected async saveRoomGroup() {
+    if (!this.groupFormState.name?.trim()) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Room group name is required.' });
+      return;
+    }
+
+    this.savingGroup.set(true);
+    try {
+      const payload = {
+        name: this.groupFormState.name.trim(),
+        notes: this.groupFormState.notes?.trim() || '',
+        enabled: this.groupFormState.enabled ?? true,
+      };
+
+      if (this.groupDialogMode === 'create') {
+        await this.pb.pb.collection('room_groups').create(payload);
+        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room group created.' });
+      } else {
+        await this.pb.pb.collection('room_groups').update(this.groupFormState.id!, payload);
+        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room group updated.' });
+      }
+
+      this.groupDialogVisible = false;
+      this.loadData();
+    } catch (e: any) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to save room group.' });
+    } finally {
+      this.savingGroup.set(false);
+    }
+  }
+
+  protected async deleteRoomGroupConfirm(group: RoomGroupRow) {
+    if (confirm(`Are you sure you want to delete room group "${group.name}"?`)) {
+      try {
+        await this.pb.pb.collection('room_groups').delete(group.id);
+        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room group deleted.' });
+        this.loadData();
+      } catch (e: any) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete room group.' });
+      }
+    }
+  }
+
+  protected openNewRoom(groupId = '') {
+    this.roomFormState = { number: '', name: '', notes: '', room_group: groupId, enabled: true };
+    this.roomDialogMode = 'create';
+    this.roomDialogVisible = true;
   }
 
   protected editRoom(room: Room) {
-    this.formState = {
+    this.roomFormState = {
       ...room,
       room_group: room.room_group ?? room.group_id ?? '',
       notes: room.notes ?? room.description ?? ''
     };
-    this.dialogMode = 'edit';
-    this.dialogVisible = true;
+    this.roomDialogMode = 'edit';
+    this.roomDialogVisible = true;
   }
 
-  protected hideDialog() {
-    this.dialogVisible = false;
+  protected hideRoomDialog() {
+    this.roomDialogVisible = false;
   }
 
   protected async saveRoom() {
-    if (!this.formState.number?.trim() || !this.formState.name?.trim()) {
+    if (!this.roomFormState.number?.trim() || !this.roomFormState.name?.trim()) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Room number and name are required.' });
       return;
     }
 
-    this.saving.set(true);
+    this.savingRoom.set(true);
     try {
       const payload = {
-        number: this.formState.number.trim(),
-        name: this.formState.name.trim(),
-        room_group: this.formState.room_group?.trim() || null,
-        notes: this.formState.notes?.trim() || '',
-        enabled: this.formState.enabled ?? true,
+        number: this.roomFormState.number.trim(),
+        name: this.roomFormState.name.trim(),
+        room_group: this.roomFormState.room_group?.trim() || null,
+        notes: this.roomFormState.notes?.trim() || '',
+        enabled: this.roomFormState.enabled ?? true,
       };
 
-      if (this.dialogMode === 'create') {
+      if (this.roomDialogMode === 'create') {
         await this.pb.pb.collection('rooms').create(payload);
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room created.' });
       } else {
-        await this.pb.pb.collection('rooms').update(this.formState.id!, payload);
+        await this.pb.pb.collection('rooms').update(this.roomFormState.id!, payload);
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room updated.' });
       }
-      this.dialogVisible = false;
+      this.roomDialogVisible = false;
       this.loadData();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to save room.' });
     } finally {
-      this.saving.set(false);
+      this.savingRoom.set(false);
     }
   }
 
@@ -178,6 +253,25 @@ export class Rooms implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete room.' });
       }
     }
+  }
+
+  protected getGroupRowCountLabel(group: RoomGroupRow): string {
+    const count = group.rooms.length;
+    return count === 1 ? '1 room' : `${count} rooms`;
+  }
+
+  protected isGroupExpanded(group: RoomGroupRow): boolean {
+    return !!this.expandedRows[group.id];
+  }
+
+  protected toggleGroupRow(group: RoomGroupRow): void {
+    const nextExpanded = { ...this.expandedRows };
+    if (nextExpanded[group.id]) {
+      delete nextExpanded[group.id];
+    } else {
+      nextExpanded[group.id] = true;
+    }
+    this.expandedRows = nextExpanded;
   }
 
   private normalizeRoom(room: Room, groupsById: RoomGroupMap): Room {
@@ -195,5 +289,45 @@ export class Rooms implements OnInit {
         group_id: room.expand?.group_id,
       },
     };
+  }
+
+  private buildGroupRows(groups: RoomGroup[], rooms: Room[]): RoomGroupRow[] {
+    const rows: RoomGroupRow[] = groups
+      .map(group => ({
+        id: group.id,
+        name: group.name,
+        notes: (group.notes ?? group.description ?? '').trim(),
+        rooms: [],
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    const rowsById = new Map(rows.map(row => [row.id, row]));
+    const ungroupedRooms: Room[] = [];
+
+    for (const room of rooms) {
+      const groupId = room.room_group ?? room.group_id ?? '';
+      const row = groupId ? rowsById.get(groupId) : undefined;
+      if (row) {
+        row.rooms.push(room);
+      } else {
+        ungroupedRooms.push(room);
+      }
+    }
+
+    for (const row of rows) {
+      row.rooms.sort((a, b) => a.number.localeCompare(b.number));
+    }
+
+    if (ungroupedRooms.length > 0) {
+      ungroupedRooms.sort((a, b) => a.number.localeCompare(b.number));
+      rows.push({
+        id: '__ungrouped__',
+        name: 'Ungrouped Rooms',
+        notes: 'Rooms that are not assigned to any room group.',
+        rooms: ungroupedRooms,
+      });
+    }
+
+    return rows;
   }
 }
