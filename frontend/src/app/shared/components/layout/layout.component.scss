@@ -1,0 +1,61 @@
+:host {
+  display: block;
+}
+
+.dashboard-shell {
+  background: var(--sv-bg);
+  color: var(--sv-text);
+}
+
+.dashboard-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  z-index: 0;
+}
+
+.dashboard-orb-primary {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #3b82f6 0%, transparent 60%);
+  top: -200px;
+  left: -200px;
+}
+
+.dashboard-orb-secondary {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #8b5cf6 0%, transparent 60%);
+  bottom: -150px;
+  right: -150px;
+}
+
+.dashboard-grid-fade {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(circle at center, black, transparent 80%);
+  -webkit-mask-image: radial-gradient(circle at center, black, transparent 80%);
+  z-index: 0;
+}
+
+.dashboard-topbar {
+  background: color-mix(in srgb, var(--sv-surface) 80%, transparent);
+  border-bottom: 1px solid var(--sv-border);
+  box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.5);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+:host ::ng-deep .active-nav {
+  font-weight: bold;
+  color: var(--sv-accent) !important;
+  background: var(--sv-accent-soft) !important;
+}
+
+:host ::ng-deep .user-menu-trigger.p-button {
+  border-color: var(--sv-border);
+}

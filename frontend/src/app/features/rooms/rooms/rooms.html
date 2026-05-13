@@ -1,0 +1,141 @@
+<div class="flex flex-col gap-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <h2 class="text-2xl font-bold text-slate-800">Rooms</h2>
+    </div>
+    <div class="flex items-center gap-2">
+      <p-button
+        label="Refresh"
+        icon="pi pi-refresh"
+        [loading]="loading()"
+        styleClass="action-btn"
+        [outlined]="true"
+        severity="info"
+        size="small"
+        (onClick)="loadData()"
+      />
+      <p-button
+        label="Add Room"
+        icon="pi pi-plus"
+        severity="primary"
+        size="small"
+        (onClick)="openNewRoom()"
+      />
+    </div>
+  </div>
+
+  <p-card styleClass="dashboard-card glass-surface p-0 shadow-sm overflow-hidden">
+    <p-table
+      #dt
+      [value]="rooms()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="dashboard-table p-datatable-sm"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Room #</th>
+          <th>Room Name</th>
+          <th>Group</th>
+          <th>Notes</th>
+          <th style="width: 120px">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-room>
+        <tr>
+          <td class="font-medium text-slate-900">{{ room.number || '-' }}</td>
+          <td class="font-medium text-slate-900">{{ room.name }}</td>
+          <td>
+            <span *ngIf="getRoomGroupName(room); else noGroup" class="px-2 py-1 bg-slate-100 text-slate-700 rounded-md text-sm border border-slate-200">
+              {{ getRoomGroupName(room) }}
+            </span>
+            <ng-template #noGroup><span class="text-slate-400 italic">No Group</span></ng-template>
+          </td>
+          <td>
+            <span class="text-sm text-slate-500 line-clamp-1 truncate max-w-[200px]">{{ room.notes || room.description || '-' }}</span>
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                severity="info"
+                (onClick)="editRoom(room)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                severity="danger"
+                (onClick)="deleteRoomConfirm(room)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="text-center py-8 text-slate-500">
+            <i class="pi pi-box text-3xl mb-3 text-slate-300 block"></i>
+            No rooms found.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Add/Edit Dialog -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="dialogMode === 'create' ? 'Add Room' : 'Edit Room'"
+  [modal]="true"
+  styleClass="w-full max-w-[500px]"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col gap-4 py-4" *ngIf="formState">
+    <div class="flex flex-col gap-2">
+      <label for="number" class="text-sm font-semibold text-slate-700">Room Number <span class="text-red-500">*</span></label>
+      <input id="number" type="text" pInputText [(ngModel)]="formState.number" placeholder="e.g. 101" />
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="name" class="text-sm font-semibold text-slate-700">Room Name <span class="text-red-500">*</span></label>
+      <input id="name" type="text" pInputText [(ngModel)]="formState.name" placeholder="e.g. Room A" />
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="room_group" class="text-sm font-semibold text-slate-700">Room Group</label>
+      <p-select 
+        id="room_group" 
+        [options]="roomGroups()" 
+        [(ngModel)]="formState.room_group" 
+        optionLabel="name" 
+        optionValue="id" 
+        placeholder="Select a group..."
+        [showClear]="true"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+    
+    <div class="flex flex-col gap-2">
+      <label for="notes" class="text-sm font-semibold text-slate-700">Notes</label>
+      <textarea id="notes" pTextarea [(ngModel)]="formState.notes" rows="3" placeholder="Optional notes..."></textarea>
+    </div>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideDialog()" />
+      <p-button label="Save" icon="pi pi-check" (onClick)="saveRoom()" [loading]="saving()" />
+    </div>
+  </ng-template>
+</p-dialog>

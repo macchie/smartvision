@@ -1,6 +1,8 @@
 import { ApplicationConfig, APP_INITIALIZER, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
+import { MessageService } from 'primeng/api';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 import { AuthService } from './core/services/auth.service';
@@ -27,9 +29,6 @@ const MyPreset = definePreset(Aura, {
       colorScheme: {
         light: {
           
-        },
-        dark: {
-            //...
         }
       }
     }
@@ -43,6 +42,8 @@ function initializeApp(auth: AuthService) {
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideAnimationsAsync(),
+    MessageService,
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     {
@@ -55,7 +56,7 @@ export const appConfig: ApplicationConfig = {
       theme: {
         preset: MyPreset,
         options: {
-          darkModeSelector: '.app-dark'
+          darkModeSelector: false
         }
       }
     })

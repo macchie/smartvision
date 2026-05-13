@@ -1,0 +1,145 @@
+<div class="flex flex-col gap-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <h2 class="text-2xl font-bold text-slate-800">Users</h2>
+    </div>
+    <div class="flex items-center gap-2">
+      <p-button
+        label="Refresh"
+        icon="pi pi-refresh"
+        [loading]="loading()"
+        styleClass="action-btn"
+        [outlined]="true"
+        severity="info"
+        size="small"
+        (onClick)="loadUsers()"
+      />
+      <!-- Only admins or operators (if permitted by rules elsewhere to create "users") can see add btn. We'll show for everyone but error out if they cant. Ideally hide if not admin/operator making users. -->
+      <p-button
+        label="Add User"
+        icon="pi pi-plus"
+        severity="primary"
+        size="small"
+        (onClick)="openNewUser()"
+      />
+    </div>
+  </div>
+
+  <p-card styleClass="dashboard-card glass-surface p-0 shadow-sm overflow-hidden">
+    <p-table
+      #dt
+      [value]="users()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="dashboard-table p-datatable-sm"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Verified</th>
+          <th style="width: 120px">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td class="font-medium text-slate-900">{{ getDisplayName(user) }}</td>
+          <td><span class="text-slate-600">{{ user.email }}</span></td>
+          <td>
+            <p-tag [value]="user.role" [severity]="getRoleSeverity(user.role)"></p-tag>
+          </td>
+          <td>
+            <i class="pi" [ngClass]="user.verified ? 'pi-check-circle text-green-500' : 'pi-times-circle text-red-400'"></i>
+          </td>
+          <td>
+            <div class="flex gap-2" *ngIf="canEdit(user)">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                severity="info"
+                (onClick)="editUser(user)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                severity="danger"
+                (onClick)="deleteUserConfirm(user)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="text-center py-8 text-slate-500">
+            <i class="pi pi-users text-3xl mb-3 text-slate-300 block"></i>
+            No users found.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Add/Edit Dialog -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="dialogMode === 'create' ? 'Add User' : 'Edit User'"
+  [modal]="true"
+  styleClass="w-full max-w-[500px]"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col gap-4 py-4" *ngIf="formState">
+    <div class="grid grid-cols-2 gap-4">
+      <div class="flex flex-col gap-2">
+        <label for="first_name" class="text-sm font-semibold text-slate-700">First Name <span class="text-red-500">*</span></label>
+        <input id="first_name" type="text" pInputText [(ngModel)]="formState.first_name" placeholder="John" />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="last_name" class="text-sm font-semibold text-slate-700">Last Name</label>
+        <input id="last_name" type="text" pInputText [(ngModel)]="formState.last_name" placeholder="Doe" />
+      </div>
+    </div>
+    
+    <div class="flex flex-col gap-2">
+      <label for="email" class="text-sm font-semibold text-slate-700">Email <span class="text-red-500">*</span></label>
+      <input id="email" type="email" pInputText [(ngModel)]="formState.email" placeholder="john.doe@example.com" />
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="role" class="text-sm font-semibold text-slate-700">Role</label>
+      <!-- Only Admin can give Admin/Operator roles -->
+      <p-select 
+        id="role" 
+        [options]="roleOptions" 
+        [(ngModel)]="formState.role" 
+        [disabled]="!isAdmin()" 
+        optionLabel="label" 
+        optionValue="value" 
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="flex items-center gap-2 mt-2">
+      <input type="checkbox" id="verified" [(ngModel)]="formState.verified" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
+      <label for="verified" class="text-sm font-semibold text-slate-700">Email Verified (Skip Verification)</label>
+    </div>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideDialog()" />
+      <p-button label="Save" icon="pi pi-check" (onClick)="saveUser()" [loading]="saving()" />
+    </div>
+  </ng-template>
+</p-dialog>

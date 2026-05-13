@@ -1,0 +1,66 @@
+<div class="dashboard-shell relative min-h-screen overflow-hidden">
+  <div class="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+    <div class="dashboard-orb dashboard-orb-primary"></div>
+    <div class="dashboard-orb dashboard-orb-secondary"></div>
+    <div class="dashboard-grid-fade"></div>
+  </div>
+
+  <header class="dashboard-topbar sticky top-0 z-20 px-4 py-3 md:px-8 md:py-4">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3 md:gap-4">
+        <a routerLink="/dashboard" class="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-700 to-blue-600 text-white shadow-sm shadow-slate-900/20 md:h-10 md:w-10">
+          <i class="pi pi-camera text-sm"></i>
+        </a>
+        <div class="hidden sm:block">
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700 md:text-xs">SmartVision</p>
+          <a routerLink="/dashboard"><h1 class="text-lg font-black tracking-tight text-slate-900 md:text-2xl">Operational Dashboard</h1></a>
+        </div>
+      </div>
+
+      <!-- Navigation links -->
+      <nav class="hidden md:flex gap-2">
+        <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/dashboard" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
+        <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/cameras" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700">Cameras</a>
+        <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/room-groups" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700">Room Groups</a>
+        <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/rooms" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700">Rooms</a>
+        <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/vehicles" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700">Vehicles</a>
+        <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/users" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700">Users</a>
+      </nav>
+
+      <div class="flex items-center gap-2 md:gap-3">
+        <!-- Mobile nav menu button could go here -->
+        
+        <button
+          type="button"
+          pButton
+          class="user-menu-trigger !rounded-full !border !border-slate-200 !bg-white/95 !px-2 !py-1.5"
+          (click)="toggleUserMenu($event)"
+          aria-label="Open user menu"
+        >
+          <div class="flex items-center gap-2">
+            <p-avatar [label]="authService.userInitials" shape="circle" styleClass="!bg-slate-900 !text-white" />
+            <i class="pi pi-angle-down text-xs text-slate-500"></i>
+          </div>
+        </button>
+
+        <p-menu #userMenu [popup]="true" [model]="userMenuItems()" appendTo="body"></p-menu>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile navigation -->
+  <div class="md:hidden overflow-x-auto whitespace-nowrap px-4 py-2 border-b border-slate-200 bg-white/50 backdrop-blur z-10 relative">
+    <div class="flex gap-2 min-w-max">
+      <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/dashboard" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
+      <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/cameras" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700">Cameras</a>
+      <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/room-groups" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700">Room Groups</a>
+      <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/rooms" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700">Rooms</a>
+      <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/vehicles" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700">Vehicles</a>
+      <a class="p-button p-component p-button-text p-button-sm font-semibold rounded-md no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/users" routerLinkActive="bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700">Users</a>
+    </div>
+  </div>
+
+  <div class="relative z-10 mx-auto max-w-7xl space-y-5 p-4 md:space-y-6 md:p-8">
+    <router-outlet></router-outlet>
+  </div>
+</div>

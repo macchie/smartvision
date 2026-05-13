@@ -15,32 +15,6 @@
   --sv-accent-soft: #e5f0ff;
 }
 
-.app-dark {
-  --sv-bg: #000000;
-  --sv-bg-soft: #1c1c1e;
-  --sv-surface: rgba(28, 28, 30, 0.72);
-  --sv-surface-strong: rgba(28, 28, 30, 0.95);
-  --sv-border: rgba(255, 255, 255, 0.15);
-  --sv-text: #f5f5f7;
-  --sv-text-muted: #98989d;
-  --sv-accent: #0a84ff;
-  --sv-accent-soft: rgba(10, 132, 255, 0.15);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not(.app-light) {
-    --sv-bg: #000000;
-    --sv-bg-soft: #1c1c1e;
-    --sv-surface: rgba(28, 28, 30, 0.72);
-    --sv-surface-strong: rgba(28, 28, 30, 0.95);
-    --sv-border: rgba(255, 255, 255, 0.15);
-    --sv-text: #f5f5f7;
-    --sv-text-muted: #98989d;
-    --sv-accent: #0a84ff;
-    --sv-accent-soft: rgba(10, 132, 255, 0.15);
-  }
-}
-
 @layer base {
   button, [role="button"] {
     cursor: pointer;
