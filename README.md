@@ -1,62 +1,97 @@
-# SmartVision Apps 🚀
+# SmartVision Apps
 
 ![PocketBase](https://img.shields.io/badge/PocketBase-0.36.9-blue)
 ![Angular](https://img.shields.io/badge/Frontend-Angular%20%2B%20PrimeNG-red)
 ![TailwindCSS](https://img.shields.io/badge/Styling-TailwindCSS-06B6D4)
 ![Docker](https://img.shields.io/badge/Deploy-Docker%20Compose-2496ED)
-![License](https://img.shields.io/badge/License-Open%20Source-success)
 
-Open-source SmartVision workspace with a modern frontend and a PocketBase backend.
+SmartVision Apps is a web platform for operational access control management.
+It centralizes people, vehicle, camera, and room data, and provides a live dashboard for monitoring ingress/egress activity and room key workflows.
 
-## ✨ Project Scope
+## Project Goal
 
-This documentation covers only:
+Deliver a production-ready, role-aware access control dashboard that:
 
-- `backend/` (PocketBase app, migrations, hooks)
-- `frontend/` (Angular app with PrimeNG + TailwindCSS)
+- keeps core operations in one web app (no mobile dependency)
+- provides consistent CRUD workflows for all master data entities
+- surfaces real backend state from PocketBase with clear user feedback
+- supports secure, maintainable evolution through migrations and hooks
 
-It intentionally excludes legacy/mobile folders.
+## Current Scope
 
-## 🧱 Architecture
+This repository currently treats only these folders as source of truth:
 
-### Backend (`backend/`)
+- backend (PocketBase server, migrations, hooks)
+- frontend (Angular application with PrimeNG and TailwindCSS)
 
-- PocketBase server
-- Schema migrations in `backend/pb_migrations/`
-- Server hooks in `backend/pb_hooks/`
-- Runtime compatibility target: **PocketBase 0.36.9**
-- Seed migration creates:
-	- App admin user: `admin@smartvision.local` / `Admin123!`
-	- PocketBase superuser: `superadmin@smartvision.local` / `Admin123!`
-- Demo data migration (`00000000000011_seed_demo_data.js`) runs only when `DEMO_DATA=TRUE` and seeds sample cameras, room groups/rooms, users, vehicles, and accesses.
-- Repair/reseed migrations are included for legacy or partially-corrupted datasets:
-	- `00000000000013_repair_core_collections_schema.js` restores expected fields and safe read rules on core collections.
-	- `00000000000016_fix_core_crud_rules.js` reapplies expected create/update/delete rules on core collections when instances drift to superuser-only write access.
-	- `00000000000015_reseed_dashboard_demo_data_fix.js` refreshes dashboard demo events/metrics when `DEMO_DATA=TRUE`.
-- Email verification is disabled in the current frontend auth flow.
+Legacy/mobile folders are intentionally excluded from active development scope.
 
-### Frontend (`frontend/`)
+## Current Feature Set
 
-- Angular application
-- UI components: PrimeNG
-- Styling: TailwindCSS (+ `tailwindcss-primeui`)
-- Web-only runtime (Capacitor/native features removed)
-- Production build output goes to `backend/pb_public/`
-- Dashboard is fully PocketBase-driven (no mocked data):
-	- Latest camera/access events from `accesses`
-	- Vehicles inside and people inside computed from open `accesses`
-	- Keys distributed computed from open `room_key_events`
-	- Legacy disabled recovery rows are ignored in dashboard aggregates/events
-	- Frontend consumes backend summary endpoint `/api/dashboard/summary` for role-safe dashboard reads
+### Authentication and Roles
 
-## ⚙️ Prerequisites
+- PocketBase auth with role-based rules (admin/operator/regular)
+- Admin and superuser seed accounts for local development
+- Rule-repair migration to prevent drift to superuser-only CRUD behavior
 
-- Node.js (recommended: current LTS)
+### Operational Dashboard
+
+- Live summary metrics (vehicles inside, people inside, keys distributed)
+- Latest access events for users and vehicles
+- Backend summary endpoint at /api/dashboard/summary for role-safe reads
+
+### Master Data CRUD
+
+- Cameras CRUD
+- Vehicles CRUD
+- Users CRUD
+- Unified Rooms experience:
+  - room groups shown as parent rows
+  - rooms shown as sub-entries in one page/table
+
+### UX and Interaction
+
+- Responsive top toolbar with active-page highlighting
+- PrimeNG toast notifications for success/error operation feedback
+- PrimeNG confirmation dialogs (no native browser confirm dialogs)
+- Production-style UI with PrimeNG + TailwindCSS
+
+## Architecture
+
+### Backend
+
+- PocketBase runtime pinned to version 0.36.9
+- Schema and data lifecycle managed via backend/pb_migrations
+- Domain behavior and API hooks in backend/pb_hooks
+- Demo data support controlled by DEMO_DATA environment variable
+
+Important migrations include:
+
+- 00000000000013_repair_core_collections_schema.js
+- 00000000000015_reseed_dashboard_demo_data_fix.js
+- 00000000000016_fix_core_crud_rules.js
+
+Seeded local credentials:
+
+- App admin user: admin@smartvision.local / Admin123!
+- PocketBase superuser: superadmin@smartvision.local / Admin123!
+
+### Frontend
+
+- Angular standalone architecture
+- PrimeNG component system
+- TailwindCSS styling (with tailwindcss-primeui)
+- Web-only runtime
+- Production build output to backend/pb_public
+
+## Prerequisites
+
+- Node.js (LTS recommended)
 - npm
-- PocketBase binary in `backend/` (version `0.36.9`)
-- Docker + Docker Compose (optional, for containerized deploy)
+- PocketBase binary in backend, version 0.36.9
+- Docker and Docker Compose (optional)
 
-## 🛠️ Local Development
+## Local Development
 
 From repository root:
 
@@ -65,7 +100,7 @@ make install
 make dev
 ```
 
-To disable demo-only seed migration data during backend startup:
+Disable demo data seeding:
 
 ```bash
 make DEMO_DATA=FALSE backend
@@ -73,68 +108,44 @@ make DEMO_DATA=FALSE backend
 
 Useful URLs:
 
-- PocketBase Admin: `http://0.0.0.0:8090/_/`
-- Frontend Dev Server: `http://0.0.0.0:4200`
+- PocketBase Admin: http://0.0.0.0:8090/_/
+- Frontend Dev Server: http://0.0.0.0:4200
 
-### Run only one service
+Run one service only:
 
 ```bash
 make backend
 make frontend
 ```
 
-## 📦 Build
-
-Build frontend assets into PocketBase public directory:
+## Build
 
 ```bash
 make build
 ```
 
-Output:
+Output directory:
 
-- `backend/pb_public/`
+- backend/pb_public
 
-## 🚢 Deploy (Docker)
-
-Build and start in background:
+## Deploy with Docker
 
 ```bash
 make docker
-```
-
-Stop services:
-
-```bash
 make docker-down
-```
-
-View logs:
-
-```bash
 make docker-logs
 ```
 
-## 🧹 Maintenance Commands
-
-Clear runtime data/public artifacts:
+## Maintenance
 
 ```bash
 make clean-data
-```
-
-Deep clean frontend dependencies/build artifacts:
-
-```bash
 make clean
 ```
 
-## 🤝 Contributing
+## Contribution Guidelines
 
-- Keep backend migrations/hooks compatible with PocketBase `0.36.9`.
-- Keep frontend UI consistent with PrimeNG + TailwindCSS.
-- Update this README when important project behavior, commands, architecture, or compatibility changes.
-
----
-
-Built with care for production-ready SmartVision workflows 💡
+- Keep backend compatibility pinned to PocketBase 0.36.9
+- Keep frontend UI aligned with PrimeNG + TailwindCSS
+- Prefer targeted, production-ready changes
+- Update this README whenever behavior, architecture, commands, or compatibility changes
