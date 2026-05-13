@@ -68,7 +68,6 @@ export class Rooms implements OnInit {
   protected readonly loading = signal(true);
   protected readonly savingGroup = signal(false);
   protected readonly savingRoom = signal(false);
-  protected expandedRows: Record<string, boolean> = {};
 
   // Room Group dialog state
   protected groupDialogVisible = false;
@@ -258,20 +257,6 @@ export class Rooms implements OnInit {
   protected getGroupRowCountLabel(group: RoomGroupRow): string {
     const count = group.rooms.length;
     return count === 1 ? '1 room' : `${count} rooms`;
-  }
-
-  protected isGroupExpanded(group: RoomGroupRow): boolean {
-    return !!this.expandedRows[group.id];
-  }
-
-  protected toggleGroupRow(group: RoomGroupRow): void {
-    const nextExpanded = { ...this.expandedRows };
-    if (nextExpanded[group.id]) {
-      delete nextExpanded[group.id];
-    } else {
-      nextExpanded[group.id] = true;
-    }
-    this.expandedRows = nextExpanded;
   }
 
   private normalizeRoom(room: Room, groupsById: RoomGroupMap): Room {

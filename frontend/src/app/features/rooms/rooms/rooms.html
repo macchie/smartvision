@@ -33,137 +33,126 @@
   </div>
 
   <p-card styleClass="dashboard-card glass-surface p-0 shadow-sm overflow-hidden">
-    <p-table
-      #dt
-      [value]="groupRows()"
-      [loading]="loading()"
-      [paginator]="true"
-      [rows]="8"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      styleClass="dashboard-table p-datatable-sm"
-      responsiveLayout="scroll"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Name</th>
-          <th style="width: 110px">Type</th>
-          <th>Notes</th>
-          <th style="width: 120px">Rooms</th>
-          <th style="width: 160px">Actions</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-group>
-        <tr>
-          <td>
-            <div class="flex items-center gap-2">
-              <p-button
-                [icon]="isGroupExpanded(group) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                severity="secondary"
-                (onClick)="toggleGroupRow(group)"
-              />
-              <span class="font-semibold text-slate-900">{{ group.name }}</span>
-            </div>
-          </td>
-          <td>
-            <span class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md text-xs font-semibold border border-indigo-100">Group</span>
-          </td>
-          <td>
-            <span class="text-sm text-slate-500 line-clamp-1 truncate max-w-[320px]">{{ group.notes || '-' }}</span>
-          </td>
-          <td>
-            <span class="px-2 py-1 bg-slate-100 text-slate-700 rounded-md text-sm border border-slate-200">
-              {{ getGroupRowCountLabel(group) }}
-            </span>
-          </td>
-          <td>
-            <div class="flex gap-2">
-              <p-button
-                icon="pi pi-plus"
-                [rounded]="true"
-                [text]="true"
-                size="small"
-                severity="success"
-                (onClick)="openNewRoom(group.id === '__ungrouped__' ? '' : group.id)"
-              />
-              <p-button
-                *ngIf="group.id !== '__ungrouped__'"
-                icon="pi pi-pencil"
-                [rounded]="true"
-                [text]="true"
-                size="small"
-                severity="info"
-                (onClick)="editRoomGroup(group)"
-              />
-              <p-button
-                *ngIf="group.id !== '__ungrouped__'"
-                icon="pi pi-trash"
-                [rounded]="true"
-                [text]="true"
-                size="small"
-                severity="danger"
-                (onClick)="deleteRoomGroupConfirm(group)"
-              />
-            </div>
-          </td>
-        </tr>
+    <div class="overflow-x-auto">
+      <table class="w-full dashboard-table">
+        <thead>
+          <tr>
+            <th class="px-4 py-3 text-left">Name</th>
+            <th class="px-4 py-3 text-left" style="width: 110px">Type</th>
+            <th class="px-4 py-3 text-left">Notes</th>
+            <th class="px-4 py-3 text-left" style="width: 120px">Rooms</th>
+            <th class="px-4 py-3 text-left" style="width: 160px">Actions</th>
+          </tr>
+        </thead>
+        <tbody *ngIf="!loading()">
+          <ng-container *ngFor="let group of groupRows()">
+            <tr>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-folder text-slate-400"></i>
+                  <span class="font-semibold text-slate-900">{{ group.name }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md text-xs font-semibold border border-indigo-100">Group</span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="text-sm text-slate-500 line-clamp-1 truncate max-w-[320px]">{{ group.notes || '-' }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="px-2 py-1 bg-slate-100 text-slate-700 rounded-md text-sm border border-slate-200">
+                  {{ getGroupRowCountLabel(group) }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex gap-2">
+                  <p-button
+                    icon="pi pi-plus"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    severity="success"
+                    (onClick)="openNewRoom(group.id === '__ungrouped__' ? '' : group.id)"
+                  />
+                  <p-button
+                    *ngIf="group.id !== '__ungrouped__'"
+                    icon="pi pi-pencil"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    severity="info"
+                    (onClick)="editRoomGroup(group)"
+                  />
+                  <p-button
+                    *ngIf="group.id !== '__ungrouped__'"
+                    icon="pi pi-trash"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    severity="danger"
+                    (onClick)="deleteRoomGroupConfirm(group)"
+                  />
+                </div>
+              </td>
+            </tr>
 
-        <ng-container *ngIf="isGroupExpanded(group)">
-          <tr *ngFor="let room of group.rooms" class="bg-slate-50/60">
-            <td>
-              <div class="flex items-center gap-2 pl-9">
-                <i class="pi pi-angle-right text-slate-400"></i>
-                <span class="font-medium text-slate-800">{{ room.number || '-' }} · {{ room.name || 'Unnamed room' }}</span>
-              </div>
-            </td>
-            <td>
-              <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-md text-xs font-semibold border border-emerald-100">Room</span>
-            </td>
-            <td>
-              <span class="text-sm text-slate-500 line-clamp-1 truncate max-w-[320px]">{{ room.notes || room.description || '-' }}</span>
-            </td>
-            <td class="text-slate-400">-</td>
-            <td>
-              <div class="flex gap-2">
-                <p-button
-                  icon="pi pi-pencil"
-                  [rounded]="true"
-                  [text]="true"
-                  size="small"
-                  severity="info"
-                  (onClick)="editRoom(room)"
-                />
-                <p-button
-                  icon="pi pi-trash"
-                  [rounded]="true"
-                  [text]="true"
-                  size="small"
-                  severity="danger"
-                  (onClick)="deleteRoomConfirm(room)"
-                />
-              </div>
+            <tr *ngFor="let room of group.rooms" class="bg-slate-50/60">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2 pl-9">
+                  <i class="pi pi-angle-right text-slate-400"></i>
+                  <span class="font-medium text-slate-800">{{ room.number || '-' }} · {{ room.name || 'Unnamed room' }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-md text-xs font-semibold border border-emerald-100">Room</span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="text-sm text-slate-500 line-clamp-1 truncate max-w-[320px]">{{ room.notes || room.description || '-' }}</span>
+              </td>
+              <td class="px-4 py-3 text-slate-400">-</td>
+              <td class="px-4 py-3">
+                <div class="flex gap-2">
+                  <p-button
+                    icon="pi pi-pencil"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    severity="info"
+                    (onClick)="editRoom(room)"
+                  />
+                  <p-button
+                    icon="pi pi-trash"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    severity="danger"
+                    (onClick)="deleteRoomConfirm(room)"
+                  />
+                </div>
+              </td>
+            </tr>
+
+            <tr *ngIf="group.rooms.length === 0" class="bg-slate-50/60">
+              <td colspan="5" class="px-4 py-3 pl-16 text-sm text-slate-500 italic">
+                No rooms in this group yet.
+              </td>
+            </tr>
+          </ng-container>
+
+          <tr *ngIf="groupRows().length === 0">
+            <td colspan="5" class="text-center py-8 text-slate-500">
+              <i class="pi pi-th-large text-3xl mb-3 text-slate-300 block"></i>
+              No room groups found.
             </td>
           </tr>
+        </tbody>
+      </table>
+    </div>
 
-          <tr *ngIf="group.rooms.length === 0" class="bg-slate-50/60">
-            <td colspan="5" class="!py-3 !pl-16 text-sm text-slate-500 italic">
-              No rooms in this group yet.
-            </td>
-          </tr>
-        </ng-container>
-      </ng-template>
-
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="5" class="text-center py-8 text-slate-500">
-            <i class="pi pi-th-large text-3xl mb-3 text-slate-300 block"></i>
-            No room groups found.
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+    <div *ngIf="loading()" class="px-4 py-8 text-center text-slate-500">
+      <i class="pi pi-spinner pi-spin mr-2"></i>
+      Loading rooms and groups...
+    </div>
   </p-card>
 </div>
 
