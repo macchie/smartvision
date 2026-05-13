@@ -31,6 +31,7 @@ It intentionally excludes legacy/mobile folders.
 - Demo data migration (`00000000000011_seed_demo_data.js`) runs only when `DEMO_DATA=TRUE` and seeds sample cameras, room groups/rooms, users, vehicles, and accesses.
 - Repair/reseed migrations are included for legacy or partially-corrupted datasets:
 	- `00000000000013_repair_core_collections_schema.js` restores expected fields and safe read rules on core collections.
+	- `00000000000016_fix_core_crud_rules.js` reapplies expected create/update/delete rules on core collections when instances drift to superuser-only write access.
 	- `00000000000015_reseed_dashboard_demo_data_fix.js` refreshes dashboard demo events/metrics when `DEMO_DATA=TRUE`.
 - Email verification is disabled in the current frontend auth flow.
 

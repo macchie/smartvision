@@ -88,7 +88,7 @@ export class Users implements OnInit {
   }
 
   protected openNewUser() {
-    this.formState = { first_name: '', last_name: '', email: '', role: 'regular', user_type: 'person', enabled: true, verified: true };
+    this.formState = { first_name: '', last_name: '', email: '', role: 'regular', user_type: 'person', enabled: true };
     this.dialogMode = 'create';
     this.dialogVisible = true;
   }
@@ -121,7 +121,7 @@ export class Users implements OnInit {
         role: this.normalizeRole(this.formState.role),
         user_type: (this.formState['user_type'] as string) || 'person',
         enabled: this.formState['enabled'] ?? true,
-        verified: this.formState.verified ?? true,
+        emailVisibility: false,
       };
 
       if (this.dialogMode === 'create') {
