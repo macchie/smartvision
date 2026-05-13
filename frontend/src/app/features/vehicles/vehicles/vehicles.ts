@@ -2,7 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -49,7 +49,8 @@ export class Vehicles implements OnInit {
 
   constructor(
     private pb: PocketBaseService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -124,15 +125,22 @@ export class Vehicles implements OnInit {
     }
   }
 
-  protected async deleteVehicleConfirm(vehicle: Vehicle) {
-    if (confirm(`Are you sure you want to delete vehicle "${vehicle.number}"?`)) {
-      try {
-        await this.pb.pb.collection('vehicles').delete(vehicle.id);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vehicle deleted.' });
-        this.loadVehicles();
-      } catch (e: any) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete vehicle.' });
-      }
-    }
+  protected deleteVehicleConfirm(vehicle: Vehicle) {
+    this.confirmationService.confirm({
+      header: 'Delete Vehicle',
+      message: `Are you sure you want to delete vehicle "${vehicle.number}"?`,
+      icon: 'pi pi-exclamation-triangle',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await this.pb.pb.collection('vehicles').delete(vehicle.id);
+          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vehicle deleted.' });
+          this.loadVehicles();
+        } catch (e: any) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete vehicle.' });
+        }
+      },
+    });
   }
 }

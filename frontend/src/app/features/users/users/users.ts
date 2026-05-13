@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -53,7 +53,8 @@ export class Users implements OnInit {
   constructor(
     private pb: PocketBaseService,
     private authService: AuthService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -144,16 +145,23 @@ export class Users implements OnInit {
     }
   }
 
-  protected async deleteUserConfirm(user: User) {
-    if (confirm(`Are you sure you want to delete user "${user.first_name} ${user.last_name}"?`)) {
-      try {
-        await this.pb.pb.collection('users').delete(user.id);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User deleted.' });
-        this.loadUsers();
-      } catch (e: any) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete user.' });
-      }
-    }
+  protected deleteUserConfirm(user: User) {
+    this.confirmationService.confirm({
+      header: 'Delete User',
+      message: `Are you sure you want to delete user "${this.getDisplayName(user)}"?`,
+      icon: 'pi pi-exclamation-triangle',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await this.pb.pb.collection('users').delete(user.id);
+          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User deleted.' });
+          this.loadUsers();
+        } catch (e: any) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete user.' });
+        }
+      },
+    });
   }
 
   protected getRoleSeverity(role: string) {

@@ -2,7 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -48,7 +48,8 @@ export class RoomGroups implements OnInit {
 
   constructor(
     private pb: PocketBaseService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -121,15 +122,22 @@ export class RoomGroups implements OnInit {
     }
   }
 
-  protected async deleteRoomGroupConfirm(group: RoomGroup) {
-    if (confirm(`Are you sure you want to delete room group "${group.name}"?`)) {
-      try {
-        await this.pb.pb.collection('room_groups').delete(group.id);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room Group deleted.' });
-        this.loadRoomGroups();
-      } catch (e: any) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete room group.' });
-      }
-    }
+  protected deleteRoomGroupConfirm(group: RoomGroup) {
+    this.confirmationService.confirm({
+      header: 'Delete Room Group',
+      message: `Are you sure you want to delete room group "${group.name}"?`,
+      icon: 'pi pi-exclamation-triangle',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await this.pb.pb.collection('room_groups').delete(group.id);
+          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room Group deleted.' });
+          this.loadRoomGroups();
+        } catch (e: any) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete room group.' });
+        }
+      },
+    });
   }
 }

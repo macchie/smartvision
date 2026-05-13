@@ -2,7 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -56,7 +56,8 @@ export class Cameras implements OnInit {
 
   constructor(
     private pb: PocketBaseService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -133,15 +134,22 @@ export class Cameras implements OnInit {
     }
   }
 
-  protected async deleteCameraConfirm(camera: Camera) {
-    if (confirm(`Are you sure you want to delete camera "${camera.name}"?`)) {
-      try {
-        await this.pb.pb.collection('cameras').delete(camera.id);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Camera deleted.' });
-        this.loadCameras();
-      } catch (e: any) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete camera.' });
-      }
-    }
+  protected deleteCameraConfirm(camera: Camera) {
+    this.confirmationService.confirm({
+      header: 'Delete Camera',
+      message: `Are you sure you want to delete camera "${camera.name}"?`,
+      icon: 'pi pi-exclamation-triangle',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await this.pb.pb.collection('cameras').delete(camera.id);
+          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Camera deleted.' });
+          this.loadCameras();
+        } catch (e: any) {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete camera.' });
+        }
+      },
+    });
   }
 }
