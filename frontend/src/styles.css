@@ -6,15 +6,19 @@
 :root {
   --sv-bg: #f5f5f7;
   --sv-bg-soft: #ffffff;
-  --sv-surface: rgba(255, 255, 255, 0.72);
-  --sv-surface-strong: rgba(255, 255, 255, 0.95);
+  --sv-surface: #ffffff;
+  --sv-surface-strong: #ffffff;
   --sv-border: rgba(0, 0, 0, 0.05);
   --sv-text: #1d1d1f;
   --sv-text-muted: #86868b;
   --sv-accent: #007aff;
   --sv-accent-soft: #e5f0ff;
-  --sv-radius-card: 1rem;
-  --sv-shadow-soft: 0 6px 20px -14px rgba(15, 23, 42, 0.2);
+  --sv-radius-sm: 0.625rem;
+  --sv-radius-md: 0.75rem;
+  --sv-radius-lg: 1rem;
+  --sv-radius-pill: 9999px;
+  --sv-radius-card: var(--sv-radius-lg);
+  --sv-shadow-soft: 0 4px 14px -10px rgba(15, 23, 42, 0.12);
 }
 
 @layer base {
@@ -30,13 +34,11 @@
     -webkit-text-size-adjust: 100%;
     overscroll-behavior-y: none;
     scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
     @apply selection:bg-blue-200/50 selection:text-blue-900;
-    background:
-      radial-gradient(1000px 520px at 8% -10%, rgba(96, 165, 250, 0.14), transparent 52%),
-      radial-gradient(900px 480px at 96% -14%, rgba(14, 165, 233, 0.1), transparent 48%),
-      linear-gradient(180deg, #f7f9fc 0%, #f3f6fb 45%, #f6f8fb 100%);
+    background: #f6f7f9;
     color: var(--sv-text);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     font-weight: 400;
@@ -68,17 +70,23 @@
 .dashboard-card,
 .glass-surface {
   border-radius: var(--sv-radius-card);
-  border: 1px solid color-mix(in srgb, var(--sv-border) 95%, rgba(148, 163, 184, 0.16)) !important;
-  background: color-mix(in srgb, var(--sv-surface-strong) 96%, white 4%) !important;
+  border: 1px solid var(--sv-border) !important;
+  background: var(--sv-surface-strong) !important;
   box-shadow: var(--sv-shadow-soft) !important;
 }
 
 .dashboard-table {
-  overflow: hidden;
+  overflow: visible;
+}
+
+/* Ensure select dropdowns render above cards/dialog wrappers when appended to body */
+.p-select-overlay,
+.p-dropdown-panel {
+  z-index: 1200 !important;
 }
 
 .dashboard-table .p-datatable-thead > tr > th {
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(248, 250, 252, 0.82));
+  background: #f8fafc;
   color: #64748b;
   font-size: 0.76rem;
   letter-spacing: 0.05em;
@@ -108,7 +116,7 @@
 }
 
 .action-btn.p-button {
-  border-radius: 0.75rem;
+  border-radius: var(--sv-radius-md);
 }
 
 .p-dialog .p-dialog-header {
@@ -128,13 +136,20 @@
 .p-inputtext,
 .p-select,
 .p-textarea {
-  border-radius: 0.7rem;
+  border-radius: var(--sv-radius-md);
 }
 
 @media (max-width: 768px) {
   .dashboard-card,
   .glass-surface {
-    border-radius: 0.8rem;
+    border-radius: var(--sv-radius-card);
+  }
+
+  .p-button,
+  .p-inputtext,
+  .p-select,
+  .p-textarea {
+    min-height: 2.75rem;
   }
 
   .dashboard-table .p-datatable-thead > tr > th,
@@ -145,7 +160,12 @@
 
   .p-dialog {
     width: min(94vw, 30rem) !important;
+    max-height: min(90dvh, 44rem);
     margin: 0 auto;
+  }
+
+  .p-dialog .p-dialog-content {
+    padding-bottom: calc(0.95rem + env(safe-area-inset-bottom));
   }
 }
 
@@ -170,26 +190,20 @@
 
 /* Mesh gradient background for auth */
 .auth-bg {
-  background:
-    radial-gradient(ellipse 76% 52% at 48% -18%, rgba(191, 219, 254, 0.5), transparent),
-    radial-gradient(ellipse 58% 46% at 86% 42%, rgba(148, 163, 184, 0.16), transparent),
-    radial-gradient(ellipse 50% 58% at 14% 88%, rgba(37, 99, 235, 0.12), transparent),
-    linear-gradient(145deg, #eef3fb 0%, #e2e8f3 48%, #f5f7fb 100%);
+  background: #eef2f7;
 }
 
 /* Glass card effect */
 .glass {
   background: var(--sv-surface);
   border: 1px solid var(--sv-border);
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
-  backdrop-filter: blur(22px) saturate(165%);
-  -webkit-backdrop-filter: blur(22px) saturate(165%);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
 }
 
 /* Scrollbar styling for dialogs */
 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: var(--sv-radius-sm); }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* Safe Area Utilities */

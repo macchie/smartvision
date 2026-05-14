@@ -1,14 +1,8 @@
 <div class="dashboard-shell relative min-h-screen overflow-hidden">
-  <div class="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
-    <div class="dashboard-orb dashboard-orb-primary"></div>
-    <div class="dashboard-orb dashboard-orb-secondary"></div>
-    <div class="dashboard-grid-fade"></div>
-  </div>
-
   <header class="dashboard-topbar sticky top-0 z-20 px-4 py-3 md:px-8 md:py-4">
     <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3 md:gap-4">
-        <a routerLink="/dashboard" class="brand-mark flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-700 to-blue-600 text-white shadow-sm shadow-slate-900/20 md:h-10 md:w-10">
+        <a routerLink="/dashboard" class="brand-mark flex h-9 w-9 items-center justify-center bg-gradient-to-br from-slate-700 to-blue-600 text-white shadow-sm shadow-slate-900/20 md:h-10 md:w-10">
           <i class="pi pi-camera text-sm"></i>
         </a>
         <div class="hidden sm:block">
@@ -19,7 +13,7 @@
 
       <div class="flex items-center gap-2 md:ml-auto md:gap-3">
         <!-- Desktop navigation links -->
-        <nav class="top-nav hidden md:flex gap-1.5 rounded-2xl border border-slate-200/70 bg-white/85 p-1 shadow-sm backdrop-blur">
+        <nav class="top-nav hidden md:flex gap-1.5 border border-slate-200/70 bg-white/85 p-1 shadow-sm backdrop-blur">
           <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
           <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/cameras" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Cameras</a>
           <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/rooms" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Rooms</a>
@@ -48,7 +42,7 @@
   </header>
 
   <!-- Mobile navigation -->
-  <div class="mobile-top-nav md:hidden overflow-x-auto whitespace-nowrap px-4 py-2 border-b border-slate-200/80 bg-white/70 backdrop-blur z-10 relative">
+  <div class="mobile-top-nav md:hidden overflow-x-auto whitespace-nowrap px-4 py-2 border-b border-slate-200/80 bg-white z-10" aria-label="Mobile section navigation">
     <div class="flex gap-2 min-w-max rounded-xl border border-slate-200/70 bg-white/85 p-1 shadow-sm">
       <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-lg no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
       <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-lg no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/cameras" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Cameras</a>
@@ -58,7 +52,7 @@
     </div>
   </div>
 
-  <div class="relative z-10 mx-auto max-w-7xl space-y-5 p-4 md:space-y-6 md:p-8">
+  <div class="relative z-10 mx-auto max-w-7xl space-y-5 p-4 pb-safe md:space-y-6 md:p-8">
     <router-outlet></router-outlet>
   </div>
 </div>

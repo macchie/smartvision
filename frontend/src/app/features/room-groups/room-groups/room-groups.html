@@ -24,7 +24,7 @@
     </div>
   </div>
 
-  <p-card styleClass="dashboard-card glass-surface p-0 shadow-sm overflow-hidden">
+  <p-card styleClass="dashboard-card glass-surface p-0 shadow-sm">
     <p-table
       #dt
       [value]="roomGroups()"
@@ -32,6 +32,7 @@
       [paginator]="true"
       [rows]="10"
       [rowsPerPageOptions]="[10, 25, 50]"
+      [paginatorDropdownAppendTo]="'body'"
       styleClass="dashboard-table p-datatable-sm"
       responsiveLayout="scroll"
     >

@@ -5,16 +5,13 @@
 
 .dashboard-shell {
   background-color: var(--sv-bg);
-  background-image: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.7) 0%, transparent 60%);
   color: var(--sv-text);
 }
 
 .dashboard-topbar {
   border-bottom: 1px solid var(--sv-border);
-  background: color-mix(in srgb, var(--sv-surface) 80%, transparent);
+  background: var(--sv-surface-strong);
   box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.05);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
 
 .dashboard-orb, .dashboard-orb-primary, .dashboard-orb-secondary, .dashboard-grid-fade {
@@ -22,15 +19,15 @@
 }
 
 .dashboard-card {
-  border-radius: 18px;
+  border-radius: var(--sv-radius-card);
   background: var(--sv-surface-strong) !important;
   border: 1px solid var(--sv-border) !important;
-  box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.03), 0 12px 34px 0 rgba(0, 0, 0, 0.02) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
   transition: box-shadow 0.15s ease;
 }
 
 .dashboard-card:hover {
-  box-shadow: 0 6px 18px 0 rgba(0, 0, 0, 0.04), 0 14px 28px 0 rgba(0, 0, 0, 0.03) !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08) !important;
 }
 
 .title-with-icon {
@@ -47,7 +44,7 @@
   justify-content: center;
   width: 1.7rem;
   height: 1.7rem;
-  border-radius: 6px;
+  border-radius: var(--sv-radius-sm);
   font-size: 0.85rem;
   color: var(--sv-text-muted);
   background: var(--sv-bg);
@@ -89,6 +86,15 @@
   overflow: hidden;
 }
 
+.quick-actions-strip {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.quick-actions-strip::-webkit-scrollbar {
+  display: none;
+}
+
 /* Removed top border gradients for a cleaner Apple aesthetic */
 .metric-card::after {
   display: none;
@@ -109,12 +115,11 @@
   right: -0.6rem;
   width: 2.8rem;
   height: 2.8rem;
-  border-radius: 99px;
+  border-radius: var(--sv-radius-pill);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--sv-surface-strong);
-  backdrop-filter: blur(10px);
   border: 1px solid var(--sv-border);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
@@ -125,7 +130,7 @@
 
 .camera-card-in {
   border-color: #15803d !important;
-  background: linear-gradient(135deg, rgba(220, 252, 231, 0.5) 0%, var(--sv-surface-strong) 40%) !important;
+  background: #f5fbf7 !important;
 }
 
 .camera-card-in .camera-overlay-icon {
@@ -139,7 +144,7 @@
 
 .camera-card-out {
   border-color: #b91c1c !important;
-  background: linear-gradient(135deg, rgba(254, 226, 226, 0.5) 0%, var(--sv-surface-strong) 40%) !important;
+  background: #fdf6f6 !important;
 }
 
 .camera-card-out .camera-overlay-icon {
@@ -153,18 +158,20 @@
 
 /* Specific styling for the quick action buttons to fit Apple aesthetics */
 :host ::ng-deep .quick-action-btn.p-button {
-  border-radius: 999px;
+  border-radius: var(--sv-radius-pill);
   background-color: var(--sv-surface-strong);
   border-color: var(--sv-border);
   color: var(--sv-text);
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  white-space: nowrap;
+  min-height: 2.5rem;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
   transition: background-color 0.12s ease, box-shadow 0.12s ease;
 }
 
 :host ::ng-deep .quick-action-btn.p-button:hover {
   background-color: var(--sv-bg);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.1);
 }
 
 :host ::ng-deep .quick-action-btn.p-button .p-button-icon {
@@ -206,10 +213,23 @@
     box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.03) !important;
   }
 
+  .quick-actions-strip {
+    margin-left: -0.125rem;
+    margin-right: -0.125rem;
+    padding-left: 0.125rem;
+    padding-right: 0.125rem;
+  }
+
+  :host ::ng-deep .quick-action-btn.p-button {
+    min-height: 2.75rem;
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+
   .camera-overlay-icon {
     width: 2.25rem;
     height: 2.25rem;
-    border-radius: 99px;
+    border-radius: var(--sv-radius-pill);
   }
 }
 

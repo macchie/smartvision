@@ -1,9 +1,9 @@
 <div class="flex flex-col gap-4">
-  <div class="flex flex-wrap items-center justify-between gap-3">
+  <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
     <div class="flex items-center gap-3">
-      <h2 class="text-2xl font-bold text-slate-800">Overview</h2>
+      <h2 class="text-xl font-bold text-slate-800 sm:text-2xl">Overview</h2>
       @if (lastUpdatedAt()) {
-        <span class="rounded-full border border-slate-200/80 bg-white/85 px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur">
+        <span class="rounded-full border border-slate-200/80 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
           <i class="pi pi-clock mr-1.5"></i>
           Updated {{ lastUpdatedAt() }}
         </span>
@@ -26,7 +26,7 @@
   <div class="relative z-10 space-y-5 md:space-y-6">
     
     <!-- Quick Actions Bar -->
-    <div class="flex flex-wrap items-center gap-3">
+    <div class="quick-actions-strip flex items-center gap-2 overflow-x-auto pb-1 md:flex-wrap md:gap-3 md:overflow-visible md:pb-0">
       <p-button styleClass="quick-action-btn" outlined icon="pi pi-car" label="Add Vehicle Access" (onClick)="quickAction('vehicle_access')" />
       <p-button styleClass="quick-action-btn" outlined icon="pi pi-user" label="Add User Access" (onClick)="quickAction('user_access')" />
       <p-button styleClass="quick-action-btn" outlined icon="pi pi-key" label="Distribute Key" (onClick)="quickAction('key_distribute')" />
@@ -34,7 +34,7 @@
     </div>
 
     @if (loadError()) {
-      <div class="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+      <div class="rounded-[var(--sv-radius-lg)] border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
         <i class="pi pi-exclamation-triangle mr-2"></i>
         {{ loadError() }}
       </div>
@@ -104,7 +104,7 @@
       }
 
       <div class="grid gap-6 lg:grid-cols-2">
-        <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-lg shadow-slate-300/20 overflow-hidden">
+        <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-sm overflow-hidden">
           <ng-template pTemplate="title">
             <span class="title-with-icon"><i class="pi pi-car"></i> Latest Vehicle Accesses</span>
           </ng-template>
@@ -141,7 +141,7 @@
           </p-table>
         </p-card>
 
-        <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-lg shadow-slate-300/20 overflow-hidden">
+        <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-sm overflow-hidden">
           <ng-template pTemplate="title">
             <span class="title-with-icon"><i class="pi pi-users"></i> Latest People Accesses</span>
           </ng-template>
