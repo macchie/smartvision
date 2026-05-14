@@ -85,6 +85,7 @@ Seeded local credentials:
 - PrimeNG component system
 - TailwindCSS styling (with tailwindcss-primeui)
 - Web-only runtime
+- Core app pages are eagerly loaded to avoid route-change style flash (FOUC)
 - Production build output to backend/pb_public
 
 ## Prerequisites

@@ -115,6 +115,45 @@
   background: rgba(241, 245, 249, 0.7);
 }
 
+/* Shared page layout rhythm for feature CRUD pages */
+.page-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  line-height: 1.95rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .page-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .page-actions {
+    justify-content: flex-end;
+  }
+}
+
 .action-btn.p-button {
   border-radius: var(--sv-radius-md);
 }

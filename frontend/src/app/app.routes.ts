@@ -1,6 +1,12 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
 import { LayoutComponent } from './shared/components/layout/layout.component';
+import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { Cameras } from './features/cameras/cameras/cameras';
+import { Users } from './features/users/users/users';
+import { Vehicles } from './features/vehicles/vehicles/vehicles';
+import { Rooms } from './features/rooms/rooms/rooms';
+import { AuthComponent } from './features/auth/auth.component';
 
 export const routes: Routes = [
   {
@@ -15,23 +21,23 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
-        loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
+        component: DashboardComponent,
       },
       {
         path: 'cameras',
-        loadComponent: () => import('./features/cameras/cameras/cameras').then(m => m.Cameras),
+        component: Cameras,
       },
       {
         path: 'users',
-        loadComponent: () => import('./features/users/users/users').then(m => m.Users),
+        component: Users,
       },
       {
         path: 'vehicles',
-        loadComponent: () => import('./features/vehicles/vehicles/vehicles').then(m => m.Vehicles),
+        component: Vehicles,
       },
       {
         path: 'rooms',
-        loadComponent: () => import('./features/rooms/rooms/rooms').then(m => m.Rooms),
+        component: Rooms,
       },
       {
         path: 'room-groups',
@@ -42,7 +48,7 @@ export const routes: Routes = [
   {
     path: 'login',
     canActivate: [guestGuard],
-    loadComponent: () => import('./features/auth/auth.component').then(m => m.AuthComponent),
+    component: AuthComponent,
   },
   { path: '**', redirectTo: 'dashboard' },
 ];

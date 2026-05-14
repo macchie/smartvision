@@ -102,6 +102,10 @@
 }
 
 @media (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+
   .pb-mobile-nav {
     padding-bottom: 0;
   }

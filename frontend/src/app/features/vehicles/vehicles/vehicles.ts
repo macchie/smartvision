@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -14,6 +15,9 @@ interface Vehicle {
   id: string;
   number: string;
   country: string;
+  owner?: string;
+  ownerLabel?: string;
+  ownerRecord?: { id: string; displayName: string } | null;
   notes?: string;
   note?: string;
   enabled?: boolean;
@@ -27,6 +31,7 @@ interface Vehicle {
   imports: [
     CommonModule,
     FormsModule,
+    AutoCompleteModule,
     TableModule,
     ButtonModule,
     DialogModule,
@@ -41,11 +46,12 @@ export class Vehicles implements OnInit {
   protected readonly vehicles = signal<Vehicle[]>([]);
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
+  protected readonly suggestedOwners = signal<Array<{ id: string; displayName: string }>>([]);
 
   // Dialog state
   protected dialogVisible = false;
   protected dialogMode: 'create' | 'edit' = 'create';
-  protected formState: Partial<Vehicle> = { number: '', country: '', notes: '' };
+  protected formState: Partial<Vehicle> = { number: '', country: '', notes: '', ownerRecord: null };
 
   constructor(
     private pb: PocketBaseService,
@@ -60,13 +66,34 @@ export class Vehicles implements OnInit {
   protected async loadVehicles() {
     this.loading.set(true);
     try {
-      const records = await this.pb.pb.collection('vehicles').getFullList<Vehicle>({
-        sort: '-id',
-      });
-      this.vehicles.set(records.map(record => ({
-        ...record,
-        notes: record.notes ?? record.note ?? '',
-      })));
+      let records: any[] = [];
+
+      try {
+        records = await this.pb.pb.collection('vehicles').getFullList<any>({
+          sort: '-id',
+          expand: 'owner',
+        });
+      } catch {
+        // Fallback: when relation expansion is blocked or unavailable, still load vehicles.
+        records = await this.pb.pb.collection('vehicles').getFullList<any>({
+          sort: '-id',
+        });
+      }
+
+      this.vehicles.set(records.map(record => {
+        const expandedOwner = record.expand?.owner;
+        return {
+          ...record,
+          notes: record.notes ?? record.note ?? '',
+          ownerLabel: this.getOwnerDisplayName(expandedOwner),
+          ownerRecord: expandedOwner
+            ? {
+                id: expandedOwner.id,
+                displayName: this.getOwnerDisplayName(expandedOwner),
+              }
+            : null,
+        };
+      }));
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load vehicles.' });
     } finally {
@@ -75,7 +102,8 @@ export class Vehicles implements OnInit {
   }
 
   protected openNewVehicle() {
-    this.formState = { number: '', country: '', notes: '', enabled: true };
+    this.formState = { number: '', country: '', notes: '', enabled: true, ownerRecord: null };
+    this.suggestedOwners.set([]);
     this.dialogMode = 'create';
     this.dialogVisible = true;
   }
@@ -83,14 +111,43 @@ export class Vehicles implements OnInit {
   protected editVehicle(vehicle: Vehicle) {
     this.formState = {
       ...vehicle,
-      notes: vehicle.notes ?? vehicle.note ?? ''
+      notes: vehicle.notes ?? vehicle.note ?? '',
+      ownerRecord: vehicle.ownerRecord ?? null,
     };
+    this.suggestedOwners.set(vehicle.ownerRecord ? [vehicle.ownerRecord] : []);
     this.dialogMode = 'edit';
     this.dialogVisible = true;
   }
 
   protected hideDialog() {
     this.dialogVisible = false;
+    this.suggestedOwners.set([]);
+  }
+
+  protected async searchOwners(event: AutoCompleteCompleteEvent) {
+    try {
+      const query = (event.query || '').trim();
+      const escapedQuery = query.replace(/"/g, '\\"');
+      const baseFilter = 'role = "regular" && (user_type = "person" || user_type = "company")';
+      const queryFilter = query
+        ? ` && (first_name ~ "${escapedQuery}" || last_name ~ "${escapedQuery}" || name ~ "${escapedQuery}" || email ~ "${escapedQuery}")`
+        : '';
+      const filter = `${baseFilter}${queryFilter}`;
+
+      const records = await this.pb.pb.collection('users').getList(1, 10, {
+        filter,
+        sort: 'name,first_name,last_name,email',
+      });
+
+      this.suggestedOwners.set(
+        records.items.map((record: any) => ({
+          id: record.id,
+          displayName: this.getOwnerDisplayName(record),
+        })),
+      );
+    } catch {
+      this.suggestedOwners.set([]);
+    }
   }
 
   protected async saveVehicle() {
@@ -105,6 +162,7 @@ export class Vehicles implements OnInit {
       const payload = {
         number: normalizedNumber,
         country: this.formState.country?.trim().toUpperCase() || '',
+        owner: this.formState.ownerRecord?.id || '',
         notes: this.formState.notes?.trim() || '',
         enabled: this.formState.enabled ?? true,
       };
@@ -123,6 +181,19 @@ export class Vehicles implements OnInit {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  private getOwnerDisplayName(user: any): string {
+    if (!user) {
+      return '';
+    }
+
+    if (user.user_type === 'company') {
+      return user.name?.trim() || user.email || 'Company';
+    }
+
+    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    return fullName || user.name?.trim() || user.email || 'Person';
   }
 
   protected deleteVehicleConfirm(vehicle: Vehicle) {
