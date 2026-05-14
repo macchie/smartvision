@@ -61,6 +61,36 @@ migrate((app) => {
     return u
   })()
 
+  const companyA = findBy(app, "users", (u) => u.getString("email") === "company.novacargo.demo@smartvision.local") || (() => {
+    const u = new Record(usersCol)
+    u.set("user_type", "company")
+    u.set("name", "Nova Cargo Srl")
+    u.set("username", "novacargo_demo")
+    u.set("email", "company.novacargo.demo@smartvision.local")
+    u.set("emailVisibility", false)
+    u.set("role", "regular")
+    u.set("enabled", true)
+    u.set("notes", tag)
+    u.setPassword("Demo1234!")
+    app.save(u)
+    return u
+  })()
+
+  const companyB = findBy(app, "users", (u) => u.getString("email") === "company.orionfleet.demo@smartvision.local") || (() => {
+    const u = new Record(usersCol)
+    u.set("user_type", "company")
+    u.set("name", "Orion Fleet Spa")
+    u.set("username", "orionfleet_demo")
+    u.set("email", "company.orionfleet.demo@smartvision.local")
+    u.set("emailVisibility", false)
+    u.set("role", "regular")
+    u.set("enabled", true)
+    u.set("notes", tag)
+    u.setPassword("Demo1234!")
+    app.save(u)
+    return u
+  })()
+
   let camIn = findBy(app, "cameras", (c) => c.getString("camera_id") === "demo-cam-in")
   if (!camIn) {
     camIn = new Record(camerasCol)
@@ -103,6 +133,50 @@ migrate((app) => {
     vehicleB.set("enabled", true)
     vehicleB.set("notes", tag)
     app.save(vehicleB)
+  }
+
+  let vehicleC = findBy(app, "vehicles", (v) => v.getString("number") === "NC112AA")
+  if (!vehicleC) {
+    vehicleC = new Record(vehiclesCol)
+    vehicleC.set("number", "NC112AA")
+    vehicleC.set("country", "IT")
+    vehicleC.set("owner", companyA.id)
+    vehicleC.set("enabled", true)
+    vehicleC.set("notes", tag)
+    app.save(vehicleC)
+  }
+
+  let vehicleD = findBy(app, "vehicles", (v) => v.getString("number") === "NC278BB")
+  if (!vehicleD) {
+    vehicleD = new Record(vehiclesCol)
+    vehicleD.set("number", "NC278BB")
+    vehicleD.set("country", "IT")
+    vehicleD.set("owner", companyA.id)
+    vehicleD.set("enabled", true)
+    vehicleD.set("notes", tag)
+    app.save(vehicleD)
+  }
+
+  let vehicleE = findBy(app, "vehicles", (v) => v.getString("number") === "OF334CC")
+  if (!vehicleE) {
+    vehicleE = new Record(vehiclesCol)
+    vehicleE.set("number", "OF334CC")
+    vehicleE.set("country", "IT")
+    vehicleE.set("owner", companyB.id)
+    vehicleE.set("enabled", true)
+    vehicleE.set("notes", tag)
+    app.save(vehicleE)
+  }
+
+  let vehicleF = findBy(app, "vehicles", (v) => v.getString("number") === "OF509DD")
+  if (!vehicleF) {
+    vehicleF = new Record(vehiclesCol)
+    vehicleF.set("number", "OF509DD")
+    vehicleF.set("country", "IT")
+    vehicleF.set("owner", companyB.id)
+    vehicleF.set("enabled", true)
+    vehicleF.set("notes", tag)
+    app.save(vehicleF)
   }
 
   const seedAccess = (data) => {
