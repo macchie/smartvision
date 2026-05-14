@@ -26,7 +26,7 @@
   <div class="relative z-10 space-y-5 md:space-y-6">
     
     <!-- Quick Actions Bar -->
-    <div class="quick-actions-strip flex items-center gap-2 overflow-x-auto pb-1 md:flex-wrap md:gap-3 md:overflow-visible md:pb-0">
+    <div class="quick-actions-strip grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center md:gap-3">
       <p-button styleClass="quick-action-btn" outlined icon="pi pi-car" label="Add Vehicle Access" (onClick)="quickAction('vehicle_access')" />
       <p-button styleClass="quick-action-btn" outlined icon="pi pi-user" label="Add User Access" (onClick)="quickAction('user_access')" />
       <p-button styleClass="quick-action-btn" outlined icon="pi pi-key" label="Distribute Key" (onClick)="quickAction('key_distribute')" />
@@ -48,51 +48,59 @@
         </div>
       </p-card>
     } @else {
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="stats-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <p-card styleClass="dashboard-card glass-surface metric-card metric-vehicles h-full shadow-sm card-enter">
           <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-car"></i> Vehicles Inside</span>
+            <span class="title-with-icon"><i class="pi pi-car"></i><span class="sm:hidden">Vehicles</span><span class="hidden sm:inline">Vehicles Inside</span></span>
           </ng-template>
-          <p class="text-4xl font-black text-blue-700">{{ vehiclesInside() }}</p>
-          <p class="mt-2 text-xs text-slate-500">Active vehicles that have not exited yet.</p>
+          <p class="text-2xl font-black leading-tight text-blue-700 sm:text-4xl">{{ vehiclesInside() }}</p>
+          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block">Active vehicles that have not exited yet.</p>
         </p-card>
 
         <p-card styleClass="dashboard-card glass-surface metric-card metric-people h-full shadow-sm card-enter">
           <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-users"></i> People Inside</span>
+            <span class="title-with-icon"><i class="pi pi-users"></i><span class="sm:hidden">People</span><span class="hidden sm:inline">People Inside</span></span>
           </ng-template>
-          <p class="text-4xl font-black text-teal-700">{{ usersInside() }}</p>
-          <p class="mt-2 text-xs text-slate-500">Individuals currently marked as inside.</p>
+          <p class="text-2xl font-black leading-tight text-teal-700 sm:text-4xl">{{ usersInside() }}</p>
+          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block">Individuals currently marked as inside.</p>
         </p-card>
 
         <p-card styleClass="dashboard-card glass-surface metric-card metric-keys h-full shadow-sm card-enter">
           <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-key"></i> Keys Distributed</span>
+            <span class="title-with-icon"><i class="pi pi-key"></i><span class="sm:hidden">Keys</span><span class="hidden sm:inline">Keys Distributed</span></span>
           </ng-template>
-          <p class="text-4xl font-black text-slate-700">{{ keyDistributed() }}</p>
-          <p class="mt-2 text-xs text-slate-500">Collected keys still pending return.</p>
+          <p class="text-2xl font-black leading-tight text-slate-700 sm:text-4xl">{{ keyDistributed() }}</p>
+          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block">Collected keys still pending return.</p>
         </p-card>
       </div>
 
       @if (cameraVehicleCards().length > 0) {
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div class="camera-cards-grid grid gap-3">
           @for (cameraEvent of cameraVehicleCards(); track cameraEvent.camera) {
             <p-card [styleClass]="'dashboard-card glass-surface camera-card h-full shadow-sm card-enter ' + (cameraEvent.direction === 'in' ? 'camera-card-in' : 'camera-card-out')">
               <ng-template pTemplate="title">
-                <span class="title-with-icon"><i class="pi pi-video"></i> {{ cameraEvent.camera }}</span>
+                <span class="title-with-icon"><i class="pi pi-video"></i><span class="truncate">{{ cameraEvent.camera }}</span></span>
               </ng-template>
-              <div class="camera-card-body space-y-2 text-sm text-slate-600">
+              <div class="camera-card-body text-slate-600">
                 <div class="camera-overlay-icon" aria-hidden="true">
                   <i class="pi" [ngClass]="cameraEvent.direction === 'in' ? 'pi-sign-in' : 'pi-sign-out'"></i>
                 </div>
-                <p><span class="font-semibold text-slate-900">Vehicle:</span> {{ cameraEvent.subject }}</p>
-                <p><span class="font-semibold text-slate-900">Driver:</span> {{ cameraEvent.actor }}</p>
-                <div class="flex flex-wrap items-center gap-2 pt-1">
-                  <p-tag [value]="cameraEvent.direction === 'in' ? 'Ingress' : 'Egress'" [severity]="directionSeverity(cameraEvent.direction)" />
-                  <p-tag [value]="cameraEvent.didLeave ? 'Outside' : 'Inside'" [severity]="leaveSeverity(cameraEvent.didLeave)" />
+                <div class="grid grid-cols-2 gap-2 text-[12px]">
+                  <div class="rounded-[var(--sv-radius-sm)] border border-slate-200/70 bg-white px-2 py-1">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Vehicle</p>
+                    <p class="truncate font-semibold text-slate-900">{{ cameraEvent.subject }}</p>
+                  </div>
+                  <div class="rounded-[var(--sv-radius-sm)] border border-slate-200/70 bg-white px-2 py-1">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Driver</p>
+                    <p class="truncate font-semibold text-slate-900">{{ cameraEvent.actor }}</p>
+                  </div>
+                  <div class="col-span-2 flex flex-wrap items-center gap-2 pt-0.5">
+                    <p-tag [value]="cameraEvent.direction === 'in' ? 'Ingress' : 'Egress'" [severity]="directionSeverity(cameraEvent.direction)" />
+                    <p-tag [value]="cameraEvent.didLeave ? 'Outside' : 'Inside'" [severity]="leaveSeverity(cameraEvent.didLeave)" />
+                  </div>
+                  <p class="col-span-2 truncate"><span class="font-semibold text-slate-900">Reason:</span> {{ cameraEvent.reason }}</p>
+                  <p class="col-span-2 truncate"><span class="font-semibold text-slate-900">When:</span> {{ cameraEvent.eventTime }}</p>
                 </div>
-                <p><span class="font-semibold text-slate-900">Reason:</span> {{ cameraEvent.reason }}</p>
-                <p><span class="font-semibold text-slate-900">When:</span> {{ cameraEvent.eventTime }}</p>
               </div>
             </p-card>
           }

@@ -41,18 +41,30 @@
     </div>
   </header>
 
-  <!-- Mobile navigation -->
-  <div class="mobile-top-nav md:hidden overflow-x-auto whitespace-nowrap px-4 py-2 border-b border-slate-200/80 bg-white z-10" aria-label="Mobile section navigation">
-    <div class="flex gap-2 min-w-max rounded-xl border border-slate-200/70 bg-white/85 p-1 shadow-sm">
-      <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-lg no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
-      <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-lg no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/cameras" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Cameras</a>
-      <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-lg no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/rooms" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Rooms</a>
-      <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-lg no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/vehicles" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Vehicles</a>
-      <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-lg no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/users" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Users</a>
-    </div>
-  </div>
-
-  <div class="relative z-10 mx-auto max-w-7xl space-y-5 p-4 pb-safe md:space-y-6 md:p-8">
+  <div class="relative z-10 mx-auto max-w-7xl space-y-5 p-4 pb-mobile-nav md:space-y-6 md:p-8">
     <router-outlet></router-outlet>
   </div>
+
+  <nav class="mobile-bottom-nav md:hidden" aria-label="Primary mobile navigation">
+    <a class="mobile-tab-link" routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
+      <i class="pi pi-home"></i>
+      <span>Home</span>
+    </a>
+    <a class="mobile-tab-link" routerLink="/cameras" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
+      <i class="pi pi-video"></i>
+      <span>Cameras</span>
+    </a>
+    <a class="mobile-tab-link" routerLink="/rooms" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
+      <i class="pi pi-building"></i>
+      <span>Rooms</span>
+    </a>
+    <a class="mobile-tab-link" routerLink="/vehicles" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
+      <i class="pi pi-car"></i>
+      <span>Vehicles</span>
+    </a>
+    <a class="mobile-tab-link" routerLink="/users" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
+      <i class="pi pi-users"></i>
+      <span>Users</span>
+    </a>
+  </nav>
 </div>

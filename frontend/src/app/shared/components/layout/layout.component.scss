@@ -1,6 +1,5 @@
 :host {
   display: block;
-  --sv-mobile-top-offset: calc(4.25rem + env(safe-area-inset-top));
 }
 
 .dashboard-shell {
@@ -33,23 +32,48 @@
   border-radius: var(--sv-radius-md);
 }
 
-.mobile-top-nav {
-  scrollbar-width: none;
-  position: sticky;
-  top: var(--sv-mobile-top-offset);
+.mobile-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.45rem 0.6rem calc(0.45rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--sv-border);
+  background: var(--sv-surface-strong);
+  box-shadow: 0 -6px 24px -18px rgba(15, 23, 42, 0.4);
 }
 
-.mobile-top-nav::-webkit-scrollbar {
-  display: none;
+.mobile-tab-link {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: 3rem;
+  border-radius: var(--sv-radius-md);
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.68rem;
+  font-weight: 600;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 
-.mobile-top-nav > div {
-  scroll-snap-type: x proximity;
-  border-radius: var(--sv-radius-lg);
+.mobile-tab-link i {
+  font-size: 0.95rem;
 }
 
-.mobile-top-nav .top-nav-link {
-  scroll-snap-align: start;
+.mobile-tab-link.active-nav {
+  color: #1d4ed8;
+  background: #eaf2ff;
+  border: 1px solid #bfdbfe;
+}
+
+.pb-mobile-nav {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
 
 :host ::ng-deep .active-nav {
@@ -74,5 +98,11 @@
   .top-nav-link {
     min-height: 2.75rem;
     padding: 0.65rem 0.9rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .pb-mobile-nav {
+    padding-bottom: 0;
   }
 }

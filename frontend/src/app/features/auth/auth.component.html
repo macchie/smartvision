@@ -16,23 +16,7 @@
       </div>
     }
 
-    <form (ngSubmit)="auth()" [attr.aria-label]="authMode() === 'login' ? 'Sign in form' : 'Create account form'" novalidate class="space-y-4">
-      @if (authMode() === 'register') {
-        <div class="grid grid-cols-2 gap-4 animate-fade-in">
-          <div class="space-y-2">
-            <label for="auth-first-name" class="ml-1 block text-xs font-semibold text-[var(--sv-text-muted)]">First Name</label>
-            <input id="auth-first-name" type="text" [(ngModel)]="form.firstName" name="firstName"
-              placeholder="Jane" autocomplete="given-name" required
-              class="w-full rounded-[var(--sv-radius-md)] border border-[var(--sv-border)] bg-[var(--sv-bg)] px-4 py-3.5 text-sm text-[var(--sv-text)] outline-none transition-all placeholder:text-gray-400 focus:border-[var(--sv-accent)] focus:bg-[var(--sv-surface-strong)] focus:ring-4 focus:ring-[var(--sv-accent-soft)]" />
-          </div>
-          <div class="space-y-2">
-            <label for="auth-last-name" class="ml-1 block text-xs font-semibold text-[var(--sv-text-muted)]">Last Name</label>
-            <input id="auth-last-name" type="text" [(ngModel)]="form.lastName" name="lastName"
-              placeholder="Doe" autocomplete="family-name" required
-              class="w-full rounded-[var(--sv-radius-md)] border border-[var(--sv-border)] bg-[var(--sv-bg)] px-4 py-3.5 text-sm text-[var(--sv-text)] outline-none transition-all placeholder:text-gray-400 focus:border-[var(--sv-accent)] focus:bg-[var(--sv-surface-strong)] focus:ring-4 focus:ring-[var(--sv-accent-soft)]" />
-          </div>
-        </div>
-      }
+    <form (ngSubmit)="auth()" aria-label="Sign in form" novalidate class="space-y-4">
 
         <div class="space-y-2">
           <label for="auth-email" class="ml-1 block text-xs font-semibold text-[var(--sv-text-muted)]">Email</label>
@@ -44,27 +28,17 @@
         <div class="space-y-2">
           <label for="auth-password" class="ml-1 block text-xs font-semibold text-[var(--sv-text-muted)]">Password</label>
           <input id="auth-password" type="password" [(ngModel)]="form.pass" name="pass"
-            [placeholder]="authMode() === 'register' ? 'Min. 8 characters' : '••••••••'"
-            [attr.autocomplete]="authMode() === 'register' ? 'new-password' : 'current-password'"
-            [attr.minlength]="authMode() === 'register' ? 8 : null"
+            placeholder="••••••••"
+            autocomplete="current-password"
             required
             class="w-full rounded-[var(--sv-radius-md)] border border-[var(--sv-border)] bg-[var(--sv-bg)] px-4 py-3.5 text-sm text-[var(--sv-text)] outline-none transition-all placeholder:text-gray-400 focus:border-[var(--sv-accent)] focus:bg-[var(--sv-surface-strong)] focus:ring-4 focus:ring-[var(--sv-accent-soft)]" />
         </div>
 
-        @if (authMode() === 'register') {
-          <div class="space-y-2 animate-fade-in">
-            <label for="auth-password-confirm" class="ml-1 block text-xs font-semibold text-[var(--sv-text-muted)]">Confirm Password</label>
-            <input id="auth-password-confirm" type="password" [(ngModel)]="form.passConfirm" name="passConfirm"
-              placeholder="Re-enter password" autocomplete="new-password" required minlength="8"
-              class="w-full rounded-[var(--sv-radius-md)] border border-[var(--sv-border)] bg-[var(--sv-bg)] px-4 py-3.5 text-sm text-[var(--sv-text)] outline-none transition-all placeholder:text-gray-400 focus:border-[var(--sv-accent)] focus:bg-[var(--sv-surface-strong)] focus:ring-4 focus:ring-[var(--sv-accent-soft)]" />
-          </div>
-        }
-
         <button type="submit" [disabled]="loading()" [attr.aria-busy]="loading()"
-          [attr.aria-label]="loading() ? 'Please wait…' : (authMode() === 'login' ? 'Sign in' : 'Create account')"
+          [attr.aria-label]="loading() ? 'Please wait…' : 'Sign in'"
           class="mt-4 w-full rounded-[var(--sv-radius-md)] bg-[var(--sv-accent)] py-3.5 font-semibold text-white transition-all active:scale-[0.98] shadow-sm hover:bg-blue-600 disabled:opacity-50">
           @if (!loading()) {
-            <span>{{ authMode() === 'login' ? 'Sign In' : 'Create Account' }}</span>
+            <span>Sign In</span>
           } @else {
             <span class="flex items-center justify-center gap-2">
               <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true"></span>
@@ -72,18 +46,7 @@
             </span>
           }
         </button>
-
-        @if (authMode() === 'register') {
-          <p class="mt-4 px-4 text-center text-xs leading-relaxed text-[var(--sv-text-muted)]">
-            Your account will be reviewed by an administrator before full access is granted.
-          </p>
-        }
     </form>
-
-    <div class="mt-8 pt-6 text-center">
-      <button type="button" (click)="toggleAuthMode()" class="text-xs font-medium text-[var(--sv-accent)] transition-colors hover:text-blue-700">
-        {{ authMode() === 'login' ? "Don't have an account? Register" : 'Already have an account? Sign in' }}
-      </button>
-    </div>
+    <p class="mt-6 text-center text-xs text-[var(--sv-text-muted)]">Access is restricted to admin and operator accounts.</p>
   </div>
 </div>

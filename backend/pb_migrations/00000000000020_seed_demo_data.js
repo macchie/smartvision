@@ -83,10 +83,10 @@ migrate((app) => {
     app.save(camOut)
   }
 
-  let vehicleA = findBy(app, "vehicles", (v) => v.getString("number") === "DEMO-001")
+  let vehicleA = findBy(app, "vehicles", (v) => v.getString("number") === "DV661MN")
   if (!vehicleA) {
     vehicleA = new Record(vehiclesCol)
-    vehicleA.set("number", "DEMO-001")
+    vehicleA.set("number", "DV661MN")
     vehicleA.set("country", "IT")
     vehicleA.set("owner", personA.id)
     vehicleA.set("enabled", true)
@@ -94,20 +94,15 @@ migrate((app) => {
     app.save(vehicleA)
   }
 
-  let vehicleB = findBy(app, "vehicles", (v) => v.getString("number") === "DEMO-002")
+  let vehicleB = findBy(app, "vehicles", (v) => v.getString("number") === "BY628DG")
   if (!vehicleB) {
     vehicleB = new Record(vehiclesCol)
-    vehicleB.set("number", "DEMO-002")
+    vehicleB.set("number", "BY628DG")
     vehicleB.set("country", "IT")
     vehicleB.set("owner", personB.id)
     vehicleB.set("enabled", true)
     vehicleB.set("notes", tag)
     app.save(vehicleB)
-  }
-
-  const oldDemoAccesses = app.findRecordsByFilter("accesses", "notes ~ 'demo_seed_v'", "", 10000, 0)
-  for (const rec of oldDemoAccesses) {
-    app.delete(rec)
   }
 
   const seedAccess = (data) => {

@@ -31,6 +31,8 @@ Legacy/mobile folders are intentionally excluded from active development scope.
 ### Authentication and Roles
 
 - PocketBase auth with role-based rules (admin/operator/regular)
+- Sign-in restricted to enabled admin/operator accounts only
+- Self-registration is disabled; users are managed by admins/operators
 - Admin and superuser seed accounts for local development
 - Rule-repair migration to prevent drift to superuser-only CRUD behavior
 
@@ -70,6 +72,7 @@ Important migrations include:
 - 00000000000013_repair_core_collections_schema.js
 - 00000000000015_reseed_dashboard_demo_data_fix.js
 - 00000000000016_fix_core_crud_rules.js
+- 00000000000021_restrict_users_auth_to_admin_operator.js
 
 Seeded local credentials:
 

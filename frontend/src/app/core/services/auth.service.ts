@@ -8,6 +8,8 @@ export class AuthService {
   readonly loading = signal(false);
   readonly isAuthenticated = computed(() => !!this.user());
   readonly isAdmin = computed(() => this.user()?.role === 'admin');
+  readonly isOperator = computed(() => this.user()?.role === 'operator');
+  readonly canAccessConsole = computed(() => this.isAdmin() || this.isOperator());
 
   private get pb() { return this.pbService.pb; }
 
@@ -26,11 +28,15 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<void> {
     await this.pb.collection('users').authWithPassword(email, password);
-    this.user.set(this.pb.authStore.record as unknown as User);
-  }
+    const record = this.pb.authStore.record as unknown as User;
 
-  async register(email: string, password: string, passwordConfirm: string, firstName: string, lastName: string): Promise<void> {
-    await this.pb.collection('users').create({ email, password, passwordConfirm, first_name: firstName, last_name: lastName });
+    if (record?.role !== 'admin' && record?.role !== 'operator') {
+      this.pb.authStore.clear();
+      this.user.set(null);
+      throw new Error('Only admin and operator accounts can access SmartVision.');
+    }
+
+    this.user.set(record);
   }
 
   async updateProfile(data: { first_name: string; last_name: string; plan?: string }): Promise<void> {

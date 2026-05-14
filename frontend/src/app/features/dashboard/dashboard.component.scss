@@ -87,12 +87,11 @@
 }
 
 .quick-actions-strip {
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+  align-items: stretch;
 }
 
-.quick-actions-strip::-webkit-scrollbar {
-  display: none;
+.camera-cards-grid {
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
 }
 
 /* Removed top border gradients for a cleaner Apple aesthetic */
@@ -111,8 +110,8 @@
 
 .camera-overlay-icon {
   position: absolute;
-  top: -0.6rem;
-  right: -0.6rem;
+  top: -2.15rem;
+  right: 0.1rem;
   width: 2.8rem;
   height: 2.8rem;
   border-radius: var(--sv-radius-pill);
@@ -209,18 +208,53 @@
 }
 
 @media (max-width: 767px) {
+  .quick-actions-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .camera-cards-grid {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+
+  :host ::ng-deep .stats-grid .p-card,
+  :host ::ng-deep .camera-cards-grid .p-card {
+    height: 100%;
+  }
+
+  :host ::ng-deep .stats-grid .p-card .p-card-content,
+  :host ::ng-deep .camera-cards-grid .p-card .p-card-content {
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+  }
+
+  :host ::ng-deep .stats-grid .p-card .p-card-title,
+  :host ::ng-deep .camera-cards-grid .p-card .p-card-title {
+    font-size: 0.74rem;
+    line-height: 1rem;
+  }
+
+  :host ::ng-deep .stats-grid .p-card .p-card-body,
+  :host ::ng-deep .camera-cards-grid .p-card .p-card-body {
+    padding: 0.62rem;
+  }
+
+  :host ::ng-deep .camera-cards-grid .p-tag {
+    font-size: 0.62rem;
+    padding: 0.12rem 0.35rem;
+  }
+
   .dashboard-card:hover {
     box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.03) !important;
   }
 
-  .quick-actions-strip {
-    margin-left: -0.125rem;
-    margin-right: -0.125rem;
-    padding-left: 0.125rem;
-    padding-right: 0.125rem;
-  }
-
   :host ::ng-deep .quick-action-btn.p-button {
+    width: 100%;
     min-height: 2.75rem;
     padding-left: 0.9rem;
     padding-right: 0.9rem;
@@ -230,6 +264,8 @@
     width: 2.25rem;
     height: 2.25rem;
     border-radius: var(--sv-radius-pill);
+    top: -1.95rem;
+    right: 0;
   }
 }
 
