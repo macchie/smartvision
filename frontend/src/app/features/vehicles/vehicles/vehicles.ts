@@ -10,6 +10,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
 
 interface Vehicle {
   id: string;
@@ -37,7 +38,8 @@ interface Vehicle {
     DialogModule,
     InputTextModule,
     TextareaModule,
-    CardModule
+    CardModule,
+    TagModule
   ],
   templateUrl: './vehicles.html',
   styleUrls: ['./vehicles.scss']

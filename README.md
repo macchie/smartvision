@@ -1,11 +1,11 @@
-# SmartVision Apps
+# SmartVision
 
 ![PocketBase](https://img.shields.io/badge/PocketBase-0.36.9-blue)
 ![Angular](https://img.shields.io/badge/Frontend-Angular%20%2B%20PrimeNG-red)
 ![TailwindCSS](https://img.shields.io/badge/Styling-TailwindCSS-06B6D4)
 ![Docker](https://img.shields.io/badge/Deploy-Docker%20Compose-2496ED)
 
-SmartVision Apps is a web platform for operational access control management.
+SmartVision is a web platform for operational access control management.
 It centralizes people, vehicle, camera, and room data, and provides a live dashboard for monitoring ingress/egress activity and room key workflows.
 
 ## Project Goal
@@ -66,13 +66,7 @@ Legacy/mobile folders are intentionally excluded from active development scope.
 - Schema and data lifecycle managed via backend/pb_migrations
 - Domain behavior and API hooks in backend/pb_hooks
 - Demo data support controlled by DEMO_DATA environment variable
-
-Important migrations include:
-
-- 00000000000013_repair_core_collections_schema.js
-- 00000000000015_reseed_dashboard_demo_data_fix.js
-- 00000000000016_fix_core_crud_rules.js
-- 00000000000021_restrict_users_auth_to_admin_operator.js
+- Demo seed includes users, cameras, vehicles, room groups, rooms, and sample access events
 
 Seeded local credentials:
 

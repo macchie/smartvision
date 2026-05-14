@@ -8,6 +8,7 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
 import { User } from '../../../core/models';
@@ -23,6 +24,7 @@ import { TagModule } from 'primeng/tag';
     ButtonModule,
     DialogModule,
     InputTextModule,
+    TextareaModule,
     CardModule,
     SelectModule,
     TagModule
@@ -44,6 +46,11 @@ export class Users implements OnInit {
     { label: 'Admin', value: 'admin' },
     { label: 'Operator', value: 'operator' },
     { label: 'User', value: 'regular' }
+  ];
+
+  protected userTypeOptions = [
+    { label: 'Person', value: 'person' },
+    { label: 'Company', value: 'company' },
   ];
 
   // Access control
@@ -89,7 +96,17 @@ export class Users implements OnInit {
   }
 
   protected openNewUser() {
-    this.formState = { first_name: '', last_name: '', email: '', role: 'regular', user_type: 'person', enabled: true };
+    this.formState = {
+      first_name: '',
+      last_name: '',
+      name: '',
+      username: '',
+      notes: '',
+      email: '',
+      role: 'regular',
+      user_type: 'person',
+      enabled: true,
+    };
     this.dialogMode = 'create';
     this.dialogVisible = true;
   }
@@ -97,10 +114,20 @@ export class Users implements OnInit {
   protected editUser(user: User) {
     this.formState = {
       ...user,
+      user_type: this.normalizeUserType(user['user_type']),
       role: this.normalizeRole(user.role)
     };
     this.dialogMode = 'edit';
     this.dialogVisible = true;
+  }
+
+  protected onUserTypeChange(userType: 'person' | 'company'): void {
+    if (userType === 'company') {
+      this.formState.first_name = '';
+      this.formState.last_name = '';
+    } else {
+      this.formState['name'] = '';
+    }
   }
 
   protected hideDialog() {
@@ -108,8 +135,19 @@ export class Users implements OnInit {
   }
 
   protected async saveUser() {
-    if (!this.formState.email?.trim() || !this.formState.first_name?.trim()) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Email and First Name are required.' });
+    const userType = this.normalizeUserType(this.formState['user_type']);
+    if (!this.formState.email?.trim()) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Email is required.' });
+      return;
+    }
+
+    if (userType === 'person' && !this.formState.first_name?.trim()) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'First Name is required for person users.' });
+      return;
+    }
+
+    if (userType === 'company' && !String(this.formState['name'] || '').trim()) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Company Name is required for company users.' });
       return;
     }
 
@@ -117,10 +155,13 @@ export class Users implements OnInit {
     try {
       const payload = {
         email: this.formState.email.trim(),
+        user_type: userType,
+        name: String(this.formState['name'] || '').trim(),
         first_name: this.formState.first_name?.trim() || '',
         last_name: this.formState.last_name?.trim() || '',
+        username: String(this.formState['username'] || '').trim(),
+        notes: String(this.formState['notes'] || '').trim(),
         role: this.normalizeRole(this.formState.role),
-        user_type: (this.formState['user_type'] as string) || 'person',
         enabled: this.formState['enabled'] ?? true,
         emailVisibility: false,
       };
@@ -172,6 +213,10 @@ export class Users implements OnInit {
     }
   }
 
+  protected getUserTypeLabel(user: User): string {
+    return this.normalizeUserType(user['user_type']) === 'company' ? 'Company' : 'Person';
+  }
+
   protected getDisplayName(user: User): string {
     const first = String(user.first_name ?? '').trim();
     const last = String(user.last_name ?? '').trim();
@@ -191,5 +236,9 @@ export class Users implements OnInit {
     }
 
     return 'regular';
+  }
+
+  private normalizeUserType(userType?: unknown): 'person' | 'company' {
+    return userType === 'company' ? 'company' : 'person';
   }
 }

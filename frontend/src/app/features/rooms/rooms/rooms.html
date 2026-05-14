@@ -39,6 +39,8 @@
           <tr>
             <th class="px-4 py-3 text-left">Name</th>
             <th class="px-4 py-3 text-left" style="width: 110px">Type</th>
+            <th class="px-4 py-3 text-left" style="width: 110px">Key</th>
+            <th class="px-4 py-3 text-left" style="width: 110px">Enabled</th>
             <th class="px-4 py-3 text-left">Notes</th>
             <th class="px-4 py-3 text-left" style="width: 120px">Rooms</th>
             <th class="px-4 py-3 text-left" style="width: 160px">Actions</th>
@@ -55,6 +57,12 @@
               </td>
               <td class="px-4 py-3">
                 <span class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md text-xs font-semibold border border-indigo-100">Group</span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="text-slate-400">-</span>
+              </td>
+              <td class="px-4 py-3">
+                <p-tag [value]="group.enabled ? 'Yes' : 'No'" [severity]="group.enabled ? 'success' : 'secondary'"></p-tag>
               </td>
               <td class="px-4 py-3">
                 <span class="text-sm text-slate-500 line-clamp-1 truncate max-w-[320px]">{{ group.notes || '-' }}</span>
@@ -107,6 +115,12 @@
                 <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-md text-xs font-semibold border border-emerald-100">Room</span>
               </td>
               <td class="px-4 py-3">
+                <p-tag [value]="room.key_collected ? 'Collected' : 'Available'" [severity]="room.key_collected ? 'warn' : 'success'"></p-tag>
+              </td>
+              <td class="px-4 py-3">
+                <p-tag [value]="room.enabled ? 'Yes' : 'No'" [severity]="room.enabled ? 'success' : 'secondary'"></p-tag>
+              </td>
+              <td class="px-4 py-3">
                 <span class="text-sm text-slate-500 line-clamp-1 truncate max-w-[320px]">{{ room.notes || room.description || '-' }}</span>
               </td>
               <td class="px-4 py-3 text-slate-400">-</td>
@@ -133,14 +147,14 @@
             </tr>
 
             <tr *ngIf="group.rooms.length === 0" class="bg-slate-50/60">
-              <td colspan="5" class="px-4 py-3 pl-16 text-sm text-slate-500 italic">
+              <td colspan="7" class="px-4 py-3 pl-16 text-sm text-slate-500 italic">
                 No rooms in this group yet.
               </td>
             </tr>
           </ng-container>
 
           <tr *ngIf="groupRows().length === 0">
-            <td colspan="5" class="text-center py-8 text-slate-500">
+            <td colspan="7" class="text-center py-8 text-slate-500">
               <i class="pi pi-th-large text-3xl mb-3 text-slate-300 block"></i>
               No room groups found.
             </td>
@@ -174,6 +188,11 @@
     <div class="flex flex-col gap-2">
       <label for="group_notes" class="text-sm font-semibold text-slate-700">Notes</label>
       <textarea id="group_notes" pTextarea [(ngModel)]="groupFormState.notes" rows="3" placeholder="Optional notes..."></textarea>
+    </div>
+
+    <div class="flex items-center gap-2 mt-1">
+      <input type="checkbox" id="room_group_enabled" [(ngModel)]="groupFormState['enabled']" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
+      <label for="room_group_enabled" class="text-sm font-semibold text-slate-700">Enabled</label>
     </div>
   </div>
   
@@ -209,22 +228,33 @@
 
     <div class="flex flex-col gap-2">
       <label for="room_group" class="text-sm font-semibold text-slate-700">Room Group</label>
-      <p-select
+      <p-autoComplete
         id="room_group"
-        [options]="roomGroups()"
-        [(ngModel)]="roomFormState.room_group"
-        optionLabel="name"
-        optionValue="id"
-        placeholder="Select a group..."
-        [showClear]="true"
+        [(ngModel)]="roomFormState.roomGroupRecord"
+        [suggestions]="suggestedRoomGroups()"
+        (completeMethod)="searchRoomGroups($event)"
+        field="displayName"
+        optionLabel="displayName"
+        dataKey="id"
+        placeholder="Search room groups..."
+        [dropdown]="true"
+        [completeOnFocus]="true"
         appendTo="body"
         styleClass="w-full"
-      />
+        [fluid]="true"
+      >
+        <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+      </p-autoComplete>
     </div>
 
     <div class="flex flex-col gap-2">
       <label for="room_notes" class="text-sm font-semibold text-slate-700">Notes</label>
       <textarea id="room_notes" pTextarea [(ngModel)]="roomFormState.notes" rows="3" placeholder="Optional notes..."></textarea>
+    </div>
+
+    <div class="flex items-center gap-2 mt-1">
+      <input type="checkbox" id="room_enabled" [(ngModel)]="roomFormState['enabled']" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
+      <label for="room_enabled" class="text-sm font-semibold text-slate-700">Enabled</label>
     </div>
   </div>
 

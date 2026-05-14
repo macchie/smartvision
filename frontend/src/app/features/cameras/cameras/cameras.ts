@@ -10,12 +10,15 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
+import { TagModule } from 'primeng/tag';
 
 interface Camera {
   id: string;
   name: string;
   camera_id: string;
   direction: 'in' | 'out';
+  metadata?: unknown;
+  metadataText?: string;
   notes?: string;
   description?: string;
   enabled?: boolean;
@@ -35,7 +38,8 @@ interface Camera {
     InputTextModule,
     TextareaModule,
     CardModule,
-    SelectModule
+    SelectModule,
+    TagModule
   ],
   templateUrl: './cameras.html',
   styleUrls: ['./cameras.scss']
@@ -48,7 +52,7 @@ export class Cameras implements OnInit {
   // Dialog state
   protected dialogVisible = false;
   protected dialogMode: 'create' | 'edit' = 'create';
-  protected formState: Partial<Camera> = { name: '', camera_id: '', direction: 'in', notes: '' };
+  protected formState: Partial<Camera> = { name: '', camera_id: '', direction: 'in', metadataText: '', notes: '' };
   protected readonly directionOptions = [
     { label: 'Entry (in)', value: 'in' },
     { label: 'Exit (out)', value: 'out' },
@@ -73,6 +77,7 @@ export class Cameras implements OnInit {
       this.cameras.set(records.map(record => ({
         ...record,
         direction: record.direction === 'out' ? 'out' : 'in',
+        metadataText: this.stringifyMetadata(record.metadata),
         notes: record.notes ?? record.description ?? '',
       })));
     } catch (e: any) {
@@ -83,7 +88,7 @@ export class Cameras implements OnInit {
   }
 
   protected openNewCamera() {
-    this.formState = { name: '', camera_id: '', direction: 'in', notes: '', enabled: true };
+    this.formState = { name: '', camera_id: '', direction: 'in', metadataText: '', notes: '', enabled: true };
     this.dialogMode = 'create';
     this.dialogVisible = true;
   }
@@ -93,6 +98,7 @@ export class Cameras implements OnInit {
       ...camera,
       notes: camera.notes ?? camera.description ?? '',
       direction: camera.direction === 'out' ? 'out' : 'in',
+      metadataText: this.stringifyMetadata(camera.metadata),
     };
     this.dialogMode = 'edit';
     this.dialogVisible = true;
@@ -110,10 +116,17 @@ export class Cameras implements OnInit {
 
     this.saving.set(true);
     try {
+      const metadataPayload = this.parseMetadata(this.formState.metadataText);
+      if (metadataPayload === undefined) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Metadata must be valid JSON.' });
+        return;
+      }
+
       const payload = {
         name: this.formState.name.trim(),
         camera_id: this.formState.camera_id.trim(),
         direction: this.formState.direction === 'out' ? 'out' : 'in',
+        metadata: metadataPayload,
         notes: this.formState.notes?.trim() || '',
         enabled: this.formState.enabled ?? true,
       };
@@ -131,6 +144,35 @@ export class Cameras implements OnInit {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to save camera.' });
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  private stringifyMetadata(value: unknown): string {
+    if (value === undefined || value === null || value === '') {
+      return '';
+    }
+
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return '';
+    }
+  }
+
+  private parseMetadata(raw?: string): unknown {
+    const source = (raw || '').trim();
+    if (!source) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(source);
+    } catch {
+      return undefined;
     }
   }
 

@@ -41,6 +41,8 @@
           <th>Name</th>
           <th>Camera ID</th>
           <th>Direction</th>
+          <th>Metadata</th>
+          <th>Enabled</th>
           <th>Camera Details</th>
           <th style="width: 120px">Actions</th>
         </tr>
@@ -53,6 +55,12 @@
             <span class="text-sm font-semibold" [ngClass]="camera.direction === 'out' ? 'text-orange-600' : 'text-emerald-600'">
               {{ camera.direction === 'out' ? 'Out' : 'In' }}
             </span>
+          </td>
+          <td>
+            <span class="text-xs text-slate-500 line-clamp-1 max-w-xs">{{ camera.metadataText || '-' }}</span>
+          </td>
+          <td>
+            <p-tag [value]="camera.enabled ? 'Yes' : 'No'" [severity]="camera.enabled ? 'success' : 'secondary'"></p-tag>
           </td>
           <td>
             <span class="text-sm text-slate-500 line-clamp-1 max-w-xs">{{ camera.notes || camera.description || '-' }}</span>
@@ -81,7 +89,7 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="5" class="text-center py-8 text-slate-500">
+          <td colspan="7" class="text-center py-8 text-slate-500">
             <i class="pi pi-camera text-3xl mb-3 text-slate-300 block"></i>
             No cameras found. Add one to get started.
           </td>
@@ -127,8 +135,18 @@
     </div>
 
     <div class="flex flex-col gap-2">
+      <label for="metadata" class="text-sm font-semibold text-slate-700">Metadata (JSON)</label>
+      <textarea id="metadata" pTextarea [(ngModel)]="formState.metadataText" rows="4" placeholder='{"ip":"10.0.0.1","zone":"north-gate"}'></textarea>
+    </div>
+
+    <div class="flex flex-col gap-2">
       <label for="notes" class="text-sm font-semibold text-slate-700">Notes</label>
       <textarea id="notes" pTextarea [(ngModel)]="formState.notes" rows="3" placeholder="Optional details about location or purpose..."></textarea>
+    </div>
+
+    <div class="flex items-center gap-2 mt-1">
+      <input type="checkbox" id="camera_enabled" [(ngModel)]="formState['enabled']" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
+      <label for="camera_enabled" class="text-sm font-semibold text-slate-700">Enabled</label>
     </div>
   </div>
   
