@@ -56,6 +56,8 @@ Legacy/mobile folders are intentionally excluded from active development scope.
 - Responsive top toolbar with active-page highlighting
 - PrimeNG toast notifications for success/error operation feedback
 - PrimeNG confirmation dialogs (no native browser confirm dialogs)
+- Free-text search bars on Cameras, Rooms, Vehicles, and Users pages
+- Sort selectors on list tables for quick ordering by key fields
 - Production-style UI with PrimeNG + TailwindCSS
 
 ## Architecture

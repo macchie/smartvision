@@ -36,6 +36,80 @@ export class Users implements OnInit {
   protected readonly users = signal<User[]>([]);
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
+  protected readonly searchQuery = signal('');
+  protected readonly sortField = signal<'type' | 'username' | 'name' | 'company' | 'email' | 'role' | 'enabled' | 'verified' | 'notes'>('name');
+  protected readonly sortDirection = signal<'asc' | 'desc'>('asc');
+  protected readonly filteredUsers = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    const sortField = this.sortField();
+    const sortDirection = this.sortDirection();
+    const rows = this.users()
+      .filter(user => {
+        if (!query) {
+          return true;
+        }
+
+        const haystack = [
+          this.getDisplayName(user),
+          user['username'],
+          user['name'],
+          user.email,
+          user.role,
+          user['user_type'],
+          user['notes'],
+          user['enabled'] ? 'yes enabled' : 'no disabled',
+          user.verified ? 'verified' : 'not verified',
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return haystack.includes(query);
+      })
+      .slice();
+
+    const compareText = (a: string, b: string) => a.localeCompare(b);
+    const compareBoolean = (a: boolean, b: boolean) => Number(a) - Number(b);
+
+    rows.sort((a, b) => {
+      let result = 0;
+
+      switch (sortField) {
+        case 'type':
+          result = compareText(this.getUserTypeLabel(a), this.getUserTypeLabel(b));
+          break;
+        case 'username':
+          result = compareText(String(a['username'] || ''), String(b['username'] || ''));
+          break;
+        case 'company':
+          result = compareText(String(a['name'] || ''), String(b['name'] || ''));
+          break;
+        case 'email':
+          result = compareText(a.email || '', b.email || '');
+          break;
+        case 'role':
+          result = compareText(a.role || '', b.role || '');
+          break;
+        case 'enabled':
+          result = compareBoolean(!!a['enabled'], !!b['enabled']);
+          break;
+        case 'verified':
+          result = compareBoolean(!!a.verified, !!b.verified);
+          break;
+        case 'notes':
+          result = compareText(String(a['notes'] || ''), String(b['notes'] || ''));
+          break;
+        case 'name':
+        default:
+          result = compareText(this.getDisplayName(a), this.getDisplayName(b));
+          break;
+      }
+
+      return sortDirection === 'asc' ? result : -result;
+    });
+
+    return rows;
+  });
 
   // Dialog state
   protected dialogVisible = false;
@@ -223,6 +297,26 @@ export class Users implements OnInit {
     const full = `${first} ${last}`.trim();
     const fallbackName = String(user['name'] ?? '').trim();
     return full || fallbackName || user.email;
+  }
+
+  protected toggleSort(field: 'type' | 'username' | 'name' | 'company' | 'email' | 'role' | 'enabled' | 'verified' | 'notes'): void {
+    if (this.sortField() === field) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+
+    this.sortField.set(field);
+    this.sortDirection.set('asc');
+  }
+
+  protected getSortIcon(field: 'type' | 'username' | 'name' | 'company' | 'email' | 'role' | 'enabled' | 'verified' | 'notes'): string {
+    if (this.sortField() !== field) {
+      return 'pi-sort-alt text-slate-400';
+    }
+
+    return this.sortDirection() === 'asc'
+      ? 'pi-sort-amount-up-alt text-blue-600'
+      : 'pi-sort-amount-down text-blue-600';
   }
 
   private normalizeRole(role?: unknown): 'admin' | 'operator' | 'regular' {

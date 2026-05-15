@@ -33,21 +33,65 @@
   </div>
 
   <p-card styleClass="dashboard-card glass-surface p-0 shadow-sm overflow-hidden">
+    <div class="table-toolbar">
+      <div class="table-search-shell">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          type="text"
+          class="table-search-input"
+          placeholder="Search rooms and groups freely..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </div>
+    </div>
+
     <div class="overflow-x-auto">
       <table class="w-full dashboard-table">
         <thead>
           <tr>
-            <th class="px-4 py-3 text-left">Name</th>
-            <th class="px-4 py-3 text-left" style="width: 110px">Type</th>
-            <th class="px-4 py-3 text-left" style="width: 110px">Key</th>
-            <th class="px-4 py-3 text-left" style="width: 110px">Enabled</th>
-            <th class="px-4 py-3 text-left">Notes</th>
-            <th class="px-4 py-3 text-left" style="width: 120px">Rooms</th>
+            <th class="px-4 py-3 text-left">
+              <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('name')">
+                Name
+                <i class="pi text-[11px]" [ngClass]="getSortIcon('name')"></i>
+              </button>
+            </th>
+            <th class="px-4 py-3 text-left" style="width: 110px">
+              <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('type')">
+                Type
+                <i class="pi text-[11px]" [ngClass]="getSortIcon('type')"></i>
+              </button>
+            </th>
+            <th class="px-4 py-3 text-left" style="width: 110px">
+              <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('key')">
+                Key
+                <i class="pi text-[11px]" [ngClass]="getSortIcon('key')"></i>
+              </button>
+            </th>
+            <th class="px-4 py-3 text-left" style="width: 110px">
+              <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('enabled')">
+                Enabled
+                <i class="pi text-[11px]" [ngClass]="getSortIcon('enabled')"></i>
+              </button>
+            </th>
+            <th class="px-4 py-3 text-left">
+              <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('notes')">
+                Notes
+                <i class="pi text-[11px]" [ngClass]="getSortIcon('notes')"></i>
+              </button>
+            </th>
+            <th class="px-4 py-3 text-left" style="width: 120px">
+              <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('rooms')">
+                Rooms
+                <i class="pi text-[11px]" [ngClass]="getSortIcon('rooms')"></i>
+              </button>
+            </th>
             <th class="px-4 py-3 text-left" style="width: 160px">Actions</th>
           </tr>
         </thead>
         <tbody *ngIf="!loading()">
-          <ng-container *ngFor="let group of groupRows()">
+          <ng-container *ngFor="let group of filteredGroupRows()">
             <tr>
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
@@ -127,6 +171,14 @@
               <td class="px-4 py-3">
                 <div class="flex gap-2">
                   <p-button
+                    [icon]="getRoomKeyActionIcon(room)"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    [severity]="getRoomKeyActionSeverity(room)"
+                    (onClick)="openRoomKeyAction(room)"
+                  />
+                  <p-button
                     icon="pi pi-pencil"
                     [rounded]="true"
                     [text]="true"
@@ -153,10 +205,10 @@
             </tr>
           </ng-container>
 
-          <tr *ngIf="groupRows().length === 0">
+          <tr *ngIf="filteredGroupRows().length === 0">
             <td colspan="7" class="text-center py-8 text-slate-500">
               <i class="pi pi-th-large text-3xl mb-3 text-slate-300 block"></i>
-              No room groups found.
+              No matching groups or rooms found.
             </td>
           </tr>
         </tbody>
@@ -200,6 +252,85 @@
     <div class="flex justify-end gap-2">
       <p-button label="Cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideRoomGroupDialog()" />
       <p-button label="Save" icon="pi pi-check" (onClick)="saveRoomGroup()" [loading]="savingGroup()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Room Key Action Dialog -->
+<p-dialog
+  [visible]="roomKeyDialogVisible()"
+  (visibleChange)="roomKeyDialogVisible.set($event)"
+  [header]="roomKeyDialogMode === 'distribute' ? 'Distribute Key' : 'Collect Key'"
+  [modal]="true"
+  styleClass="w-full max-w-[500px]"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col gap-4 py-4">
+    <div class="flex flex-col gap-2">
+      <label for="rk-user" class="text-sm font-semibold text-slate-700">
+        {{ roomKeyDialogMode === 'distribute' ? 'User' : 'Confirm Return by User' }}
+      </label>
+      <p-autoComplete
+        id="rk-user"
+        [(ngModel)]="roomKeyFormState.user"
+        [suggestions]="suggestedUsers()"
+        (completeMethod)="searchUsers($event)"
+        field="displayName"
+        optionLabel="displayName"
+        dataKey="id"
+        placeholder="Search user..."
+        [dropdown]="true"
+        [completeOnFocus]="true"
+        appendTo="body"
+        styleClass="w-full"
+        [fluid]="true"
+      >
+        <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+      </p-autoComplete>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="rk-room" class="text-sm font-semibold text-slate-700">Room</label>
+      <p-autoComplete
+        id="rk-room"
+        [(ngModel)]="roomKeyFormState.room"
+        [suggestions]="suggestedRooms()"
+        (completeMethod)="searchRooms($event)"
+        field="displayName"
+        optionLabel="displayName"
+        dataKey="id"
+        placeholder="Search room..."
+        [dropdown]="true"
+        [completeOnFocus]="true"
+        appendTo="body"
+        styleClass="w-full"
+        [fluid]="true"
+      >
+        <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+      </p-autoComplete>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="rk-reason" class="text-sm font-semibold text-slate-700">Reason / Notes</label>
+      <textarea
+        id="rk-reason"
+        pTextarea
+        [(ngModel)]="roomKeyFormState.reason"
+        rows="3"
+        placeholder="Enter optional notes..."
+      ></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideRoomKeyDialog()" />
+      <p-button
+        [label]="roomKeyDialogMode === 'distribute' ? 'Distribute' : 'Collect'"
+        [icon]="roomKeyDialogMode === 'distribute' ? 'pi pi-key' : 'pi pi-check-circle'"
+        (onClick)="submitRoomKeyAction()"
+      />
     </div>
   </ng-template>
 </p-dialog>

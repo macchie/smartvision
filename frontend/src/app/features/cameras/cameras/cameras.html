@@ -25,9 +25,23 @@
   </div>
 
   <p-card styleClass="dashboard-card glass-surface p-0 shadow-sm">
+    <div class="table-toolbar">
+      <div class="table-search-shell">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          type="text"
+          class="table-search-input"
+          placeholder="Search cameras freely..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </div>
+    </div>
+
     <p-table
       #dt
-      [value]="cameras()"
+      [value]="filteredCameras()"
       [loading]="loading()"
       [paginator]="true"
       [rows]="10"
@@ -38,12 +52,42 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th>Name</th>
-          <th>Camera ID</th>
-          <th>Direction</th>
-          <th>Metadata</th>
-          <th>Enabled</th>
-          <th>Camera Details</th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('name')">
+              Name
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('name')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('camera_id')">
+              Camera ID
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('camera_id')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('direction')">
+              Direction
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('direction')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('metadata')">
+              Metadata
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('metadata')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('enabled')">
+              Enabled
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('enabled')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('notes')">
+              Camera Details
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('notes')"></i>
+            </button>
+          </th>
           <th style="width: 120px">Actions</th>
         </tr>
       </ng-template>

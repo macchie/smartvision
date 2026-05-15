@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
@@ -49,6 +49,65 @@ export class Vehicles implements OnInit {
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly suggestedOwners = signal<Array<{ id: string; displayName: string }>>([]);
+  protected readonly searchQuery = signal('');
+  protected readonly sortField = signal<'number' | 'country' | 'owner' | 'enabled' | 'notes'>('number');
+  protected readonly sortDirection = signal<'asc' | 'desc'>('asc');
+  protected readonly filteredVehicles = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    const sortField = this.sortField();
+    const sortDirection = this.sortDirection();
+    const rows = this.vehicles()
+      .filter(vehicle => {
+        if (!query) {
+          return true;
+        }
+
+        const haystack = [
+          vehicle.number,
+          vehicle.country,
+          vehicle.ownerLabel,
+          vehicle.notes,
+          vehicle.note,
+          vehicle.enabled ? 'yes enabled' : 'no disabled',
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return haystack.includes(query);
+      })
+      .slice();
+
+    const compareText = (a: string, b: string) => a.localeCompare(b);
+    const compareBoolean = (a: boolean, b: boolean) => Number(a) - Number(b);
+
+    rows.sort((a, b) => {
+      let result = 0;
+
+      switch (sortField) {
+        case 'country':
+          result = compareText(a.country || '', b.country || '');
+          break;
+        case 'owner':
+          result = compareText(a.ownerLabel || '', b.ownerLabel || '');
+          break;
+        case 'enabled':
+          result = compareBoolean(!!a.enabled, !!b.enabled);
+          break;
+        case 'notes':
+          result = compareText(a.notes || a.note || '', b.notes || b.note || '');
+          break;
+        case 'number':
+        default:
+          result = compareText(a.number || '', b.number || '');
+          break;
+      }
+
+      return sortDirection === 'asc' ? result : -result;
+    });
+
+    return rows;
+  });
 
   // Dialog state
   protected dialogVisible = false;
@@ -215,5 +274,25 @@ export class Vehicles implements OnInit {
         }
       },
     });
+  }
+
+  protected toggleSort(field: 'number' | 'country' | 'owner' | 'enabled' | 'notes'): void {
+    if (this.sortField() === field) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+
+    this.sortField.set(field);
+    this.sortDirection.set('asc');
+  }
+
+  protected getSortIcon(field: 'number' | 'country' | 'owner' | 'enabled' | 'notes'): string {
+    if (this.sortField() !== field) {
+      return 'pi-sort-alt text-slate-400';
+    }
+
+    return this.sortDirection() === 'asc'
+      ? 'pi-sort-amount-up-alt text-blue-600'
+      : 'pi-sort-amount-down text-blue-600';
   }
 }

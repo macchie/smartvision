@@ -25,9 +25,23 @@
   </div>
 
   <p-card styleClass="dashboard-card glass-surface p-0 shadow-sm">
+    <div class="table-toolbar">
+      <div class="table-search-shell">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          type="text"
+          class="table-search-input"
+          placeholder="Search vehicles freely..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </div>
+    </div>
+
     <p-table
       #dt
-      [value]="vehicles()"
+      [value]="filteredVehicles()"
       [loading]="loading()"
       [paginator]="true"
       [rows]="10"
@@ -38,11 +52,36 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th>Plate Number</th>
-          <th>Country</th>
-          <th>Owner</th>
-          <th>Enabled</th>
-          <th>Notes</th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('number')">
+              Plate Number
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('number')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('country')">
+              Country
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('country')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('owner')">
+              Owner
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('owner')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('enabled')">
+              Enabled
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('enabled')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('notes')">
+              Notes
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('notes')"></i>
+            </button>
+          </th>
           <th style="width: 120px">Actions</th>
         </tr>
       </ng-template>

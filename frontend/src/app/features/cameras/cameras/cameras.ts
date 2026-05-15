@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
@@ -48,6 +48,69 @@ export class Cameras implements OnInit {
   protected readonly cameras = signal<Camera[]>([]);
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
+  protected readonly searchQuery = signal('');
+  protected readonly sortField = signal<'name' | 'camera_id' | 'direction' | 'metadata' | 'enabled' | 'notes'>('name');
+  protected readonly sortDirection = signal<'asc' | 'desc'>('asc');
+  protected readonly filteredCameras = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    const sortField = this.sortField();
+    const sortDirection = this.sortDirection();
+    const rows = this.cameras()
+      .filter(camera => {
+        if (!query) {
+          return true;
+        }
+
+        const haystack = [
+          camera.name,
+          camera.camera_id,
+          camera.direction,
+          camera.metadataText,
+          camera.notes,
+          camera.description,
+          camera.enabled ? 'yes enabled' : 'no disabled',
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return haystack.includes(query);
+      })
+      .slice();
+
+    const compareText = (a: string, b: string) => a.localeCompare(b);
+    const compareBoolean = (a: boolean, b: boolean) => Number(a) - Number(b);
+
+    rows.sort((a, b) => {
+      let result = 0;
+
+      switch (sortField) {
+        case 'camera_id':
+          result = compareText(a.camera_id || '', b.camera_id || '');
+          break;
+        case 'direction':
+          result = compareText(a.direction || '', b.direction || '');
+          break;
+        case 'metadata':
+          result = compareText(a.metadataText || '', b.metadataText || '');
+          break;
+        case 'enabled':
+          result = compareBoolean(!!a.enabled, !!b.enabled);
+          break;
+        case 'notes':
+          result = compareText(a.notes || a.description || '', b.notes || b.description || '');
+          break;
+        case 'name':
+        default:
+          result = compareText(a.name || '', b.name || '');
+          break;
+      }
+
+      return sortDirection === 'asc' ? result : -result;
+    });
+
+    return rows;
+  });
 
   // Dialog state
   protected dialogVisible = false;
@@ -193,5 +256,25 @@ export class Cameras implements OnInit {
         }
       },
     });
+  }
+
+  protected toggleSort(field: 'name' | 'camera_id' | 'direction' | 'metadata' | 'enabled' | 'notes'): void {
+    if (this.sortField() === field) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+
+    this.sortField.set(field);
+    this.sortDirection.set('asc');
+  }
+
+  protected getSortIcon(field: 'name' | 'camera_id' | 'direction' | 'metadata' | 'enabled' | 'notes'): string {
+    if (this.sortField() !== field) {
+      return 'pi-sort-alt text-slate-400';
+    }
+
+    return this.sortDirection() === 'asc'
+      ? 'pi-sort-amount-up-alt text-blue-600'
+      : 'pi-sort-amount-down text-blue-600';
   }
 }

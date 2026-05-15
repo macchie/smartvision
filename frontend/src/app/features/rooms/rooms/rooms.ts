@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
@@ -70,10 +70,159 @@ type RoomGroupMap = Map<string, RoomGroup>;
 export class Rooms implements OnInit {
   protected readonly roomGroups = signal<RoomGroup[]>([]);
   protected readonly suggestedRoomGroups = signal<Array<{ id: string; displayName: string }>>([]);
+  protected readonly suggestedUsers = signal<Array<{ id: string; displayName: string }>>([]);
+  protected readonly suggestedRooms = signal<Array<{ id: string; displayName: string }>>([]);
   protected readonly groupRows = signal<RoomGroupRow[]>([]);
   protected readonly loading = signal(true);
   protected readonly savingGroup = signal(false);
   protected readonly savingRoom = signal(false);
+  protected readonly roomKeyDialogVisible = signal(false);
+  protected readonly searchQuery = signal('');
+  protected readonly sortField = signal<'name' | 'type' | 'key' | 'enabled' | 'notes' | 'rooms'>('name');
+  protected readonly sortDirection = signal<'asc' | 'desc'>('asc');
+  protected readonly filteredGroupRows = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    const sortField = this.sortField();
+    const sortDirection = this.sortDirection();
+    const rows = this.groupRows().map(group => ({
+      ...group,
+      rooms: group.rooms.slice(),
+    }));
+
+    const compareRoomBySort = (a: Room, b: Room) => {
+      let result = 0;
+
+      switch (sortField) {
+        case 'key':
+          result = Number(!!a.key_collected) - Number(!!b.key_collected);
+          break;
+        case 'enabled':
+          result = Number(!!a.enabled) - Number(!!b.enabled);
+          break;
+        case 'notes':
+          result = (a.notes || a.description || '').localeCompare(b.notes || b.description || '');
+          break;
+        case 'rooms':
+          result = (a.number || '').localeCompare(b.number || '');
+          break;
+        case 'type':
+          result = (a.name || '').localeCompare(b.name || '');
+          break;
+        case 'name':
+        default:
+          result = (a.number || '').localeCompare(b.number || '');
+          break;
+      }
+
+      return sortDirection === 'asc' ? result : -result;
+    };
+
+    const filtered = rows
+      .map(group => {
+        const groupHaystack = `${group.name || ''} ${group.notes || ''}`.toLowerCase();
+        const groupMatches = !query || groupHaystack.includes(query);
+
+        const matchingRooms = group.rooms.filter(room => {
+          if (!query) {
+            return true;
+          }
+
+          if (groupMatches) {
+            return true;
+          }
+
+          const roomHaystack = [
+            room.number,
+            room.name,
+            room.notes,
+            room.description,
+            room.key_collected ? 'key collected' : 'key available',
+            room.enabled ? 'enabled' : 'disabled',
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+
+          return roomHaystack.includes(query);
+        });
+
+        matchingRooms.sort(compareRoomBySort);
+
+        return {
+          ...group,
+          rooms: matchingRooms,
+          __groupMatches: groupMatches,
+        };
+      })
+      .filter(group => group.__groupMatches || group.rooms.length > 0)
+      .map(group => {
+        const { __groupMatches, ...rest } = group;
+        return rest;
+      });
+
+    filtered.sort((a, b) => {
+      const getGroupSortKey = (group: RoomGroupRow): string | number => {
+        switch (sortField) {
+          case 'type':
+            return group.id === '__ungrouped__' ? 'z_ungrouped' : 'a_group';
+          case 'key': {
+            const totalRooms = group.rooms.length;
+            if (totalRooms === 0) {
+              return -1;
+            }
+            const collected = group.rooms.filter(room => !!room.key_collected).length;
+            return collected / totalRooms;
+          }
+          case 'enabled': {
+            const totalRooms = group.rooms.length;
+            if (totalRooms === 0) {
+              return Number(!!group.enabled);
+            }
+            const enabledRooms = group.rooms.filter(room => !!room.enabled).length;
+            return enabledRooms / totalRooms;
+          }
+          case 'notes':
+            return group.notes || '';
+          case 'rooms':
+            return group.rooms.length;
+          case 'name':
+          default:
+            return group.name || '';
+        }
+      };
+
+      const aKey = getGroupSortKey(a);
+      const bKey = getGroupSortKey(b);
+
+      let result = 0;
+      if (typeof aKey === 'number' && typeof bKey === 'number') {
+        result = aKey - bKey;
+      } else {
+        result = String(aKey).localeCompare(String(bKey));
+      }
+
+      if (a.id === '__ungrouped__' && b.id !== '__ungrouped__') {
+        result = 1;
+      } else if (b.id === '__ungrouped__' && a.id !== '__ungrouped__') {
+        result = -1;
+      }
+
+      return sortDirection === 'asc' ? result : -result;
+    });
+
+    return filtered;
+  });
+
+  protected roomKeyDialogMode: 'distribute' | 'collect' = 'distribute';
+  protected roomKeyFormState: {
+    user: { id: string; displayName: string } | null;
+    room: { id: string; displayName: string } | null;
+    reason: string;
+  } = {
+    user: null,
+    room: null,
+    reason: '',
+  };
 
   // Room Group dialog state
   protected groupDialogVisible = false;
@@ -312,9 +461,142 @@ export class Rooms implements OnInit {
     });
   }
 
+  protected openRoomKeyAction(room: Room): void {
+    this.roomKeyDialogMode = room.key_collected ? 'collect' : 'distribute';
+
+    const selectedRoom = {
+      id: room.id,
+      displayName: `${room.number || '-'}${room.name ? ' - ' + room.name : ''}`,
+    };
+
+    this.roomKeyFormState = {
+      user: null,
+      room: selectedRoom,
+      reason: '',
+    };
+
+    this.suggestedRooms.set([selectedRoom]);
+    this.suggestedUsers.set([]);
+    this.roomKeyDialogVisible.set(true);
+  }
+
+  protected hideRoomKeyDialog(): void {
+    this.roomKeyDialogVisible.set(false);
+    this.roomKeyFormState = {
+      user: null,
+      room: null,
+      reason: '',
+    };
+    this.suggestedUsers.set([]);
+    this.suggestedRooms.set([]);
+  }
+
+  protected getRoomKeyActionIcon(room: Room): string {
+    return room.key_collected ? 'pi pi-check-circle' : 'pi pi-key';
+  }
+
+  protected getRoomKeyActionSeverity(room: Room): 'success' | 'warn' {
+    return room.key_collected ? 'warn' : 'success';
+  }
+
+  protected async searchUsers(event: AutoCompleteCompleteEvent) {
+    try {
+      const query = event.query || '';
+      const filterStr = query
+        ? `first_name ~ "${query}" || last_name ~ "${query}" || email ~ "${query}" || name ~ "${query}"`
+        : '';
+      const options = filterStr ? { filter: filterStr } : {};
+
+      const records = await this.pb.pb.collection('users').getList(1, 10, options);
+      this.suggestedUsers.set(records.items.map(record => ({
+        id: record.id,
+        displayName: record['user_type'] === 'company' && record['name']
+          ? `${record['name']} (${record['email']})`
+          : `${record['first_name']} ${record['last_name']} (${record['email']})`
+      })));
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  protected async searchRooms(event: AutoCompleteCompleteEvent) {
+    const query = (event.query || '').trim().toLowerCase();
+    const rooms = this.groupRows()
+      .flatMap(group => group.rooms)
+      .filter(room => {
+        if (!query) {
+          return true;
+        }
+
+        const haystack = `${room.number || ''} ${room.name || ''}`.toLowerCase();
+        return haystack.includes(query);
+      })
+      .slice(0, 20)
+      .map(room => ({
+        id: room.id,
+        displayName: `${room.number || '-'}${room.name ? ' - ' + room.name : ''}`,
+      }));
+
+    this.suggestedRooms.set(rooms);
+  }
+
+  protected async submitRoomKeyAction(): Promise<void> {
+    try {
+      if (!this.roomKeyFormState.user || !this.roomKeyFormState.room) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'User and Room are required.' });
+        return;
+      }
+
+      const isDistribute = this.roomKeyDialogMode === 'distribute';
+      await this.pb.pb.collection('room_key_events').create({
+        room: this.roomKeyFormState.room.id,
+        user: this.roomKeyFormState.user.id,
+        is_collecting: isDistribute,
+        did_return_key: !isDistribute,
+        reason: this.roomKeyFormState.reason,
+        enabled: true,
+      });
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: isDistribute ? 'Key distributed.' : 'Key collected.',
+      });
+
+      this.hideRoomKeyDialog();
+      this.loadData();
+    } catch (e: any) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: e.message || (this.roomKeyDialogMode === 'distribute' ? 'Failed to distribute key.' : 'Failed to collect key.'),
+      });
+    }
+  }
+
   protected getGroupRowCountLabel(group: RoomGroupRow): string {
     const count = group.rooms.length;
     return count === 1 ? '1 room' : `${count} rooms`;
+  }
+
+  protected toggleSort(field: 'name' | 'type' | 'key' | 'enabled' | 'notes' | 'rooms'): void {
+    if (this.sortField() === field) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+
+    this.sortField.set(field);
+    this.sortDirection.set('asc');
+  }
+
+  protected getSortIcon(field: 'name' | 'type' | 'key' | 'enabled' | 'notes' | 'rooms'): string {
+    if (this.sortField() !== field) {
+      return 'pi-sort-alt text-slate-400';
+    }
+
+    return this.sortDirection() === 'asc'
+      ? 'pi-sort-amount-up-alt text-blue-600'
+      : 'pi-sort-amount-down text-blue-600';
   }
 
   private normalizeRoom(room: Room, groupsById: RoomGroupMap): Room {
