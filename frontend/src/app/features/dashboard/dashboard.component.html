@@ -116,7 +116,7 @@
           <ng-template pTemplate="title">
             <span class="title-with-icon"><i class="pi pi-car"></i> Latest Vehicle Accesses</span>
           </ng-template>
-          <p-table [value]="vehicleRows()" stripedRows responsiveLayout="scroll" styleClass="dashboard-table text-sm">
+          <p-table [value]="vehicleRows()" stripedRows responsiveLayout="scroll" styleClass="dashboard-table p-datatable-sm text-sm">
             <ng-template pTemplate="header">
               <tr>
                 <th>Vehicle</th>
@@ -153,11 +153,10 @@
           <ng-template pTemplate="title">
             <span class="title-with-icon"><i class="pi pi-users"></i> Latest People Accesses</span>
           </ng-template>
-          <p-table [value]="userRows()" stripedRows responsiveLayout="scroll" styleClass="dashboard-table text-sm">
+          <p-table [value]="userRows()" stripedRows responsiveLayout="scroll" styleClass="dashboard-table p-datatable-sm text-sm">
             <ng-template pTemplate="header">
               <tr>
                 <th>Person</th>
-                <th>Actor</th>
                 <th>Camera</th>
                 <th>Direction</th>
                 <th>Status</th>
@@ -167,7 +166,6 @@
             <ng-template pTemplate="body" let-row>
               <tr>
                 <td><span class="font-semibold text-slate-900">{{ row.subject }}</span></td>
-                <td>{{ row.actor }}</td>
                 <td>{{ row.camera }}</td>
                 <td>
                   <p-tag [value]="row.direction === 'in' ? 'Ingress' : 'Egress'" [severity]="directionSeverity(row.direction)" />
@@ -180,7 +178,7 @@
             </ng-template>
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="6" class="text-center text-sm text-slate-500">No recent people accesses.</td>
+                <td colspan="5" class="text-center text-sm text-slate-500">No recent people accesses.</td>
               </tr>
             </ng-template>
           </p-table>
@@ -319,21 +317,6 @@
             [fluid]="true">
             <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
           </p-autoComplete>
-      </div>
-      <div class="flex flex-col gap-2">
-          <label for="ua-direction" class="text-sm font-semibold">Direction</label>
-          <p-select 
-            id="ua-direction" 
-            [options]="directionOptions" 
-            [(ngModel)]="formState.didLeave" 
-            optionLabel="label" 
-            optionValue="value" 
-            appendTo="body"
-            styleClass="w-full"
-            [fluid]="true">
-            <ng-template let-item pTemplate="item">{{ item.label }}</ng-template>
-            <ng-template let-item pTemplate="selectedItem">{{ item?.label ?? 'Select Direction' }}</ng-template>
-          </p-select>
       </div>
       <div class="flex flex-col gap-2">
           <label for="ua-reason" class="text-sm font-semibold">Reason / Notes</label>

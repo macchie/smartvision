@@ -25,9 +25,23 @@
   </div>
 
   <p-card styleClass="dashboard-card glass-surface p-0 shadow-sm">
+    <div class="table-toolbar">
+      <div class="table-search-shell">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          type="text"
+          class="table-search-input"
+          placeholder="Search room groups freely..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </div>
+    </div>
+
     <p-table
       #dt
-      [value]="roomGroups()"
+      [value]="filteredRoomGroups()"
       [loading]="loading()"
       [paginator]="true"
       [rows]="10"

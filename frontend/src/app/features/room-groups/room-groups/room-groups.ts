@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
@@ -40,6 +40,29 @@ export class RoomGroups implements OnInit {
   protected readonly roomGroups = signal<RoomGroup[]>([]);
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
+  protected readonly searchQuery = signal('');
+
+  protected readonly filteredRoomGroups = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    if (!query) {
+      return this.roomGroups();
+    }
+
+    return this.roomGroups().filter((group) => {
+      const haystack = [
+        group.name,
+        group.notes,
+        group.description,
+        this.formatDateTime(group.created),
+        this.formatDateTime(group.updated),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(query);
+    });
+  });
 
   // Dialog state
   protected dialogVisible = false;

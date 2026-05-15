@@ -149,12 +149,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected suggestedCameras = signal<any[]>([]);
   protected suggestedRooms = signal<any[]>([]);
 
-  // Direction Options
-  protected directionOptions = [
-    { label: 'Enter', value: false },
-    { label: 'Exit', value: true }
-  ];
-
   // Form Models
   protected formState = {
     user: null as any,
@@ -162,7 +156,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     driver: null as any,
     camera: null as any,
     room: null as any,
-    didLeave: false,
     reason: ''
   };
 
@@ -268,7 +261,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       driver: null,
       camera: null,
       room: null,
-      didLeave: false,
       reason: ''
     };
   }
@@ -401,11 +393,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'User and Camera are required.' });
         return;
       }
+
+      const didLeave = this.isEgressCamera(this.formState.camera);
+
       await this.pb.collection('accesses').create({
         access_type: 'user',
         user: this.formState.user.id,
         camera: this.formState.camera.id,
-        did_leave: this.formState.didLeave,
+        did_leave: didLeave,
         reason: this.formState.reason,
         made_by_user: this.authService.user()?.id,
         deletable: true,
@@ -466,6 +461,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   protected directionSeverity(direction: 'in' | 'out'): 'success' | 'danger' {
     return direction === 'in' ? 'success' : 'danger';
+  }
+
+  private isEgressCamera(camera: any): boolean {
+    const direction = String(camera?.direction || '').toLowerCase();
+    return direction === 'out' || direction === 'egress';
   }
 
   protected leaveSeverity(left: boolean): 'success' | 'warn' {

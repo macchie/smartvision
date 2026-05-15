@@ -52,6 +52,10 @@ Legacy/mobile folders are intentionally excluded from active development scope.
 - Cameras CRUD
 - Vehicles CRUD
 - Users CRUD
+- Access Logs page:
+  - unified table for people and vehicle accesses
+  - default sort by latest event first
+  - free-text search + quick filters by type and direction
 - Unified Rooms experience:
   - room groups shown as parent rows
   - rooms shown as sub-entries in one page/table

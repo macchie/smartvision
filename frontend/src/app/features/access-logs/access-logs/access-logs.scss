@@ -1,0 +1,13 @@
+:host {
+  display: block;
+}
+
+:host ::ng-deep .p-select {
+  min-width: 10.5rem;
+}
+
+@media (max-width: 768px) {
+  :host ::ng-deep .p-select {
+    width: 100% !important;
+  }
+}

@@ -1,0 +1,160 @@
+<div class="page-shell">
+  <div class="page-header">
+    <div class="flex items-center gap-3">
+      <h2 class="page-title">Access Logs</h2>
+    </div>
+    <div class="page-actions">
+      <p-button
+        label="Refresh"
+        icon="pi pi-refresh"
+        [loading]="loading()"
+        styleClass="action-btn"
+        [outlined]="true"
+        severity="info"
+        size="small"
+        (onClick)="loadAccessLogs()"
+      />
+    </div>
+  </div>
+
+  <p-card styleClass="dashboard-card glass-surface p-0 shadow-sm">
+    <div class="table-toolbar flex flex-wrap items-center gap-3">
+      <div class="table-search-shell flex-1 min-w-[240px]">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          type="text"
+          class="table-search-input"
+          placeholder="Search subject, actor, camera, reason..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </div>
+
+      <p-select
+        [options]="accessTypeOptions"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="accessTypeFilter()"
+        (ngModelChange)="accessTypeFilter.set($event)"
+        appendTo="body"
+        styleClass="w-[190px]"
+      />
+
+      <p-select
+        [options]="directionOptions"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="directionFilter()"
+        (ngModelChange)="directionFilter.set($event)"
+        appendTo="body"
+        styleClass="w-[170px]"
+      />
+
+      <p-button
+        label="Reset"
+        icon="pi pi-filter-slash"
+        [outlined]="true"
+        severity="secondary"
+        size="small"
+        (onClick)="resetFilters()"
+      />
+    </div>
+
+    <p-table
+      [value]="filteredLogs()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="15"
+      [rowsPerPageOptions]="[15, 30, 50]"
+      [paginatorDropdownAppendTo]="'body'"
+      styleClass="dashboard-table p-datatable-sm"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('when')">
+              When
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('when')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('accessType')">
+              Type
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('accessType')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('subject')">
+              Subject
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('subject')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('actor')">
+              Actor
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('actor')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('camera')">
+              Camera
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('camera')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('direction')">
+              Direction
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('direction')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('status')">
+              Status
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('status')"></i>
+            </button>
+          </th>
+          <th>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('reason')">
+              Reason
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('reason')"></i>
+            </button>
+          </th>
+          <th>Updated</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td class="whitespace-nowrap text-slate-700">{{ formatDateTime(row.createdAt) }}</td>
+          <td>
+            <p-tag [value]="row.accessType === 'vehicle' ? 'Vehicle' : 'Person'" [severity]="accessTypeSeverity(row.accessType)" />
+          </td>
+          <td class="font-semibold text-slate-900">{{ row.subject }}</td>
+          <td>{{ row.actor }}</td>
+          <td>{{ row.camera }}</td>
+          <td>
+            <p-tag [value]="row.direction === 'in' ? 'Ingress' : 'Egress'" [severity]="directionSeverity(row.direction)" />
+          </td>
+          <td>
+            <p-tag [value]="row.didLeave ? 'Outside' : 'Inside'" [severity]="statusSeverity(row.didLeave)" />
+          </td>
+          <td>
+            <span class="text-sm text-slate-600 line-clamp-1 max-w-[300px]">{{ row.reason }}</span>
+          </td>
+          <td class="whitespace-nowrap text-slate-500">{{ formatDateTime(row.updatedAt) }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center py-8 text-slate-500">
+            <i class="pi pi-history text-3xl mb-3 text-slate-300 block"></i>
+            No access logs found.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>

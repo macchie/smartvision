@@ -6,6 +6,7 @@ import { Cameras } from './features/cameras/cameras/cameras';
 import { Users } from './features/users/users/users';
 import { Vehicles } from './features/vehicles/vehicles/vehicles';
 import { Rooms } from './features/rooms/rooms/rooms';
+import { AccessLogs } from './features/access-logs/access-logs/access-logs';
 import { AuthComponent } from './features/auth/auth.component';
 
 export const routes: Routes = [
@@ -38,6 +39,10 @@ export const routes: Routes = [
       {
         path: 'rooms',
         component: Rooms,
+      },
+      {
+        path: 'access-logs',
+        component: AccessLogs,
       },
       {
         path: 'room-groups',

@@ -181,28 +181,6 @@
   background: var(--sv-accent-soft);
 }
 
-:host ::ng-deep .dashboard-table .p-datatable-thead > tr > th {
-  background: transparent;
-  color: var(--sv-text-muted);
-  font-weight: 500;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  border-bottom: 1px solid var(--sv-border);
-}
-
-:host ::ng-deep .dashboard-table .p-datatable-tbody > tr > td {
-  border-color: var(--sv-border);
-}
-
-:host ::ng-deep .dashboard-table .p-datatable-tbody > tr {
-  transition: background-color 0.12s ease;
-}
-
-:host ::ng-deep .dashboard-table .p-datatable-tbody > tr:hover {
-  background: var(--sv-bg);
-}
-
 :host ::ng-deep .user-menu-trigger.p-button {
   border-color: var(--sv-border);
 }
@@ -269,10 +247,3 @@
   }
 }
 
-@media (max-width: 768px) {
-  :host ::ng-deep .dashboard-table .p-datatable-thead > tr > th,
-  :host ::ng-deep .dashboard-table .p-datatable-tbody > tr > td {
-    padding: 0.65rem 0.55rem;
-    font-size: 0.78rem;
-  }
-}
