@@ -148,7 +148,11 @@ export class Users implements OnInit {
       const records = await this.pb.pb.collection('users').getFullList<User>({
         sort: '-id',
       });
-      this.users.set(records);
+      this.users.set(records.map(record => ({
+        ...record,
+        created: record['created'] || record['created_at'] || '',
+        updated: record['updated'] || record['updated_at'] || '',
+      })));
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load users.' });
     } finally {
@@ -317,6 +321,15 @@ export class Users implements OnInit {
     return this.sortDirection() === 'asc'
       ? 'pi-sort-amount-up-alt text-blue-600'
       : 'pi-sort-amount-down text-blue-600';
+  }
+
+  protected formatDateTime(value?: string): string {
+    if (!value) {
+      return '-';
+    }
+
+    const parsed = new Date(value);
+    return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
   }
 
   private normalizeRole(role?: unknown): 'admin' | 'operator' | 'regular' {

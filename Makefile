@@ -18,12 +18,6 @@ dev:
 	@$(MAKE) -j2 backend frontend
 
 backend:
-	@PB_VERSION=$$(cd backend && ./pocketbase --version 2>/dev/null | awk '{print $$3}'); \
-	if [ "$$PB_VERSION" != "$(POCKETBASE_VERSION)" ]; then \
-		echo "PocketBase version mismatch: expected $(POCKETBASE_VERSION), got $$PB_VERSION"; \
-		echo "These migrations are pinned for PocketBase $(POCKETBASE_VERSION)."; \
-		exit 1; \
-	fi
 	cd backend && DEMO_DATA=$(DEMO_DATA) ./pocketbase serve --http=0.0.0.0:8090
 
 frontend:

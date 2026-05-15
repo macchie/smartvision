@@ -146,6 +146,8 @@ export class Vehicles implements OnInit {
         return {
           ...record,
           notes: record.notes ?? record.note ?? '',
+          created: record.created || record['created_at'] || '',
+          updated: record.updated || record['updated_at'] || '',
           ownerLabel: this.getOwnerDisplayName(expandedOwner),
           ownerRecord: expandedOwner
             ? {
@@ -294,5 +296,14 @@ export class Vehicles implements OnInit {
     return this.sortDirection() === 'asc'
       ? 'pi-sort-amount-up-alt text-blue-600'
       : 'pi-sort-amount-down text-blue-600';
+  }
+
+  protected formatDateTime(value?: string): string {
+    if (!value) {
+      return '-';
+    }
+
+    const parsed = new Date(value);
+    return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
   }
 }

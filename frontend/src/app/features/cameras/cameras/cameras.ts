@@ -24,6 +24,8 @@ interface Camera {
   enabled?: boolean;
   created: string;
   updated: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 @Component({
@@ -142,6 +144,8 @@ export class Cameras implements OnInit {
         direction: record.direction === 'out' ? 'out' : 'in',
         metadataText: this.stringifyMetadata(record.metadata),
         notes: record.notes ?? record.description ?? '',
+        created: record.created || record.created_at || '',
+        updated: record.updated || record.updated_at || '',
       })));
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load cameras.' });
@@ -276,5 +280,14 @@ export class Cameras implements OnInit {
     return this.sortDirection() === 'asc'
       ? 'pi-sort-amount-up-alt text-blue-600'
       : 'pi-sort-amount-down text-blue-600';
+  }
+
+  protected formatDateTime(value?: string): string {
+    if (!value) {
+      return '-';
+    }
+
+    const parsed = new Date(value);
+    return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
   }
 }

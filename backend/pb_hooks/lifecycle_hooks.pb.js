@@ -22,6 +22,42 @@
 // ---------------------------------------------------------------------------
 // 1. Users: enforce default role "regular" if not set
 // ---------------------------------------------------------------------------
+function applyAuditTimestamps(record, isCreate) {
+    const now = new Date().toISOString()
+
+    if (isCreate) {
+        try {
+            if (!record.getString("created_at")) {
+                record.set("created_at", now)
+            }
+        } catch (_) {
+            // ignore if field doesn't exist in this collection context
+        }
+    }
+
+    try {
+        record.set("updated_at", now)
+    } catch (_) {
+        // ignore if field doesn't exist in this collection context
+    }
+}
+
+const AUDITED_COLLECTIONS = ["users", "cameras", "room_groups", "rooms", "vehicles", "accesses", "room_key_events"]
+for (const collectionName of AUDITED_COLLECTIONS) {
+    onRecordCreateRequest((e) => {
+        applyAuditTimestamps(e.record, true)
+        e.next()
+    }, collectionName)
+
+    onRecordUpdateRequest((e) => {
+        applyAuditTimestamps(e.record, false)
+        e.next()
+    }, collectionName)
+}
+
+// ---------------------------------------------------------------------------
+// 1. Users: enforce default role "regular" if not set
+// ---------------------------------------------------------------------------
 onRecordCreateRequest((e) => {
     if (!e.record.get("role")) {
         e.record.set("role", "regular")
@@ -112,9 +148,26 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
 
         const getStr = (record, fieldName) => {
             try {
-                return record.getString(fieldName) || ""
+                const raw = record.get(fieldName)
+                if (raw === null || raw === undefined) {
+                    return ""
+                }
+
+                if (typeof raw === "string") {
+                    return raw
+                }
+
+                if (raw instanceof Date) {
+                    return raw.toISOString()
+                }
+
+                return String(raw)
             } catch (_) {
-                return ""
+                try {
+                    return record.getString(fieldName) || ""
+                } catch (_) {
+                    return ""
+                }
             }
         }
 
@@ -146,12 +199,44 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
         const roomKeyEvents = safeFindRecords("room_key_events", "", 10000)
 
         const parseTime = (record) => {
-            const created = String(getStr(record, "created") || "")
+            const created = String(getCreatedAt(record) || "")
             const updated = String(getStr(record, "updated") || "")
             const source = created || updated
             const ts = Date.parse(source)
             if (!Number.isNaN(ts)) return ts
             return 0
+        }
+
+        const getCreatedAt = (record) => {
+            try {
+                const exported = record.publicExport()
+                const created = exported && (exported.created || exported.created_at)
+                    ? String(exported.created || exported.created_at)
+                    : ""
+                if (created) {
+                    return created
+                }
+            } catch (_) {
+                // ignore and continue with fallbacks
+            }
+
+            try {
+                const dt = record.getDateTime("created")
+                const created = dt ? String(dt) : ""
+                if (created && created.indexOf("0001-01-01") !== 0) {
+                    return created
+                }
+            } catch (_) {
+                // ignore and continue with fallback
+            }
+
+            return String(
+                getStr(record, "created")
+                || getStr(record, "created_at")
+                || getStr(record, "updated")
+                || getStr(record, "updated_at")
+                || "",
+            )
         }
 
         const isLegacyRecoveredAccess = (access) => {
@@ -162,7 +247,17 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             return reason === "Recovered legacy access" && !userId && !vehicleId && !cameraId
         }
 
-        const isEnabledAccess = (access) => getBool(access, "enabled")
+        const isEnabledAccess = (access) => {
+            try {
+                const raw = access.get("enabled")
+                if (raw === null || raw === undefined) {
+                    return true
+                }
+                return !!raw
+            } catch (_) {
+                return true
+            }
+        }
 
         accessesRaw.sort((a, b) => parseTime(b) - parseTime(a))
         const accesses = accessesRaw
@@ -286,7 +381,7 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
                 direction: camera.direction,
                 didLeave: didLeave,
                 reason: getStr(access, "reason") || "-",
-                createdAt: getStr(access, "created") || "",
+                createdAt: getCreatedAt(access),
             })
         }
 
@@ -311,3 +406,27 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
         })
     }
 })
+
+// ---------------------------------------------------------------------------
+// 7. Demo scheduler: generate fake vehicle/user accesses every 30s when
+//    DEMO_DATA=TRUE. This feeds live dashboard activity in demo mode.
+// ---------------------------------------------------------------------------
+// IMPORTANT: PocketBase executes each handler in an isolated context.
+// Keep cron callback self-contained and load helpers with require() inside.
+cronAdd("demo-access-scheduler", "*/1 * * * *", () => {
+    try {
+        const scheduler = require(`${__hooks}/lib/demo_scheduler.js`)
+        scheduler.runDemoSchedulerTick()
+    } catch (err) {
+        console.error("[demo scheduler] cron tick failed before execution:", err)
+    }
+})
+
+console.log(
+    "[demo scheduler] cron registered",
+    JSON.stringify({
+        expression: "*/1 * * * *",
+        demoDataRaw: $os.getenv("DEMO_DATA") || "",
+        note: "handler requires are loaded per tick for scope isolation safety",
+    }),
+)

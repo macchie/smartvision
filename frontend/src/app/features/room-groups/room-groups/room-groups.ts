@@ -65,6 +65,8 @@ export class RoomGroups implements OnInit {
       this.roomGroups.set(records.map(record => ({
         ...record,
         notes: record.notes ?? record.description ?? '',
+        created: record.created || (record as any)['created_at'] || '',
+        updated: record.updated || (record as any)['updated_at'] || '',
       })));
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load room groups.' });
@@ -139,5 +141,14 @@ export class RoomGroups implements OnInit {
         }
       },
     });
+  }
+
+  protected formatDateTime(value?: string): string {
+    if (!value) {
+      return '-';
+    }
+
+    const parsed = new Date(value);
+    return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
   }
 }

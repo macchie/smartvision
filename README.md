@@ -41,6 +41,11 @@ Legacy/mobile folders are intentionally excluded from active development scope.
 - Live summary metrics (vehicles inside, people inside, keys distributed)
 - Latest access events for users and vehicles
 - Backend summary endpoint at /api/dashboard/summary for role-safe reads
+- Realtime dashboard updates via PocketBase subscriptions:
+  - auto-refresh on new `accesses` (vehicle/user)
+  - auto-refresh on new `room_key_events` (keys distributed metric)
+  - camera cards, latest lists, and stats update automatically
+- Demo mode scheduler (`DEMO_DATA=TRUE`) emits fake vehicle/person ingress/egress every minute (PocketBase 0.36.x cron granularity)
 
 ### Master Data CRUD
 
@@ -50,6 +55,10 @@ Legacy/mobile folders are intentionally excluded from active development scope.
 - Unified Rooms experience:
   - room groups shown as parent rows
   - rooms shown as sub-entries in one page/table
+- Entity audit timestamps:
+  - explicit `created_at` and `updated_at` fields are maintained for core entities (`users`, `cameras`, `room_groups`, `rooms`, `vehicles`, `accesses`, `room_key_events`)
+  - schema-repair migration backfills missing timestamp values for legacy records
+  - hooks populate/refresh audit timestamps on create/update requests
 
 ### UX and Interaction
 

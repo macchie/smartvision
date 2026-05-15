@@ -18,6 +18,8 @@ interface RoomGroup {
   notes?: string;
   description?: string;
   enabled?: boolean;
+  created?: string;
+  updated?: string;
 }
 
 interface Room {
@@ -37,6 +39,8 @@ interface Room {
   };
   created: string;
   updated: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface RoomGroupRow {
@@ -44,6 +48,8 @@ interface RoomGroupRow {
   name: string;
   notes: string;
   enabled: boolean;
+  created: string;
+  updated: string;
   rooms: Room[];
 }
 
@@ -599,6 +605,15 @@ export class Rooms implements OnInit {
       : 'pi-sort-amount-down text-blue-600';
   }
 
+  protected formatDateTime(value?: string): string {
+    if (!value) {
+      return '-';
+    }
+
+    const parsed = new Date(value);
+    return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
+  }
+
   private normalizeRoom(room: Room, groupsById: RoomGroupMap): Room {
     const normalizedGroupId = room.room_group ?? room.group_id ?? '';
     const expandedGroup = room.expand?.room_group
@@ -607,6 +622,8 @@ export class Rooms implements OnInit {
 
     return {
       ...room,
+      created: room.created || room.created_at || '',
+      updated: room.updated || room.updated_at || '',
       room_group: normalizedGroupId,
       roomGroupRecord: expandedGroup ? { id: expandedGroup.id, displayName: expandedGroup.name } : null,
       notes: room.notes ?? room.description ?? '',
@@ -624,6 +641,8 @@ export class Rooms implements OnInit {
         name: group.name,
         notes: (group.notes ?? group.description ?? '').trim(),
         enabled: !!group.enabled,
+        created: (group as any).created || (group as any).created_at || '',
+        updated: (group as any).updated || (group as any).updated_at || '',
         rooms: [],
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -652,6 +671,8 @@ export class Rooms implements OnInit {
         name: 'Ungrouped Rooms',
         notes: 'Rooms that are not assigned to any room group.',
         enabled: true,
+        created: '',
+        updated: '',
         rooms: ungroupedRooms,
       });
     }

@@ -107,6 +107,8 @@
               <i class="pi text-[11px]" [ngClass]="getSortIcon('notes')"></i>
             </button>
           </th>
+          <th>Created</th>
+          <th>Updated</th>
           <th style="width: 120px">Actions</th>
         </tr>
       </ng-template>
@@ -129,6 +131,8 @@
             <i class="pi" [ngClass]="user.verified ? 'pi-check-circle text-green-500' : 'pi-times-circle text-red-400'"></i>
           </td>
           <td><span class="text-sm text-slate-500 line-clamp-1 max-w-[220px]">{{ user.notes || '-' }}</span></td>
+          <td><span class="text-sm text-slate-600">{{ formatDateTime(user.created) }}</span></td>
+          <td><span class="text-sm text-slate-600">{{ formatDateTime(user.updated) }}</span></td>
           <td>
             <div class="flex gap-2" *ngIf="canEdit(user)">
               <p-button
@@ -153,7 +157,7 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="10" class="text-center py-8 text-slate-500">
+          <td colspan="12" class="text-center py-8 text-slate-500">
             <i class="pi pi-users text-3xl mb-3 text-slate-300 block"></i>
             No users found.
           </td>

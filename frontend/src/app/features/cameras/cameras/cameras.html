@@ -88,6 +88,8 @@
               <i class="pi text-[11px]" [ngClass]="getSortIcon('notes')"></i>
             </button>
           </th>
+          <th>Created</th>
+          <th>Updated</th>
           <th style="width: 120px">Actions</th>
         </tr>
       </ng-template>
@@ -109,6 +111,8 @@
           <td>
             <span class="text-sm text-slate-500 line-clamp-1 max-w-xs">{{ camera.notes || camera.description || '-' }}</span>
           </td>
+          <td><span class="text-sm text-slate-600">{{ formatDateTime(camera.created) }}</span></td>
+          <td><span class="text-sm text-slate-600">{{ formatDateTime(camera.updated) }}</span></td>
           <td>
             <div class="flex gap-2">
               <p-button
@@ -133,7 +137,7 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7" class="text-center py-8 text-slate-500">
+          <td colspan="9" class="text-center py-8 text-slate-500">
             <i class="pi pi-camera text-3xl mb-3 text-slate-300 block"></i>
             No cameras found. Add one to get started.
           </td>

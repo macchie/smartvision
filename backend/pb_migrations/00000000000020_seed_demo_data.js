@@ -280,66 +280,9 @@ migrate((app) => {
     app.save(vehicleF)
   }
 
-  const seedAccess = (data) => {
-    const a = new Record(accessesCol)
-    a.set("access_type", data.access_type)
-    if (data.user) a.set("user", data.user)
-    if (data.vehicle) a.set("vehicle", data.vehicle)
-    if (data.driver_user) a.set("driver_user", data.driver_user)
-    if (data.camera) a.set("camera", data.camera)
-    if (data.made_by_user) a.set("made_by_user", data.made_by_user)
-    a.set("did_leave", data.did_leave)
-    a.set("deletable", true)
-    a.set("reason", data.reason)
-    a.set("enabled", true)
-    a.set("notes", tag)
-    app.save(a)
-  }
-
-  seedAccess({
-    access_type: "vehicle",
-    vehicle: vehicleA.id,
-    driver_user: personA.id,
-    camera: camIn.id,
-    made_by_user: actorId,
-    did_leave: false,
-    reason: "Demo vehicle ingress",
-  })
-
-  seedAccess({
-    access_type: "vehicle",
-    vehicle: vehicleB.id,
-    driver_user: personB.id,
-    camera: camOut.id,
-    made_by_user: actorId,
-    did_leave: true,
-    reason: "Demo vehicle egress",
-  })
-
-  seedAccess({
-    access_type: "user",
-    user: personA.id,
-    camera: camIn.id,
-    made_by_user: actorId,
-    did_leave: false,
-    reason: "Demo person ingress",
-  })
-
-  seedAccess({
-    access_type: "user",
-    user: personB.id,
-    camera: camOut.id,
-    made_by_user: actorId,
-    did_leave: true,
-    reason: "Demo person egress",
-  })
-
   console.log("[demo reseed fix] dashboard demo data refreshed")
   return
 }, (app) => {
-  const records = app.findRecordsByFilter("accesses", "notes = 'demo_seed_v3'", "", 10000, 0)
-  for (const r of records) app.delete(r)
-
   const rooms = app.findRecordsByFilter("rooms", "notes = 'demo_seed_v3'", "", 10000, 0)
   for (const r of rooms) app.delete(r)
 

@@ -24,6 +24,21 @@ migrate((app) => {
     }
   }
 
+  const readTimestamp = (record, primaryKey, fallbackKey) => {
+    const primary = String(record.getString(primaryKey) || "")
+    if (primary) {
+      return primary
+    }
+
+    const fallback = String(record.getString(fallbackKey) || "")
+    if (fallback) {
+      return fallback
+    }
+
+    const now = new Date().toISOString()
+    return now
+  }
+
   // cameras
   ensureField(camerasCol, { name: "name", type: "text", required: false })
   ensureField(camerasCol, { name: "camera_id", type: "text", required: false })
@@ -37,6 +52,8 @@ migrate((app) => {
   ensureField(camerasCol, { name: "metadata", type: "json", maxSize: 5242880 })
   ensureField(camerasCol, { name: "enabled", type: "bool" })
   ensureField(camerasCol, { name: "notes", type: "text", max: 2000 })
+  ensureField(camerasCol, { name: "created_at", type: "date" })
+  ensureField(camerasCol, { name: "updated_at", type: "date" })
 
   camerasCol.listRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
   camerasCol.viewRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
@@ -55,6 +72,8 @@ migrate((app) => {
   })
   ensureField(vehiclesCol, { name: "enabled", type: "bool" })
   ensureField(vehiclesCol, { name: "notes", type: "text", max: 2000 })
+  ensureField(vehiclesCol, { name: "created_at", type: "date" })
+  ensureField(vehiclesCol, { name: "updated_at", type: "date" })
 
   vehiclesCol.listRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
   vehiclesCol.viewRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
@@ -64,6 +83,8 @@ migrate((app) => {
   ensureField(roomGroupsCol, { name: "name", type: "text", required: false })
   ensureField(roomGroupsCol, { name: "enabled", type: "bool" })
   ensureField(roomGroupsCol, { name: "notes", type: "text", max: 2000 })
+  ensureField(roomGroupsCol, { name: "created_at", type: "date" })
+  ensureField(roomGroupsCol, { name: "updated_at", type: "date" })
 
   roomGroupsCol.listRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
   roomGroupsCol.viewRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
@@ -83,6 +104,8 @@ migrate((app) => {
   })
   ensureField(roomsCol, { name: "enabled", type: "bool" })
   ensureField(roomsCol, { name: "notes", type: "text", max: 2000 })
+  ensureField(roomsCol, { name: "created_at", type: "date" })
+  ensureField(roomsCol, { name: "updated_at", type: "date" })
 
   roomsCol.listRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
   roomsCol.viewRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
@@ -141,6 +164,8 @@ migrate((app) => {
   ensureField(accessesCol, { name: "reason", type: "text", max: 1000 })
   ensureField(accessesCol, { name: "enabled", type: "bool" })
   ensureField(accessesCol, { name: "notes", type: "text", max: 2000 })
+  ensureField(accessesCol, { name: "created_at", type: "date" })
+  ensureField(accessesCol, { name: "updated_at", type: "date" })
 
   accessesCol.listRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
   accessesCol.viewRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
@@ -168,6 +193,11 @@ migrate((app) => {
   ensureField(roomKeyEventsCol, { name: "reason", type: "text", max: 1000 })
   ensureField(roomKeyEventsCol, { name: "enabled", type: "bool" })
   ensureField(roomKeyEventsCol, { name: "notes", type: "text", max: 2000 })
+  ensureField(roomKeyEventsCol, { name: "created_at", type: "date" })
+  ensureField(roomKeyEventsCol, { name: "updated_at", type: "date" })
+
+  ensureField(usersCol, { name: "created_at", type: "date" })
+  ensureField(usersCol, { name: "updated_at", type: "date" })
 
   roomKeyEventsCol.listRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
   roomKeyEventsCol.viewRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
@@ -180,6 +210,8 @@ migrate((app) => {
     if (!c.getString("camera_id")) c.set("camera_id", "cam-" + c.id.slice(0, 8))
     if (!c.getString("direction")) c.set("direction", "in")
     if (c.get("enabled") == null) c.set("enabled", true)
+    if (!c.getString("created_at")) c.set("created_at", readTimestamp(c, "created", "updated"))
+    if (!c.getString("updated_at")) c.set("updated_at", readTimestamp(c, "updated", "created"))
     app.save(c)
   }
 
@@ -187,6 +219,8 @@ migrate((app) => {
   for (const v of vehicles) {
     if (!v.getString("number")) v.set("number", "VEH-" + v.id.slice(0, 6))
     if (v.get("enabled") == null) v.set("enabled", true)
+    if (!v.getString("created_at")) v.set("created_at", readTimestamp(v, "created", "updated"))
+    if (!v.getString("updated_at")) v.set("updated_at", readTimestamp(v, "updated", "created"))
     app.save(v)
   }
 
@@ -194,6 +228,8 @@ migrate((app) => {
   for (const rg of roomGroups) {
     if (!rg.getString("name")) rg.set("name", "Group " + rg.id.slice(0, 6))
     if (rg.get("enabled") == null) rg.set("enabled", true)
+    if (!rg.getString("created_at")) rg.set("created_at", readTimestamp(rg, "created", "updated"))
+    if (!rg.getString("updated_at")) rg.set("updated_at", readTimestamp(rg, "updated", "created"))
     app.save(rg)
   }
 
@@ -202,6 +238,8 @@ migrate((app) => {
     if (!r.getString("number")) r.set("number", "R-" + r.id.slice(0, 6))
     if (r.get("enabled") == null) r.set("enabled", true)
     if (r.get("key_collected") == null) r.set("key_collected", false)
+    if (!r.getString("created_at")) r.set("created_at", readTimestamp(r, "created", "updated"))
+    if (!r.getString("updated_at")) r.set("updated_at", readTimestamp(r, "updated", "created"))
     app.save(r)
   }
 
@@ -212,6 +250,8 @@ migrate((app) => {
     if (a.get("deletable") == null) a.set("deletable", true)
     if (a.get("enabled") == null) a.set("enabled", true)
     if (!a.getString("reason")) a.set("reason", "Recovered legacy access")
+    if (!a.getString("created_at")) a.set("created_at", readTimestamp(a, "created", "updated"))
+    if (!a.getString("updated_at")) a.set("updated_at", readTimestamp(a, "updated", "created"))
     app.save(a)
   }
 
@@ -220,7 +260,16 @@ migrate((app) => {
     if (ke.get("is_collecting") == null) ke.set("is_collecting", false)
     if (ke.get("did_return_key") == null) ke.set("did_return_key", false)
     if (ke.get("enabled") == null) ke.set("enabled", true)
+    if (!ke.getString("created_at")) ke.set("created_at", readTimestamp(ke, "created", "updated"))
+    if (!ke.getString("updated_at")) ke.set("updated_at", readTimestamp(ke, "updated", "created"))
     app.save(ke)
+  }
+
+  const users = app.findRecordsByFilter("users", "id != ''", "", 10000, 0)
+  for (const user of users) {
+    if (!user.getString("created_at")) user.set("created_at", readTimestamp(user, "created", "updated"))
+    if (!user.getString("updated_at")) user.set("updated_at", readTimestamp(user, "updated", "created"))
+    app.save(user)
   }
 
   return

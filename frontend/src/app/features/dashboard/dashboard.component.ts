@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, ViewChild, computed, signal } from '@angular/core';
+import { Component, NgZone, OnDestroy, OnInit, ViewChild, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MenuItem, MessageService } from 'primeng/api';
@@ -76,24 +76,52 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly usersInside = signal(0);
   protected readonly keyDistributed = signal(0);
   protected readonly lastUpdatedAt = signal('');
+  protected readonly relativeTimeNow = signal(Date.now());
 
-  protected readonly vehicleRows = computed(() =>
-    this.latestCameraEvents().filter(row => row.accessType === 'vehicle').slice(0, 8),
-  );
+  protected readonly vehicleRows = computed(() => {
+    this.relativeTimeNow();
 
-  protected readonly userRows = computed(() =>
-    this.latestCameraEvents().filter(row => row.accessType === 'user').slice(0, 8),
-  );
+    return this.latestCameraEvents()
+      .filter(row => row.accessType === 'vehicle')
+      .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt))
+      .slice(0, 8)
+      .map(row => ({
+        ...row,
+        eventTime: this.formatRelativeTime(row.createdAt),
+      }));
+  });
+
+  protected readonly userRows = computed(() => {
+    this.relativeTimeNow();
+
+    return this.latestCameraEvents()
+      .filter(row => row.accessType === 'user')
+      .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt))
+      .slice(0, 8)
+      .map(row => ({
+        ...row,
+        eventTime: this.formatRelativeTime(row.createdAt),
+      }));
+  });
 
   protected readonly cameraVehicleCards = computed(() => {
+    this.relativeTimeNow();
+
     const latestByCamera = new Map<string, AccessRow>();
-    for (const row of this.latestCameraEvents()) {
+    const sortedVehicleRows = this.latestCameraEvents()
+      .filter(row => row.accessType === 'vehicle')
+      .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt));
+
+    for (const row of sortedVehicleRows) {
       if (row.accessType !== 'vehicle') {
         continue;
       }
 
       if (!latestByCamera.has(row.camera)) {
-        latestByCamera.set(row.camera, row);
+        latestByCamera.set(row.camera, {
+          ...row,
+          eventTime: this.formatRelativeTime(row.createdAt),
+        });
       }
     }
 
@@ -139,16 +167,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
   };
 
   private refreshHandle: ReturnType<typeof setInterval> | null = null;
+  private relativeTimeHandle: ReturnType<typeof setInterval> | null = null;
+  private realtimeRefreshHandle: ReturnType<typeof setTimeout> | null = null;
+  private realtimeRetryHandle: ReturnType<typeof setTimeout> | null = null;
+  private realtimeUnsubscribers: Array<() => void> = [];
+  private authStoreUnsubscribe: (() => void) | null = null;
+  private realtimeSetupInFlight = false;
 
   constructor(
     public authService: AuthService,
     private router: Router,
     private pocketBaseService: PocketBaseService,
     private messageService: MessageService,
+    private ngZone: NgZone,
   ) {}
 
   ngOnInit(): void {
     this.loadDashboard(true);
+    this.setupRealtimeSubscriptions();
+    this.authStoreUnsubscribe = this.pb.authStore.onChange(() => {
+      this.setupRealtimeSubscriptions();
+    });
+
+    // Keep `time ago` labels fresh even when no new API event arrives.
+    this.relativeTimeHandle = setInterval(() => {
+      this.relativeTimeNow.set(Date.now());
+    }, 15000);
+
     this.refreshHandle = setInterval(() => {
       this.loadDashboard(false);
     }, 20000);
@@ -159,6 +204,48 @@ export class DashboardComponent implements OnInit, OnDestroy {
       clearInterval(this.refreshHandle);
       this.refreshHandle = null;
     }
+
+    if (this.relativeTimeHandle) {
+      clearInterval(this.relativeTimeHandle);
+      this.relativeTimeHandle = null;
+    }
+
+    if (this.realtimeRefreshHandle) {
+      clearTimeout(this.realtimeRefreshHandle);
+      this.realtimeRefreshHandle = null;
+    }
+
+    if (this.realtimeRetryHandle) {
+      clearTimeout(this.realtimeRetryHandle);
+      this.realtimeRetryHandle = null;
+    }
+
+    if (this.authStoreUnsubscribe) {
+      try {
+        this.authStoreUnsubscribe();
+      } catch (error) {
+        console.error('Failed to unsubscribe authStore listener', error);
+      }
+      this.authStoreUnsubscribe = null;
+    }
+
+    this.clearRealtimeSubscriptions();
+  }
+
+  private clearRealtimeSubscriptions(): void {
+    if (this.realtimeRefreshHandle) {
+      clearTimeout(this.realtimeRefreshHandle);
+      this.realtimeRefreshHandle = null;
+    }
+
+    for (const unsubscribe of this.realtimeUnsubscribers) {
+      try {
+        unsubscribe();
+      } catch (error) {
+        console.error('Failed to unsubscribe dashboard realtime listener', error);
+      }
+    }
+    this.realtimeUnsubscribers = [];
   }
 
   protected refreshDashboard(): void {
@@ -294,10 +381,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         vehicle: this.formState.vehicle.id,
         driver_user: this.formState.driver?.id || null,
         camera: this.formState.camera.id,
-        did_leave: this.formState.didLeave,
+        did_leave: false,
         reason: this.formState.reason,
         made_by_user: this.authService.user()?.id,
-        deletable: true
+        deletable: true,
+        enabled: true,
       });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vehicle access recorded.' });
       this.vehicleAccessDialog.set(false);
@@ -320,7 +408,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         did_leave: this.formState.didLeave,
         reason: this.formState.reason,
         made_by_user: this.authService.user()?.id,
-        deletable: true
+        deletable: true,
+        enabled: true,
       });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User access recorded.' });
       this.userAccessDialog.set(false);
@@ -391,6 +480,74 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.pocketBaseService.pb;
   }
 
+  private async setupRealtimeSubscriptions(): Promise<void> {
+    if (this.realtimeSetupInFlight) {
+      return;
+    }
+
+    this.realtimeSetupInFlight = true;
+
+    this.clearRealtimeSubscriptions();
+
+    if (this.realtimeRetryHandle) {
+      clearTimeout(this.realtimeRetryHandle);
+      this.realtimeRetryHandle = null;
+    }
+
+    try {
+      const onRealtimeEvent = (event: { action: string }) => {
+        // Changes in both create/update/delete affect summary metrics and latest tables.
+        if (event.action === 'create' || event.action === 'update' || event.action === 'delete') {
+          this.ngZone.run(() => {
+            this.scheduleRealtimeDashboardRefresh();
+          });
+        }
+      };
+
+      const unsubAccesses = await this.pb.collection('accesses').subscribe('*', onRealtimeEvent);
+
+      const unsubRoomKeys = await this.pb.collection('room_key_events').subscribe('*', onRealtimeEvent);
+
+      const unsubCameras = await this.pb.collection('cameras').subscribe('*', onRealtimeEvent);
+
+      const unsubUsers = await this.pb.collection('users').subscribe('*', onRealtimeEvent);
+
+      const unsubVehicles = await this.pb.collection('vehicles').subscribe('*', onRealtimeEvent);
+
+      const unsubRooms = await this.pb.collection('rooms').subscribe('*', onRealtimeEvent);
+
+      this.realtimeUnsubscribers.push(
+        unsubAccesses,
+        unsubRoomKeys,
+        unsubCameras,
+        unsubUsers,
+        unsubVehicles,
+        unsubRooms,
+      );
+
+      this.scheduleRealtimeDashboardRefresh();
+    } catch (error) {
+      console.error('Dashboard realtime subscriptions failed to initialize', error);
+      this.realtimeRetryHandle = setTimeout(() => {
+        this.realtimeRetryHandle = null;
+        this.setupRealtimeSubscriptions();
+      }, 3000);
+    } finally {
+      this.realtimeSetupInFlight = false;
+    }
+  }
+
+  private scheduleRealtimeDashboardRefresh(): void {
+    if (this.realtimeRefreshHandle) {
+      return;
+    }
+
+    this.realtimeRefreshHandle = setTimeout(() => {
+      this.realtimeRefreshHandle = null;
+      this.loadDashboard(false);
+    }, 250);
+  }
+
   private async loadDashboard(initialLoad: boolean): Promise<void> {
     if (initialLoad) {
       this.loading.set(true);
@@ -400,12 +557,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     try {
       const summary = await this.fetchDashboardSummary();
-      const events = summary.events.map(event => ({
-        ...event,
-        eventTime: this.formatRelativeTime(event.createdAt),
-      }));
+      const events = summary.events
+        .slice()
+        .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt))
+        .map(event => ({
+          ...event,
+          eventTime: this.formatRelativeTime(event.createdAt),
+        }));
 
       this.latestCameraEvents.set(events);
+      this.relativeTimeNow.set(Date.now());
       this.vehiclesInside.set(summary.metrics.vehiclesInside);
       this.usersInside.set(summary.metrics.usersInside);
       this.keyDistributed.set(summary.metrics.keyDistributed);
@@ -466,5 +627,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const diffDay = Math.round(diffHour / 24);
     return rtf.format(diffDay, 'day');
+  }
+
+  private toTimestamp(isoDate: string): number {
+    const ts = Date.parse(isoDate || '');
+    return Number.isFinite(ts) ? ts : 0;
   }
 }

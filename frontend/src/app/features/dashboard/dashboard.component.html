@@ -258,21 +258,6 @@
           </p-autoComplete>
       </div>
       <div class="flex flex-col gap-2">
-          <label for="va-direction" class="text-sm font-semibold">Direction</label>
-          <p-select 
-            id="va-direction" 
-            [options]="directionOptions" 
-            [(ngModel)]="formState.didLeave" 
-            optionLabel="label" 
-            optionValue="value" 
-            appendTo="body"
-            styleClass="w-full"
-            [fluid]="true">
-            <ng-template let-item pTemplate="item">{{ item.label }}</ng-template>
-            <ng-template let-item pTemplate="selectedItem">{{ item?.label ?? 'Select Direction' }}</ng-template>
-          </p-select>
-      </div>
-      <div class="flex flex-col gap-2">
           <label for="va-reason" class="text-sm font-semibold">Reason / Notes</label>
           <textarea 
             pTextarea 
