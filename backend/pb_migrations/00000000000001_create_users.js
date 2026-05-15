@@ -27,7 +27,7 @@ migrate((app) => {
         type: "select",
         required: true,
         maxSelect: 1,
-        values: ["person", "company"],
+        values: ["person", "employee", "company"],
       }),
 
       // Display name used for company records and as optional full name.

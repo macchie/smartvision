@@ -52,6 +52,7 @@ Legacy/mobile folders are intentionally excluded from active development scope.
 - Cameras CRUD
 - Vehicles CRUD
 - Users CRUD
+  - supported user types: `person`, `employee`, and `company`
 - Access Logs page:
   - unified table for people and vehicle accesses
   - default sort by latest event first
@@ -62,7 +63,8 @@ Legacy/mobile folders are intentionally excluded from active development scope.
 - Entity audit timestamps:
   - explicit `created_at` and `updated_at` fields are maintained for core entities (`users`, `cameras`, `room_groups`, `rooms`, `vehicles`, `accesses`, `room_key_events`)
   - schema-repair migration backfills missing timestamp values for legacy records
-  - hooks populate/refresh audit timestamps on create/update requests
+  - hooks populate/refresh audit timestamps on create/update requests using PocketBase date-compatible format
+  - users list queries request explicit timestamp fields so Created/Updated columns are always available in the dashboard tables
 
 ### UX and Interaction
 

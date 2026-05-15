@@ -35,7 +35,7 @@ migrate((app) => {
       return fallback
     }
 
-    const now = new Date().toISOString()
+    const now = new Date().toISOString().replace("T", " ")
     return now
   }
 
@@ -198,6 +198,7 @@ migrate((app) => {
 
   ensureField(usersCol, { name: "created_at", type: "date" })
   ensureField(usersCol, { name: "updated_at", type: "date" })
+  app.save(usersCol)
 
   roomKeyEventsCol.listRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"
   roomKeyEventsCol.viewRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"

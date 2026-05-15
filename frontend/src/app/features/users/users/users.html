@@ -115,7 +115,7 @@
       <ng-template pTemplate="body" let-user>
         <tr>
           <td>
-            <p-tag [value]="getUserTypeLabel(user)" [severity]="user.user_type === 'company' ? 'info' : 'contrast'"></p-tag>
+            <p-tag [value]="getUserTypeLabel(user)" [severity]="user.user_type === 'company' ? 'info' : user.user_type === 'employee' ? 'warn' : 'contrast'"></p-tag>
           </td>
           <td><span class="text-slate-600">{{ user.username || '-' }}</span></td>
           <td class="font-medium text-slate-900">{{ getDisplayName(user) }}</td>

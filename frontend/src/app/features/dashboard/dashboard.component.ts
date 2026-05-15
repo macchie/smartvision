@@ -52,6 +52,37 @@ type DashboardSummaryResponse = {
   }>;
 };
 
+type AccessRecord = {
+  id: string;
+  access_type?: AccessType;
+  user?: string;
+  vehicle?: string;
+  driver_user?: string;
+  made_by_user?: string;
+  camera?: string;
+  did_leave?: boolean;
+  enabled?: boolean;
+  reason?: string;
+  created?: string;
+  created_at?: string;
+  updated?: string;
+  updated_at?: string;
+  expand?: {
+    user?: any;
+    vehicle?: any;
+    driver_user?: any;
+    made_by_user?: any;
+    camera?: any;
+  };
+};
+
+type RoomKeyEventRecord = {
+  id: string;
+  is_collecting?: boolean;
+  did_return_key?: boolean;
+  enabled?: boolean;
+};
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -76,11 +107,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly usersInside = signal(0);
   protected readonly keyDistributed = signal(0);
   protected readonly lastUpdatedAt = signal('');
-  protected readonly relativeTimeNow = signal(Date.now());
 
   protected readonly vehicleRows = computed(() => {
-    this.relativeTimeNow();
-
     return this.latestCameraEvents()
       .filter(row => row.accessType === 'vehicle')
       .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt))
@@ -92,8 +120,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   });
 
   protected readonly userRows = computed(() => {
-    this.relativeTimeNow();
-
     return this.latestCameraEvents()
       .filter(row => row.accessType === 'user')
       .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt))
@@ -105,8 +131,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   });
 
   protected readonly cameraVehicleCards = computed(() => {
-    this.relativeTimeNow();
-
     const latestByCamera = new Map<string, AccessRow>();
     const sortedVehicleRows = this.latestCameraEvents()
       .filter(row => row.accessType === 'vehicle')
@@ -125,7 +149,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     }
 
-    return Array.from(latestByCamera.values());
+    return Array.from(latestByCamera.values()).sort((a, b) => {
+      if (a.direction !== b.direction) {
+        return a.direction === 'in' ? -1 : 1;
+      }
+
+      return this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt);
+    });
   });
 
   protected readonly userMenuItems = computed<MenuItem[]>(() => [
@@ -159,13 +189,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     reason: ''
   };
 
-  private refreshHandle: ReturnType<typeof setInterval> | null = null;
-  private relativeTimeHandle: ReturnType<typeof setInterval> | null = null;
-  private realtimeRefreshHandle: ReturnType<typeof setTimeout> | null = null;
-  private realtimeRetryHandle: ReturnType<typeof setTimeout> | null = null;
   private realtimeUnsubscribers: Array<() => void> = [];
   private authStoreUnsubscribe: (() => void) | null = null;
+  private onlineListener: (() => void) | null = null;
   private realtimeSetupInFlight = false;
+  private accessLoadInFlight = false;
+  private pendingAccessRefresh = false;
+  private keyLoadInFlight = false;
+  private pendingKeyRefresh = false;
 
   constructor(
     public authService: AuthService,
@@ -180,39 +211,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.setupRealtimeSubscriptions();
     this.authStoreUnsubscribe = this.pb.authStore.onChange(() => {
       this.setupRealtimeSubscriptions();
+      this.triggerAccessRefresh();
+      this.triggerKeyRefresh();
     });
 
-    // Keep `time ago` labels fresh even when no new API event arrives.
-    this.relativeTimeHandle = setInterval(() => {
-      this.relativeTimeNow.set(Date.now());
-    }, 15000);
-
-    this.refreshHandle = setInterval(() => {
-      this.loadDashboard(false);
-    }, 20000);
+    // Re-attempt realtime subscription when network connectivity returns.
+    this.onlineListener = () => {
+      this.setupRealtimeSubscriptions();
+      this.triggerAccessRefresh();
+      this.triggerKeyRefresh();
+    };
+    window.addEventListener('online', this.onlineListener);
   }
 
   ngOnDestroy(): void {
-    if (this.refreshHandle) {
-      clearInterval(this.refreshHandle);
-      this.refreshHandle = null;
-    }
-
-    if (this.relativeTimeHandle) {
-      clearInterval(this.relativeTimeHandle);
-      this.relativeTimeHandle = null;
-    }
-
-    if (this.realtimeRefreshHandle) {
-      clearTimeout(this.realtimeRefreshHandle);
-      this.realtimeRefreshHandle = null;
-    }
-
-    if (this.realtimeRetryHandle) {
-      clearTimeout(this.realtimeRetryHandle);
-      this.realtimeRetryHandle = null;
-    }
-
     if (this.authStoreUnsubscribe) {
       try {
         this.authStoreUnsubscribe();
@@ -222,15 +234,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.authStoreUnsubscribe = null;
     }
 
+    if (this.onlineListener) {
+      window.removeEventListener('online', this.onlineListener);
+      this.onlineListener = null;
+    }
+
     this.clearRealtimeSubscriptions();
   }
 
   private clearRealtimeSubscriptions(): void {
-    if (this.realtimeRefreshHandle) {
-      clearTimeout(this.realtimeRefreshHandle);
-      this.realtimeRefreshHandle = null;
-    }
-
     for (const unsubscribe of this.realtimeUnsubscribers) {
       try {
         unsubscribe();
@@ -381,7 +393,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vehicle access recorded.' });
       this.vehicleAccessDialog.set(false);
-      this.refreshDashboard();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to record access.' });
     }
@@ -408,7 +419,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User access recorded.' });
       this.userAccessDialog.set(false);
-      this.refreshDashboard();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to record access.' });
     }
@@ -430,7 +440,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Key distributed.' });
       this.keyDistributeDialog.set(false);
-      this.refreshDashboard();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to distribute key.' });
     }
@@ -453,7 +462,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Key collected.' });
       this.keyCollectDialog.set(false);
-      this.refreshDashboard();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to collect key.' });
     }
@@ -489,87 +497,115 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.clearRealtimeSubscriptions();
 
-    if (this.realtimeRetryHandle) {
-      clearTimeout(this.realtimeRetryHandle);
-      this.realtimeRetryHandle = null;
-    }
-
     try {
-      const onRealtimeEvent = (event: { action: string }) => {
-        // Changes in both create/update/delete affect summary metrics and latest tables.
-        if (event.action === 'create' || event.action === 'update' || event.action === 'delete') {
+      const onAccessLikeEvent = (event: { action: string }) => {
+        if (
+          event.action === 'create'
+          || event.action === 'update'
+          || event.action === 'delete'
+          || event.action === 'PB_CONNECT'
+        ) {
           this.ngZone.run(() => {
-            this.scheduleRealtimeDashboardRefresh();
+            this.triggerAccessRefresh();
           });
         }
       };
 
-      const unsubAccesses = await this.pb.collection('accesses').subscribe('*', onRealtimeEvent);
+      const onRoomKeyEvent = (event: { action: string }) => {
+        if (
+          event.action === 'create'
+          || event.action === 'update'
+          || event.action === 'delete'
+          || event.action === 'PB_CONNECT'
+        ) {
+          this.ngZone.run(() => {
+            this.triggerKeyRefresh();
+          });
+        }
+      };
 
-      const unsubRoomKeys = await this.pb.collection('room_key_events').subscribe('*', onRealtimeEvent);
+      const targets: Array<Promise<() => void>> = [
+        this.pb.collection('accesses').subscribe('*', onAccessLikeEvent),
+        this.pb.collection('cameras').subscribe('*', onAccessLikeEvent),
+        this.pb.collection('users').subscribe('*', onAccessLikeEvent),
+        this.pb.collection('vehicles').subscribe('*', onAccessLikeEvent),
+        this.pb.collection('room_key_events').subscribe('*', onRoomKeyEvent),
+      ];
 
-      const unsubCameras = await this.pb.collection('cameras').subscribe('*', onRealtimeEvent);
+      const results = await Promise.allSettled(targets);
 
-      const unsubUsers = await this.pb.collection('users').subscribe('*', onRealtimeEvent);
+      let successCount = 0;
+      let failureCount = 0;
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          successCount += 1;
+          this.realtimeUnsubscribers.push(result.value);
+        } else {
+          failureCount += 1;
+          console.error('Dashboard realtime subscription failed for one collection', result.reason);
+        }
+      }
 
-      const unsubVehicles = await this.pb.collection('vehicles').subscribe('*', onRealtimeEvent);
-
-      const unsubRooms = await this.pb.collection('rooms').subscribe('*', onRealtimeEvent);
-
-      this.realtimeUnsubscribers.push(
-        unsubAccesses,
-        unsubRoomKeys,
-        unsubCameras,
-        unsubUsers,
-        unsubVehicles,
-        unsubRooms,
-      );
-
-      this.scheduleRealtimeDashboardRefresh();
+      if (successCount === 0) {
+        this.loadError.set('Unable to initialize realtime subscriptions to PocketBase.');
+      } else {
+        this.loadError.set('');
+        if (failureCount > 0) {
+          console.warn(`Dashboard realtime partially initialized (${successCount}/${targets.length} subscriptions active).`);
+        }
+      }
     } catch (error) {
       console.error('Dashboard realtime subscriptions failed to initialize', error);
-      this.realtimeRetryHandle = setTimeout(() => {
-        this.realtimeRetryHandle = null;
-        this.setupRealtimeSubscriptions();
-      }, 3000);
+      this.loadError.set('Unable to initialize realtime subscriptions to PocketBase.');
     } finally {
       this.realtimeSetupInFlight = false;
     }
   }
 
-  private scheduleRealtimeDashboardRefresh(): void {
-    if (this.realtimeRefreshHandle) {
+  private triggerAccessRefresh(): void {
+    if (this.accessLoadInFlight) {
+      this.pendingAccessRefresh = true;
       return;
     }
 
-    this.realtimeRefreshHandle = setTimeout(() => {
-      this.realtimeRefreshHandle = null;
-      this.loadDashboard(false);
-    }, 250);
+    this.accessLoadInFlight = true;
+    this.loadAccessData(false)
+      .finally(() => {
+        this.accessLoadInFlight = false;
+        if (this.pendingAccessRefresh) {
+          this.pendingAccessRefresh = false;
+          this.triggerAccessRefresh();
+        }
+      });
+  }
+
+  private triggerKeyRefresh(): void {
+    if (this.keyLoadInFlight) {
+      this.pendingKeyRefresh = true;
+      return;
+    }
+
+    this.keyLoadInFlight = true;
+    this.loadKeyMetric(false)
+      .finally(() => {
+        this.keyLoadInFlight = false;
+        if (this.pendingKeyRefresh) {
+          this.pendingKeyRefresh = false;
+          this.triggerKeyRefresh();
+        }
+      });
   }
 
   private async loadDashboard(initialLoad: boolean): Promise<void> {
     if (initialLoad) {
       this.loading.set(true);
-    } else {
-      this.refreshing.set(true);
     }
 
     try {
-      const summary = await this.fetchDashboardSummary();
-      const events = summary.events
-        .slice()
-        .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt))
-        .map(event => ({
-          ...event,
-          eventTime: this.formatRelativeTime(event.createdAt),
-        }));
-
-      this.latestCameraEvents.set(events);
-      this.relativeTimeNow.set(Date.now());
-      this.vehiclesInside.set(summary.metrics.vehiclesInside);
-      this.usersInside.set(summary.metrics.usersInside);
-      this.keyDistributed.set(summary.metrics.keyDistributed);
+      await Promise.all([
+        this.loadAccessData(initialLoad),
+        this.loadKeyMetric(initialLoad),
+      ]);
       this.lastUpdatedAt.set(new Date().toLocaleString());
       this.loadError.set('');
     } catch (error) {
@@ -577,7 +613,105 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.loadError.set('Unable to load the latest access data from PocketBase.');
     } finally {
       this.loading.set(false);
-      this.refreshing.set(false);
+    }
+  }
+
+  private async loadAccessData(initialLoad: boolean): Promise<void> {
+    if (!initialLoad) {
+      this.refreshing.set(true);
+    }
+
+    try {
+      try {
+        const summary = await this.fetchDashboardSummary();
+        const latestEvents = summary.events
+          .slice()
+          .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt))
+          .slice(0, 50)
+          .map((event) => ({
+            ...event,
+            eventTime: this.formatRelativeTime(event.createdAt),
+          }));
+
+        this.latestCameraEvents.set(latestEvents);
+        this.vehiclesInside.set(summary.metrics.vehiclesInside);
+        this.usersInside.set(summary.metrics.usersInside);
+      } catch (summaryError) {
+        console.warn('Dashboard summary unavailable, falling back to direct accesses query.', summaryError);
+
+        const records = await this.pb.collection('accesses').getFullList<AccessRecord>({
+          sort: '-created',
+          expand: 'user,vehicle,driver_user,made_by_user,camera',
+        });
+
+        const enabledRecords = records.filter((record) => record.enabled !== false);
+
+        const vehiclesInside = enabledRecords.reduce((count, record) => {
+          return count + (record.access_type === 'vehicle' && !record.did_leave ? 1 : 0);
+        }, 0);
+
+        const usersInside = enabledRecords.reduce((count, record) => {
+          return count + (record.access_type === 'user' && !record.did_leave ? 1 : 0);
+        }, 0);
+
+        const latestEvents = enabledRecords
+          .slice()
+          .sort((a, b) => this.toTimestamp(this.getRecordCreatedAt(b)) - this.toTimestamp(this.getRecordCreatedAt(a)))
+          .slice(0, 50)
+          .map((record) => this.mapAccessRecord(record));
+
+        this.latestCameraEvents.set(latestEvents);
+        this.vehiclesInside.set(vehiclesInside);
+        this.usersInside.set(usersInside);
+      }
+
+      this.lastUpdatedAt.set(new Date().toLocaleString());
+      this.loadError.set('');
+    } catch (error) {
+      console.error('Dashboard access data load failed', error);
+      this.loadError.set('Unable to load latest access events from PocketBase.');
+    } finally {
+      if (!initialLoad) {
+        this.refreshing.set(false);
+      }
+    }
+  }
+
+  private async loadKeyMetric(initialLoad: boolean): Promise<void> {
+    if (!initialLoad) {
+      this.refreshing.set(true);
+    }
+
+    try {
+      try {
+        const summary = await this.fetchDashboardSummary();
+        this.keyDistributed.set(summary.metrics.keyDistributed);
+      } catch (summaryError) {
+        console.warn('Dashboard summary unavailable, falling back to direct room_key_events query.', summaryError);
+
+        const keyEvents = await this.pb.collection('room_key_events').getFullList<RoomKeyEventRecord>({
+          sort: '-created',
+        });
+
+        const pendingKeys = keyEvents.reduce((count, event) => {
+          if (event.enabled === false) {
+            return count;
+          }
+          return count + (event.is_collecting && !event.did_return_key ? 1 : 0);
+        }, 0);
+
+        this.keyDistributed.set(pendingKeys);
+      }
+
+      this.lastUpdatedAt.set(new Date().toLocaleString());
+      this.loadError.set('');
+    } catch (error) {
+      console.error('Dashboard key metric load failed', error);
+      this.loadError.set('Unable to load key distribution metric from PocketBase.');
+    } finally {
+      if (!initialLoad) {
+        this.refreshing.set(false);
+      }
     }
   }
 
@@ -589,6 +723,59 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       requestKey: null,
     }) as Promise<DashboardSummaryResponse>;
+  }
+
+  private getRecordCreatedAt(record: AccessRecord): string {
+    return record.created || record.created_at || record.updated || record.updated_at || '';
+  }
+
+  private mapAccessRecord(record: AccessRecord): AccessRow {
+    const accessType: AccessType = record.access_type === 'vehicle' ? 'vehicle' : 'user';
+    const didLeave = !!record.did_leave;
+
+    const expandedUser = record.expand?.user;
+    const expandedVehicle = record.expand?.vehicle;
+    const expandedDriver = record.expand?.driver_user;
+    const expandedActor = record.expand?.made_by_user;
+    const expandedCamera = record.expand?.camera;
+
+    const subject = accessType === 'vehicle'
+      ? (expandedVehicle?.number || record.vehicle || 'Unknown vehicle')
+      : this.getUserDisplayName(expandedUser, record.user);
+
+    const actor = accessType === 'vehicle'
+      ? this.getUserDisplayName(expandedDriver || expandedActor, record.driver_user || record.made_by_user)
+      : this.getUserDisplayName(expandedActor, record.made_by_user || record.user);
+
+    const createdAt = this.getRecordCreatedAt(record);
+
+    return {
+      id: record.id,
+      accessType,
+      subject: subject || (accessType === 'vehicle' ? 'Unknown vehicle' : 'Unknown person'),
+      actor: actor || 'System',
+      camera: expandedCamera?.name || record.camera || 'Unknown camera',
+      direction: didLeave ? 'out' : 'in',
+      didLeave,
+      reason: record.reason || '-',
+      eventTime: this.formatRelativeTime(createdAt),
+      createdAt,
+    };
+  }
+
+  private getUserDisplayName(user: any, fallbackId?: string): string {
+    if (!user) {
+      return fallbackId || '';
+    }
+
+    if (user.user_type === 'company') {
+      return user.name || user.email || fallbackId || '';
+    }
+
+    const first = user.first_name || '';
+    const last = user.last_name || '';
+    const fullName = `${first} ${last}`.trim();
+    return fullName || user.name || user.email || fallbackId || '';
   }
 
   private formatRelativeTime(isoDate: string): string {

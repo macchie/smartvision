@@ -24,6 +24,10 @@ interface Vehicle {
   enabled?: boolean;
   created: string;
   updated: string;
+  created_at?: string;
+  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 @Component({
@@ -146,8 +150,8 @@ export class Vehicles implements OnInit {
         return {
           ...record,
           notes: record.notes ?? record.note ?? '',
-          created: record.created || record['created_at'] || '',
-          updated: record.updated || record['updated_at'] || '',
+          created: this.resolveTimestamp(record, 'created'),
+          updated: this.resolveTimestamp(record, 'updated'),
           ownerLabel: this.getOwnerDisplayName(expandedOwner),
           ownerRecord: expandedOwner
             ? {
@@ -191,7 +195,7 @@ export class Vehicles implements OnInit {
     try {
       const query = (event.query || '').trim();
       const escapedQuery = query.replace(/"/g, '\\"');
-      const baseFilter = 'role = "regular" && (user_type = "person" || user_type = "company")';
+      const baseFilter = 'role = "regular" && (user_type = "person" || user_type = "employee" || user_type = "company")';
       const queryFilter = query
         ? ` && (first_name ~ "${escapedQuery}" || last_name ~ "${escapedQuery}" || name ~ "${escapedQuery}" || email ~ "${escapedQuery}")`
         : '';
@@ -303,7 +307,29 @@ export class Vehicles implements OnInit {
       return '-';
     }
 
-    const parsed = new Date(value);
+    const normalized = this.normalizeDateString(value);
+    const parsed = new Date(normalized);
     return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
+  }
+
+  private resolveTimestamp(record: any, kind: 'created' | 'updated'): string {
+    if (kind === 'created') {
+      return record.created || record.created_at || record.createdAt || '';
+    }
+
+    return record.updated || record.updated_at || record.updatedAt || '';
+  }
+
+  private normalizeDateString(value: string): string {
+    const source = String(value || '').trim();
+    if (!source) {
+      return '';
+    }
+
+    if (/^\d{4}-\d{2}-\d{2} /.test(source)) {
+      return source.replace(' ', 'T');
+    }
+
+    return source;
   }
 }

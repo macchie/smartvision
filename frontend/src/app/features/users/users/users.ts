@@ -124,6 +124,7 @@ export class Users implements OnInit {
 
   protected userTypeOptions = [
     { label: 'Person', value: 'person' },
+    { label: 'Employee', value: 'employee' },
     { label: 'Company', value: 'company' },
   ];
 
@@ -147,11 +148,12 @@ export class Users implements OnInit {
     try {
       const records = await this.pb.pb.collection('users').getFullList<User>({
         sort: '-id',
+        fields: 'id,username,email,first_name,last_name,name,role,user_type,enabled,verified,notes,created_at,updated_at',
       });
       this.users.set(records.map(record => ({
         ...record,
-        created: record['created'] || record['created_at'] || '',
-        updated: record['updated'] || record['updated_at'] || '',
+        created: this.resolveTimestamp(record, 'created'),
+        updated: this.resolveTimestamp(record, 'updated'),
       })));
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load users.' });
@@ -199,7 +201,7 @@ export class Users implements OnInit {
     this.dialogVisible = true;
   }
 
-  protected onUserTypeChange(userType: 'person' | 'company'): void {
+  protected onUserTypeChange(userType: 'person' | 'employee' | 'company'): void {
     if (userType === 'company') {
       this.formState.first_name = '';
       this.formState.last_name = '';
@@ -219,8 +221,8 @@ export class Users implements OnInit {
       return;
     }
 
-    if (userType === 'person' && !this.formState.first_name?.trim()) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'First Name is required for person users.' });
+    if ((userType === 'person' || userType === 'employee') && !this.formState.first_name?.trim()) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: `First Name is required for ${userType} users.` });
       return;
     }
 
@@ -292,7 +294,16 @@ export class Users implements OnInit {
   }
 
   protected getUserTypeLabel(user: User): string {
-    return this.normalizeUserType(user['user_type']) === 'company' ? 'Company' : 'Person';
+    const type = this.normalizeUserType(user['user_type']);
+    if (type === 'company') {
+      return 'Company';
+    }
+
+    if (type === 'employee') {
+      return 'Employee';
+    }
+
+    return 'Person';
   }
 
   protected getDisplayName(user: User): string {
@@ -328,8 +339,30 @@ export class Users implements OnInit {
       return '-';
     }
 
-    const parsed = new Date(value);
+    const normalized = this.normalizeDateString(value);
+    const parsed = new Date(normalized);
     return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
+  }
+
+  private resolveTimestamp(record: User, kind: 'created' | 'updated'): string {
+    if (kind === 'created') {
+      return String(record['created'] || record['created_at'] || record['createdAt'] || '');
+    }
+
+    return String(record['updated'] || record['updated_at'] || record['updatedAt'] || '');
+  }
+
+  private normalizeDateString(value: string): string {
+    const source = String(value || '').trim();
+    if (!source) {
+      return '';
+    }
+
+    if (/^\d{4}-\d{2}-\d{2} /.test(source)) {
+      return source.replace(' ', 'T');
+    }
+
+    return source;
   }
 
   private normalizeRole(role?: unknown): 'admin' | 'operator' | 'regular' {
@@ -345,7 +378,11 @@ export class Users implements OnInit {
     return 'regular';
   }
 
-  private normalizeUserType(userType?: unknown): 'person' | 'company' {
-    return userType === 'company' ? 'company' : 'person';
+  private normalizeUserType(userType?: unknown): 'person' | 'employee' | 'company' {
+    if (userType === 'company' || userType === 'employee' || userType === 'person') {
+      return userType;
+    }
+
+    return 'person';
   }
 }

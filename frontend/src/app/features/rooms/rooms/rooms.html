@@ -48,7 +48,7 @@
     </div>
 
     <div class="overflow-x-auto">
-      <table class="w-full dashboard-table">
+      <table class="w-full dashboard-table compact-room-table">
         <thead>
           <tr>
             <th class="px-4 py-3 text-left">
@@ -87,9 +87,9 @@
                 <i class="pi text-[11px]" [ngClass]="getSortIcon('rooms')"></i>
               </button>
             </th>
-            <th class="px-4 py-3 text-left" style="width: 190px">Created</th>
-            <th class="px-4 py-3 text-left" style="width: 190px">Updated</th>
-            <th class="px-4 py-3 text-left" style="width: 160px">Actions</th>
+            <th class="px-4 py-3 text-left" style="width: 170px">Created</th>
+            <th class="px-4 py-3 text-left" style="width: 170px">Updated</th>
+            <th class="px-4 py-3 text-left" style="width: 132px">Actions</th>
           </tr>
         </thead>
         <tbody *ngIf="!loading()">
@@ -154,7 +154,7 @@
 
             <tr *ngFor="let room of group.rooms" class="bg-slate-50/60">
               <td class="px-4 py-3">
-                <div class="flex items-center gap-2 pl-9">
+                <div class="flex items-center gap-2 pl-6">
                   <i class="pi pi-angle-right text-slate-400"></i>
                   <span class="font-medium text-slate-800">{{ room.number || '-' }} · {{ room.name || 'Unnamed room' }}</span>
                 </div>

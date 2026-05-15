@@ -1,0 +1,58 @@
+:host .compact-room-table > thead > tr > th,
+:host .compact-room-table > tbody > tr > td {
+	padding-top: 0.48rem !important;
+	padding-bottom: 0.48rem !important;
+	padding-left: 0.68rem !important;
+	padding-right: 0.68rem !important;
+	line-height: 1.2;
+}
+
+:host .compact-room-table > thead > tr > th {
+	font-size: 0.7rem;
+}
+
+:host .compact-room-table > tbody > tr > td {
+	font-size: 0.84rem;
+}
+
+:host .compact-room-table .line-clamp-1,
+:host .compact-room-table .truncate {
+	line-height: 1.2;
+}
+
+:host .compact-room-table .text-sm {
+	font-size: 0.75rem !important;
+}
+
+:host .compact-room-table .text-xs {
+	font-size: 0.66rem !important;
+}
+
+:host ::ng-deep .compact-room-table .p-tag {
+	font-size: 0.68rem;
+	padding: 0.12rem 0.38rem;
+}
+
+:host ::ng-deep .compact-room-table .p-button.p-button-sm {
+	width: 1.65rem;
+	height: 1.65rem;
+}
+
+:host ::ng-deep .compact-room-table .p-button.p-button-sm .p-button-icon {
+	font-size: 0.78rem;
+}
+
+:host .table-toolbar {
+	padding-top: 0.62rem;
+	padding-bottom: 0.62rem;
+}
+
+@media (max-width: 768px) {
+	:host .compact-room-table > thead > tr > th,
+	:host .compact-room-table > tbody > tr > td {
+		padding-top: 0.42rem !important;
+		padding-bottom: 0.42rem !important;
+		padding-left: 0.5rem !important;
+		padding-right: 0.5rem !important;
+	}
+}

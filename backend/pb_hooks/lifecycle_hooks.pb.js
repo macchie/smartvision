@@ -23,7 +23,7 @@
 // 1. Users: enforce default role "regular" if not set
 // ---------------------------------------------------------------------------
 function applyAuditTimestamps(record, isCreate) {
-    const now = new Date().toISOString()
+    const now = new Date().toISOString().replace("T", " ")
 
     if (isCreate) {
         try {

@@ -144,8 +144,8 @@ export class Cameras implements OnInit {
         direction: record.direction === 'out' ? 'out' : 'in',
         metadataText: this.stringifyMetadata(record.metadata),
         notes: record.notes ?? record.description ?? '',
-        created: record.created || record.created_at || '',
-        updated: record.updated || record.updated_at || '',
+        created: this.resolveTimestamp(record, 'created'),
+        updated: this.resolveTimestamp(record, 'updated'),
       })));
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load cameras.' });
@@ -287,7 +287,29 @@ export class Cameras implements OnInit {
       return '-';
     }
 
-    const parsed = new Date(value);
+    const normalized = this.normalizeDateString(value);
+    const parsed = new Date(normalized);
     return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
+  }
+
+  private resolveTimestamp(record: any, kind: 'created' | 'updated'): string {
+    if (kind === 'created') {
+      return record.created || record.created_at || record.createdAt || '';
+    }
+
+    return record.updated || record.updated_at || record.updatedAt || '';
+  }
+
+  private normalizeDateString(value: string): string {
+    const source = String(value || '').trim();
+    if (!source) {
+      return '';
+    }
+
+    if (/^\d{4}-\d{2}-\d{2} /.test(source)) {
+      return source.replace(' ', 'T');
+    }
+
+    return source;
   }
 }

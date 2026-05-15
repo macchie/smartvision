@@ -610,7 +610,8 @@ export class Rooms implements OnInit {
       return '-';
     }
 
-    const parsed = new Date(value);
+    const normalized = this.normalizeDateString(value);
+    const parsed = new Date(normalized);
     return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
   }
 
@@ -622,8 +623,8 @@ export class Rooms implements OnInit {
 
     return {
       ...room,
-      created: room.created || room.created_at || '',
-      updated: room.updated || room.updated_at || '',
+      created: this.resolveTimestamp(room, 'created'),
+      updated: this.resolveTimestamp(room, 'updated'),
       room_group: normalizedGroupId,
       roomGroupRecord: expandedGroup ? { id: expandedGroup.id, displayName: expandedGroup.name } : null,
       notes: room.notes ?? room.description ?? '',
@@ -641,8 +642,8 @@ export class Rooms implements OnInit {
         name: group.name,
         notes: (group.notes ?? group.description ?? '').trim(),
         enabled: !!group.enabled,
-        created: (group as any).created || (group as any).created_at || '',
-        updated: (group as any).updated || (group as any).updated_at || '',
+        created: this.resolveTimestamp(group as any, 'created'),
+        updated: this.resolveTimestamp(group as any, 'updated'),
         rooms: [],
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -678,5 +679,26 @@ export class Rooms implements OnInit {
     }
 
     return rows;
+  }
+
+  private resolveTimestamp(record: any, kind: 'created' | 'updated'): string {
+    if (kind === 'created') {
+      return record.created || record.created_at || record.createdAt || '';
+    }
+
+    return record.updated || record.updated_at || record.updatedAt || '';
+  }
+
+  private normalizeDateString(value: string): string {
+    const source = String(value || '').trim();
+    if (!source) {
+      return '';
+    }
+
+    if (/^\d{4}-\d{2}-\d{2} /.test(source)) {
+      return source.replace(' ', 'T');
+    }
+
+    return source;
   }
 }
