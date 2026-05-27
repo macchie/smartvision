@@ -222,15 +222,23 @@ export class Rooms implements OnInit {
   });
 
   protected roomKeyDialogMode: 'distribute' | 'collect' = 'distribute';
-  protected roomKeyFormState: {
+  protected readonly roomKeyFormState = signal<{
     user: { id: string; displayName: string } | null;
     room: { id: string; displayName: string } | null;
     reason: string;
-  } = {
+  }>({
     user: null,
     room: null,
     reason: '',
-  };
+  });
+
+  protected updateRoomKeyForm(patch: Partial<{
+    user: { id: string; displayName: string } | null;
+    room: { id: string; displayName: string } | null;
+    reason: string;
+  }>): void {
+    this.roomKeyFormState.update(state => ({ ...state, ...patch }));
+  }
 
   // Room Group dialog state
   protected groupDialogVisible = false;
@@ -477,11 +485,11 @@ export class Rooms implements OnInit {
       displayName: `${room.number || '-'}${room.name ? ' - ' + room.name : ''}`,
     };
 
-    this.roomKeyFormState = {
+    this.roomKeyFormState.set({
       user: null,
       room: selectedRoom,
       reason: '',
-    };
+    });
 
     this.suggestedRooms.set([selectedRoom]);
     this.suggestedUsers.set([]);
@@ -490,11 +498,11 @@ export class Rooms implements OnInit {
 
   protected hideRoomKeyDialog(): void {
     this.roomKeyDialogVisible.set(false);
-    this.roomKeyFormState = {
+    this.roomKeyFormState.set({
       user: null,
       room: null,
       reason: '',
-    };
+    });
     this.suggestedUsers.set([]);
     this.suggestedRooms.set([]);
   }
@@ -509,19 +517,23 @@ export class Rooms implements OnInit {
 
   protected async searchUsers(event: AutoCompleteCompleteEvent) {
     try {
-      const query = event.query || '';
-      const filterStr = query
-        ? `first_name ~ "${query}" || last_name ~ "${query}" || email ~ "${query}" || name ~ "${query}"`
-        : '';
-      const options = filterStr ? { filter: filterStr } : {};
+      const query = (event.query || '').trim();
+      const escapedQuery = this.escapeFilterValue(query);
+      const filterStr = `user_type = "employee"${escapedQuery ? ` && (first_name ~ "${escapedQuery}" || last_name ~ "${escapedQuery}" || email ~ "${escapedQuery}" || name ~ "${escapedQuery}")` : ''}`;
+      const options = { filter: filterStr };
 
       const records = await this.pb.pb.collection('users').getList(1, 10, options);
-      this.suggestedUsers.set(records.items.map(record => ({
-        id: record.id,
-        displayName: record['user_type'] === 'company' && record['name']
-          ? `${record['name']} (${record['email']})`
-          : `${record['first_name']} ${record['last_name']} (${record['email']})`
-      })));
+      this.suggestedUsers.set(records.items.map(record => {
+        const first = (record['first_name'] || '').trim();
+        const last = (record['last_name'] || '').trim();
+        const email = (record['email'] || '').trim();
+        const fullName = `${first} ${last}`.trim();
+        
+        return {
+          id: record.id,
+          displayName: `${fullName || email || 'Unknown employee'}${fullName && email ? ` (${email})` : ''}`
+        };
+      }));
     } catch (e) {
       console.error(e);
     }
@@ -550,18 +562,19 @@ export class Rooms implements OnInit {
 
   protected async submitRoomKeyAction(): Promise<void> {
     try {
-      if (!this.roomKeyFormState.user || !this.roomKeyFormState.room) {
+      const state = this.roomKeyFormState();
+      if (!state.user || !state.room) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'User and Room are required.' });
         return;
       }
 
       const isDistribute = this.roomKeyDialogMode === 'distribute';
       await this.pb.pb.collection('room_key_events').create({
-        room: this.roomKeyFormState.room.id,
-        user: this.roomKeyFormState.user.id,
+        room: state.room.id,
+        user: state.user.id,
         is_collecting: isDistribute,
         did_return_key: !isDistribute,
-        reason: this.roomKeyFormState.reason,
+        reason: state.reason,
         enabled: true,
       });
 
@@ -599,6 +612,10 @@ export class Rooms implements OnInit {
 
   protected formatDateTime(value?: string): string {
     return formatDateTime(value);
+  }
+
+  private escapeFilterValue(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   }
 
   private normalizeRoom(room: Room, groupsById: RoomGroupMap): Room {

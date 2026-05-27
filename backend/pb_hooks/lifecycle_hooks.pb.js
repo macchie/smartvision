@@ -264,31 +264,6 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             .filter((access) => isEnabledAccess(access) && !isLegacyRecoveredAccess(access))
             .slice(0, eventsLimit)
 
-        let vehiclesInside = 0
-        let usersInside = 0
-        for (const access of accessesAll) {
-            if (!isEnabledAccess(access) || isLegacyRecoveredAccess(access)) {
-                continue
-            }
-            const accessType = getStr(access, "access_type")
-            const didLeave = getBool(access, "did_leave")
-            if (!didLeave && accessType === "vehicle") {
-                vehiclesInside += 1
-            }
-            if (!didLeave && accessType === "user") {
-                usersInside += 1
-            }
-        }
-
-        let keyDistributed = 0
-        for (const keyEvent of roomKeyEvents) {
-            const isCollecting = getBool(keyEvent, "is_collecting")
-            const didReturnKey = getBool(keyEvent, "did_return_key")
-            if (isCollecting && !didReturnKey) {
-                keyDistributed += 1
-            }
-        }
-
         const usersCache = {}
         const camerasCache = {}
         const vehiclesCache = {}
@@ -355,6 +330,35 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             } catch (_) {
                 vehiclesCache[vehicleId] = vehicleId
                 return vehicleId
+            }
+        }
+
+        let vehiclesInside = 0
+        let usersInside = 0
+        for (const access of accessesAll) {
+            if (!isEnabledAccess(access) || isLegacyRecoveredAccess(access)) {
+                continue
+            }
+            const accessType = getStr(access, "access_type")
+            const didLeave = getBool(access, "did_leave")
+            const cameraId = getStr(access, "camera")
+            const camera = getCameraData(cameraId)
+            
+            if (!didLeave && camera.direction !== "checkpoint") {
+                if (accessType === "vehicle") {
+                    vehiclesInside += 1
+                } else if (accessType === "user") {
+                    usersInside += 1
+                }
+            }
+        }
+
+        let keyDistributed = 0
+        for (const keyEvent of roomKeyEvents) {
+            const isCollecting = getBool(keyEvent, "is_collecting")
+            const didReturnKey = getBool(keyEvent, "did_return_key")
+            if (isCollecting && !didReturnKey) {
+                keyDistributed += 1
             }
         }
 

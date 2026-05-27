@@ -73,6 +73,54 @@ migrate((app) => {
     return u
   })()
 
+  const employeeA = findBy(app, "users", (u) => u.getString("email") === "employee.marco.demo@smartvision.local") || (() => {
+    const u = new Record(usersCol)
+    u.set("user_type", "employee")
+    u.set("first_name", "Marco")
+    u.set("last_name", "Rossi")
+    u.set("username", "marco_employee")
+    u.set("email", "employee.marco.demo@smartvision.local")
+    u.set("emailVisibility", false)
+    u.set("role", "regular")
+    u.set("enabled", true)
+    u.set("notes", tag)
+    u.setPassword("Demo1234!")
+    app.save(u)
+    return u
+  })()
+
+  const employeeB = findBy(app, "users", (u) => u.getString("email") === "employee.elena.demo@smartvision.local") || (() => {
+    const u = new Record(usersCol)
+    u.set("user_type", "employee")
+    u.set("first_name", "Elena")
+    u.set("last_name", "Bianchi")
+    u.set("username", "elena_employee")
+    u.set("email", "employee.elena.demo@smartvision.local")
+    u.set("emailVisibility", false)
+    u.set("role", "regular")
+    u.set("enabled", true)
+    u.set("notes", tag)
+    u.setPassword("Demo1234!")
+    app.save(u)
+    return u
+  })()
+
+  const employeeC = findBy(app, "users", (u) => u.getString("email") === "employee.luca.demo@smartvision.local") || (() => {
+    const u = new Record(usersCol)
+    u.set("user_type", "employee")
+    u.set("first_name", "Luca")
+    u.set("last_name", "Gialli")
+    u.set("username", "luca_employee")
+    u.set("email", "employee.luca.demo@smartvision.local")
+    u.set("emailVisibility", false)
+    u.set("role", "regular")
+    u.set("enabled", true)
+    u.set("notes", tag)
+    u.setPassword("Demo1234!")
+    app.save(u)
+    return u
+  })()
+
   const companyA = findBy(app, "users", (u) => u.getString("email") === "company.novacargo.demo@smartvision.local") || (() => {
     const u = new Record(usersCol)
     u.set("user_type", "company")

@@ -548,6 +548,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  protected async searchEmployees(query: string): Promise<void> {
+    try {
+      const normalizedQuery = query.trim();
+      const escapedQuery = this.escapeFilterValue(normalizedQuery);
+      const filter = `user_type = "employee"${escapedQuery ? ` && (first_name ~ "${escapedQuery}" || last_name ~ "${escapedQuery}" || email ~ "${escapedQuery}" || name ~ "${escapedQuery}")` : ''}`;
+      const options = { filter };
+
+      const records = await this.pb.collection('users').getList<UserSearchRecord>(1, 10, options);
+      this.suggestedUsers.set(records.items.map((record) => {
+        const email = (record.email || '').trim();
+        const firstName = (record.first_name || '').trim();
+        const lastName = (record.last_name || '').trim();
+        const fullName = `${firstName} ${lastName}`.trim();
+
+        const displayName = `${fullName || email || 'Unknown employee'}${fullName && email ? ` (${email})` : ''}`;
+
+        return {
+          id: record.id,
+          displayName,
+          email,
+          user_type: record.user_type,
+        };
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   protected async searchVehicles(query: string): Promise<void> {
     try {
       const normalizedQuery = query.trim();
@@ -876,11 +904,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return nextRows;
     });
 
-    if (mapped.accessType === 'vehicle' && !mapped.didLeave) {
+    if (mapped.accessType === 'vehicle' && !mapped.didLeave && mapped.direction !== 'checkpoint') {
       this.vehiclesInside.update((count) => count + 1);
     }
 
-    if (mapped.accessType === 'user' && !mapped.didLeave) {
+    if (mapped.accessType === 'user' && !mapped.didLeave && mapped.direction !== 'checkpoint') {
       this.usersInside.update((count) => count + 1);
     }
 
@@ -975,11 +1003,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const enabledRecords = records.filter((record) => record.enabled !== false);
 
         const vehiclesInside = enabledRecords.reduce((count, record) => {
-          return count + (record.access_type === 'vehicle' && !record.did_leave ? 1 : 0);
+          return count + (record.access_type === 'vehicle' && !record.did_leave && record.expand?.camera?.direction !== 'checkpoint' ? 1 : 0);
         }, 0);
 
         const usersInside = enabledRecords.reduce((count, record) => {
-          return count + (record.access_type === 'user' && !record.did_leave ? 1 : 0);
+          return count + (record.access_type === 'user' && !record.did_leave && record.expand?.camera?.direction !== 'checkpoint' ? 1 : 0);
         }, 0);
 
         const latestEvents = enabledRecords
