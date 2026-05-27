@@ -11,6 +11,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
+import { formatDateTime, resolveTimestamp } from '../../../shared/utils/date-time.utils';
+import { compareBoolean, compareText, getSortIcon, toggleSortState } from '../../../shared/utils/sort.utils';
 
 interface Vehicle {
   id: string;
@@ -82,9 +84,6 @@ export class Vehicles implements OnInit {
       })
       .slice();
 
-    const compareText = (a: string, b: string) => a.localeCompare(b);
-    const compareBoolean = (a: boolean, b: boolean) => Number(a) - Number(b);
-
     rows.sort((a, b) => {
       let result = 0;
 
@@ -150,8 +149,8 @@ export class Vehicles implements OnInit {
         return {
           ...record,
           notes: record.notes ?? record.note ?? '',
-          created: this.resolveTimestamp(record, 'created'),
-          updated: this.resolveTimestamp(record, 'updated'),
+          created: resolveTimestamp(record, 'created'),
+          updated: resolveTimestamp(record, 'updated'),
           ownerLabel: this.getOwnerDisplayName(expandedOwner),
           ownerRecord: expandedOwner
             ? {
@@ -283,53 +282,16 @@ export class Vehicles implements OnInit {
   }
 
   protected toggleSort(field: 'number' | 'country' | 'owner' | 'enabled' | 'notes'): void {
-    if (this.sortField() === field) {
-      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
-      return;
-    }
-
-    this.sortField.set(field);
-    this.sortDirection.set('asc');
+    const nextSort = toggleSortState(this.sortField(), this.sortDirection(), field);
+    this.sortField.set(nextSort.field);
+    this.sortDirection.set(nextSort.direction);
   }
 
   protected getSortIcon(field: 'number' | 'country' | 'owner' | 'enabled' | 'notes'): string {
-    if (this.sortField() !== field) {
-      return 'pi-sort-alt text-slate-400';
-    }
-
-    return this.sortDirection() === 'asc'
-      ? 'pi-sort-amount-up-alt text-blue-600'
-      : 'pi-sort-amount-down text-blue-600';
+    return getSortIcon(this.sortField(), this.sortDirection(), field);
   }
 
   protected formatDateTime(value?: string): string {
-    if (!value) {
-      return '-';
-    }
-
-    const normalized = this.normalizeDateString(value);
-    const parsed = new Date(normalized);
-    return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
-  }
-
-  private resolveTimestamp(record: any, kind: 'created' | 'updated'): string {
-    if (kind === 'created') {
-      return record.created || record.created_at || record.createdAt || '';
-    }
-
-    return record.updated || record.updated_at || record.updatedAt || '';
-  }
-
-  private normalizeDateString(value: string): string {
-    const source = String(value || '').trim();
-    if (!source) {
-      return '';
-    }
-
-    if (/^\d{4}-\d{2}-\d{2} /.test(source)) {
-      return source.replace(' ', 'T');
-    }
-
-    return source;
+    return formatDateTime(value);
   }
 }

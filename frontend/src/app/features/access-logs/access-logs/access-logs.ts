@@ -9,6 +9,8 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
+import { formatDateTime } from '../../../shared/utils/date-time.utils';
+import { compareText, getSortIcon, toggleSortState } from '../../../shared/utils/sort.utils';
 
 type AccessTypeFilter = 'all' | 'vehicle' | 'user';
 type DirectionFilter = 'all' | 'in' | 'out' | 'checkpoint';
@@ -123,8 +125,6 @@ export class AccessLogs implements OnInit {
       })
       .slice();
 
-    const compareText = (a: string, b: string) => a.localeCompare(b);
-
     rows.sort((a, b) => {
       let result = 0;
 
@@ -224,23 +224,19 @@ export class AccessLogs implements OnInit {
   }
 
   protected toggleSort(field: SortField): void {
-    if (this.sortField() === field) {
-      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    if (field === 'when' && this.sortField() !== field) {
+      this.sortField.set(field);
+      this.sortDirection.set('desc');
       return;
     }
 
-    this.sortField.set(field);
-    this.sortDirection.set(field === 'when' ? 'desc' : 'asc');
+    const nextSort = toggleSortState(this.sortField(), this.sortDirection(), field);
+    this.sortField.set(nextSort.field);
+    this.sortDirection.set(nextSort.direction);
   }
 
   protected getSortIcon(field: SortField): string {
-    if (this.sortField() !== field) {
-      return 'pi-sort-alt text-slate-400';
-    }
-
-    return this.sortDirection() === 'asc'
-      ? 'pi-sort-amount-up-alt text-blue-600'
-      : 'pi-sort-amount-down text-blue-600';
+    return getSortIcon(this.sortField(), this.sortDirection(), field);
   }
 
   protected directionSeverity(direction: AccessLogRow['direction']): 'success' | 'danger' | 'info' {
@@ -264,12 +260,7 @@ export class AccessLogs implements OnInit {
   }
 
   protected formatDateTime(value?: string): string {
-    if (!value) {
-      return '-';
-    }
-
-    const parsed = new Date(value);
-    return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
+    return formatDateTime(value);
   }
 
   private get pb() {
@@ -323,7 +314,7 @@ export class AccessLogs implements OnInit {
     const updatedAt = event.updatedAt || event.updated_at || createdAt;
 
     return {
-      id: event.id || `summary-${createdAt}-${Math.random().toString(36).slice(2)}`,
+      id: event.id || `summary-${createdAt}-${event.subject || 'subject'}-${event.camera || 'camera'}`,
       accessType,
       subject: event.subject || (accessType === 'vehicle' ? 'Unknown vehicle' : 'Unknown person'),
       actor: event.actor || 'System',

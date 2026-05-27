@@ -1,18 +1,10 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
-import { LayoutComponent } from './shared/components/layout/layout.component';
-import { DashboardComponent } from './features/dashboard/dashboard.component';
-import { Cameras } from './features/cameras/cameras/cameras';
-import { Users } from './features/users/users/users';
-import { Vehicles } from './features/vehicles/vehicles/vehicles';
-import { Rooms } from './features/rooms/rooms/rooms';
-import { AccessLogs } from './features/access-logs/access-logs/access-logs';
-import { AuthComponent } from './features/auth/auth.component';
 
 export const routes: Routes = [
   {
     path: '',
-    component: LayoutComponent,
+    loadComponent: () => import('./shared/components/layout/layout.component').then((module) => module.LayoutComponent),
     canActivate: [authGuard],
     children: [
       {
@@ -22,27 +14,27 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
-        component: DashboardComponent,
+        loadComponent: () => import('./features/dashboard/dashboard.component').then((module) => module.DashboardComponent),
       },
       {
         path: 'cameras',
-        component: Cameras,
+        loadComponent: () => import('./features/cameras/cameras/cameras').then((module) => module.Cameras),
       },
       {
         path: 'users',
-        component: Users,
+        loadComponent: () => import('./features/users/users/users').then((module) => module.Users),
       },
       {
         path: 'vehicles',
-        component: Vehicles,
+        loadComponent: () => import('./features/vehicles/vehicles/vehicles').then((module) => module.Vehicles),
       },
       {
         path: 'rooms',
-        component: Rooms,
+        loadComponent: () => import('./features/rooms/rooms/rooms').then((module) => module.Rooms),
       },
       {
         path: 'access-logs',
-        component: AccessLogs,
+        loadComponent: () => import('./features/access-logs/access-logs/access-logs').then((module) => module.AccessLogs),
       },
       {
         path: 'room-groups',
@@ -53,7 +45,7 @@ export const routes: Routes = [
   {
     path: 'login',
     canActivate: [guestGuard],
-    component: AuthComponent,
+    loadComponent: () => import('./features/auth/auth.component').then((module) => module.AuthComponent),
   },
   { path: '**', redirectTo: 'dashboard' },
 ];

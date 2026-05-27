@@ -13,6 +13,15 @@ import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
 import { User } from '../../../core/models';
 import { TagModule } from 'primeng/tag';
+import { formatDateTime, resolveTimestamp } from '../../../shared/utils/date-time.utils';
+import { compareBoolean, compareText, getSortIcon, toggleSortState } from '../../../shared/utils/sort.utils';
+
+type UserRole = 'admin' | 'operator' | 'regular';
+type UserType = 'person' | 'employee' | 'company';
+type UserFormState = Partial<User> & {
+  password?: string;
+  passwordConfirm?: string;
+};
 
 @Component({
   selector: 'app-users',
@@ -68,9 +77,6 @@ export class Users implements OnInit {
       })
       .slice();
 
-    const compareText = (a: string, b: string) => a.localeCompare(b);
-    const compareBoolean = (a: boolean, b: boolean) => Number(a) - Number(b);
-
     rows.sort((a, b) => {
       let result = 0;
 
@@ -114,7 +120,7 @@ export class Users implements OnInit {
   // Dialog state
   protected dialogVisible = false;
   protected dialogMode: 'create' | 'edit' = 'create';
-  protected formState: Partial<User> = {};
+  protected formState: UserFormState = {};
 
   protected roleOptions = [
     { label: 'Admin', value: 'admin' },
@@ -152,8 +158,8 @@ export class Users implements OnInit {
       });
       this.users.set(records.map(record => ({
         ...record,
-        created: this.resolveTimestamp(record, 'created'),
-        updated: this.resolveTimestamp(record, 'updated'),
+        created: resolveTimestamp(record as User & { created?: unknown; created_at?: unknown; createdAt?: unknown }, 'created'),
+        updated: resolveTimestamp(record as User & { updated?: unknown; updated_at?: unknown; updatedAt?: unknown }, 'updated'),
       })));
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load users.' });
@@ -186,6 +192,8 @@ export class Users implements OnInit {
       role: 'regular',
       user_type: 'person',
       enabled: true,
+      password: '',
+      passwordConfirm: '',
     };
     this.dialogMode = 'create';
     this.dialogVisible = true;
@@ -231,6 +239,25 @@ export class Users implements OnInit {
       return;
     }
 
+    if (this.dialogMode === 'create') {
+      const password = this.formState.password || '';
+      const passwordConfirm = this.formState.passwordConfirm || '';
+
+      if (!this.isStrongPassword(password)) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Password must be at least 12 characters and include upper, lower, number, and special character.',
+        });
+        return;
+      }
+
+      if (password !== passwordConfirm) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Password and Confirm Password do not match.' });
+        return;
+      }
+    }
+
     this.saving.set(true);
     try {
       const payload = {
@@ -249,10 +276,10 @@ export class Users implements OnInit {
       if (this.dialogMode === 'create') {
         await this.pb.pb.collection('users').create({
           ...payload,
-          password: 'password123', // default temp password
-          passwordConfirm: 'password123',
+          password: this.formState.password,
+          passwordConfirm: this.formState.passwordConfirm,
         });
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User created (temp password123).' });
+        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User created.' });
       } else {
         await this.pb.pb.collection('users').update(this.formState.id!, payload);
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User updated.' });
@@ -315,57 +342,20 @@ export class Users implements OnInit {
   }
 
   protected toggleSort(field: 'type' | 'username' | 'name' | 'company' | 'email' | 'role' | 'enabled' | 'verified' | 'notes'): void {
-    if (this.sortField() === field) {
-      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
-      return;
-    }
-
-    this.sortField.set(field);
-    this.sortDirection.set('asc');
+    const nextSort = toggleSortState(this.sortField(), this.sortDirection(), field);
+    this.sortField.set(nextSort.field);
+    this.sortDirection.set(nextSort.direction);
   }
 
   protected getSortIcon(field: 'type' | 'username' | 'name' | 'company' | 'email' | 'role' | 'enabled' | 'verified' | 'notes'): string {
-    if (this.sortField() !== field) {
-      return 'pi-sort-alt text-slate-400';
-    }
-
-    return this.sortDirection() === 'asc'
-      ? 'pi-sort-amount-up-alt text-blue-600'
-      : 'pi-sort-amount-down text-blue-600';
+    return getSortIcon(this.sortField(), this.sortDirection(), field);
   }
 
   protected formatDateTime(value?: string): string {
-    if (!value) {
-      return '-';
-    }
-
-    const normalized = this.normalizeDateString(value);
-    const parsed = new Date(normalized);
-    return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
+    return formatDateTime(value);
   }
 
-  private resolveTimestamp(record: User, kind: 'created' | 'updated'): string {
-    if (kind === 'created') {
-      return String(record['created'] || record['created_at'] || record['createdAt'] || '');
-    }
-
-    return String(record['updated'] || record['updated_at'] || record['updatedAt'] || '');
-  }
-
-  private normalizeDateString(value: string): string {
-    const source = String(value || '').trim();
-    if (!source) {
-      return '';
-    }
-
-    if (/^\d{4}-\d{2}-\d{2} /.test(source)) {
-      return source.replace(' ', 'T');
-    }
-
-    return source;
-  }
-
-  private normalizeRole(role?: unknown): 'admin' | 'operator' | 'regular' {
+  private normalizeRole(role?: unknown): UserRole {
     if (role === 'admin' || role === 'operator' || role === 'regular') {
       return role;
     }
@@ -378,11 +368,19 @@ export class Users implements OnInit {
     return 'regular';
   }
 
-  private normalizeUserType(userType?: unknown): 'person' | 'employee' | 'company' {
+  private normalizeUserType(userType?: unknown): UserType {
     if (userType === 'company' || userType === 'employee' || userType === 'person') {
       return userType;
     }
 
     return 'person';
+  }
+
+  private isStrongPassword(password: string): boolean {
+    return password.length >= 12
+      && /[a-z]/.test(password)
+      && /[A-Z]/.test(password)
+      && /\d/.test(password)
+      && /[^A-Za-z0-9]/.test(password);
   }
 }

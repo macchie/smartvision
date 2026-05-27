@@ -14,7 +14,6 @@
         size="small"
         (onClick)="loadUsers()"
       />
-      <!-- Only admins or operators (if permitted by rules elsewhere to create "users") can see add btn. We'll show for everyone but error out if they cant. Ideally hide if not admin/operator making users. -->
       <p-button
         label="Add User"
         icon="pi pi-plus"
@@ -200,6 +199,33 @@
       <label for="email" class="text-sm font-semibold text-slate-700">Email <span class="text-red-500">*</span></label>
       <input id="email" type="email" pInputText [(ngModel)]="formState.email" placeholder="john.doe@example.com" />
     </div>
+
+    @if (dialogMode === 'create') {
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="flex flex-col gap-2">
+          <label for="password" class="text-sm font-semibold text-slate-700">Password <span class="text-red-500">*</span></label>
+          <input
+            id="password"
+            type="password"
+            pInputText
+            [(ngModel)]="formState.password"
+            autocomplete="new-password"
+            placeholder="Minimum 12 chars"
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="password_confirm" class="text-sm font-semibold text-slate-700">Confirm Password <span class="text-red-500">*</span></label>
+          <input
+            id="password_confirm"
+            type="password"
+            pInputText
+            [(ngModel)]="formState.passwordConfirm"
+            autocomplete="new-password"
+            placeholder="Repeat password"
+          />
+        </div>
+      </div>
+    }
 
     <div class="flex flex-col gap-2">
       <label for="role" class="text-sm font-semibold text-slate-700">Role</label>

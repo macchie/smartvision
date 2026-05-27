@@ -11,6 +11,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
+import { formatDateTime, resolveTimestamp } from '../../../shared/utils/date-time.utils';
+import { getSortIcon, toggleSortState } from '../../../shared/utils/sort.utils';
 
 interface RoomGroup {
   id: string;
@@ -586,33 +588,17 @@ export class Rooms implements OnInit {
   }
 
   protected toggleSort(field: 'name' | 'type' | 'key' | 'enabled' | 'notes' | 'rooms'): void {
-    if (this.sortField() === field) {
-      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
-      return;
-    }
-
-    this.sortField.set(field);
-    this.sortDirection.set('asc');
+    const nextSort = toggleSortState(this.sortField(), this.sortDirection(), field);
+    this.sortField.set(nextSort.field);
+    this.sortDirection.set(nextSort.direction);
   }
 
   protected getSortIcon(field: 'name' | 'type' | 'key' | 'enabled' | 'notes' | 'rooms'): string {
-    if (this.sortField() !== field) {
-      return 'pi-sort-alt text-slate-400';
-    }
-
-    return this.sortDirection() === 'asc'
-      ? 'pi-sort-amount-up-alt text-blue-600'
-      : 'pi-sort-amount-down text-blue-600';
+    return getSortIcon(this.sortField(), this.sortDirection(), field);
   }
 
   protected formatDateTime(value?: string): string {
-    if (!value) {
-      return '-';
-    }
-
-    const normalized = this.normalizeDateString(value);
-    const parsed = new Date(normalized);
-    return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
+    return formatDateTime(value);
   }
 
   private normalizeRoom(room: Room, groupsById: RoomGroupMap): Room {
@@ -623,8 +609,8 @@ export class Rooms implements OnInit {
 
     return {
       ...room,
-      created: this.resolveTimestamp(room, 'created'),
-      updated: this.resolveTimestamp(room, 'updated'),
+      created: resolveTimestamp(room, 'created'),
+      updated: resolveTimestamp(room, 'updated'),
       room_group: normalizedGroupId,
       roomGroupRecord: expandedGroup ? { id: expandedGroup.id, displayName: expandedGroup.name } : null,
       notes: room.notes ?? room.description ?? '',
@@ -642,8 +628,8 @@ export class Rooms implements OnInit {
         name: group.name,
         notes: (group.notes ?? group.description ?? '').trim(),
         enabled: !!group.enabled,
-        created: this.resolveTimestamp(group as any, 'created'),
-        updated: this.resolveTimestamp(group as any, 'updated'),
+        created: resolveTimestamp(group as any, 'created'),
+        updated: resolveTimestamp(group as any, 'updated'),
         rooms: [],
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -681,24 +667,4 @@ export class Rooms implements OnInit {
     return rows;
   }
 
-  private resolveTimestamp(record: any, kind: 'created' | 'updated'): string {
-    if (kind === 'created') {
-      return record.created || record.created_at || record.createdAt || '';
-    }
-
-    return record.updated || record.updated_at || record.updatedAt || '';
-  }
-
-  private normalizeDateString(value: string): string {
-    const source = String(value || '').trim();
-    if (!source) {
-      return '';
-    }
-
-    if (/^\d{4}-\d{2}-\d{2} /.test(source)) {
-      return source.replace(' ', 'T');
-    }
-
-    return source;
-  }
 }

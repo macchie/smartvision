@@ -11,6 +11,8 @@ import { TextareaModule } from 'primeng/textarea';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
+import { formatDateTime, resolveTimestamp } from '../../../shared/utils/date-time.utils';
+import { compareBoolean, compareText, getSortIcon, toggleSortState } from '../../../shared/utils/sort.utils';
 
 interface Camera {
   id: string;
@@ -80,9 +82,6 @@ export class Cameras implements OnInit {
       })
       .slice();
 
-    const compareText = (a: string, b: string) => a.localeCompare(b);
-    const compareBoolean = (a: boolean, b: boolean) => Number(a) - Number(b);
-
     rows.sort((a, b) => {
       let result = 0;
 
@@ -145,8 +144,8 @@ export class Cameras implements OnInit {
         direction: this.normalizeDirection(record.direction),
         metadataText: this.stringifyMetadata(record.metadata),
         notes: record.notes ?? record.description ?? '',
-        created: this.resolveTimestamp(record, 'created'),
-        updated: this.resolveTimestamp(record, 'updated'),
+        created: resolveTimestamp(record, 'created'),
+        updated: resolveTimestamp(record, 'updated'),
       })));
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load cameras.' });
@@ -264,54 +263,17 @@ export class Cameras implements OnInit {
   }
 
   protected toggleSort(field: 'name' | 'camera_id' | 'direction' | 'metadata' | 'enabled' | 'notes'): void {
-    if (this.sortField() === field) {
-      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
-      return;
-    }
-
-    this.sortField.set(field);
-    this.sortDirection.set('asc');
+    const nextSort = toggleSortState(this.sortField(), this.sortDirection(), field);
+    this.sortField.set(nextSort.field);
+    this.sortDirection.set(nextSort.direction);
   }
 
   protected getSortIcon(field: 'name' | 'camera_id' | 'direction' | 'metadata' | 'enabled' | 'notes'): string {
-    if (this.sortField() !== field) {
-      return 'pi-sort-alt text-slate-400';
-    }
-
-    return this.sortDirection() === 'asc'
-      ? 'pi-sort-amount-up-alt text-blue-600'
-      : 'pi-sort-amount-down text-blue-600';
+    return getSortIcon(this.sortField(), this.sortDirection(), field);
   }
 
   protected formatDateTime(value?: string): string {
-    if (!value) {
-      return '-';
-    }
-
-    const normalized = this.normalizeDateString(value);
-    const parsed = new Date(normalized);
-    return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : '-';
-  }
-
-  private resolveTimestamp(record: any, kind: 'created' | 'updated'): string {
-    if (kind === 'created') {
-      return record.created || record.created_at || record.createdAt || '';
-    }
-
-    return record.updated || record.updated_at || record.updatedAt || '';
-  }
-
-  private normalizeDateString(value: string): string {
-    const source = String(value || '').trim();
-    if (!source) {
-      return '';
-    }
-
-    if (/^\d{4}-\d{2}-\d{2} /.test(source)) {
-      return source.replace(' ', 'T');
-    }
-
-    return source;
+    return formatDateTime(value);
   }
 
   protected directionLabel(direction: Camera['direction']): string {

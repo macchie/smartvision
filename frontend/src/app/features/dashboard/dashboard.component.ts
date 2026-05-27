@@ -1,22 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, NgZone, OnDestroy, OnInit, ViewChild, computed, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, NgZone, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuItem, MessageService } from 'primeng/api';
-import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
-import { AvatarModule } from 'primeng/avatar';
+import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { TextareaModule } from 'primeng/textarea';
-import { Menu, MenuModule } from 'primeng/menu';
-import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../core/services/auth.service';
 import { PocketBaseService } from '../../core/services/pocketbase.service';
+import { QuickActionDialogComponent, QuickActionDialogOption } from '../../shared/components/quick-action-dialog/quick-action-dialog.component';
 
 type AccessType = 'vehicle' | 'user';
 
@@ -97,21 +90,67 @@ type RealtimeEvent<TRecord = any> = {
   record?: TRecord;
 };
 
+type QuickActionDialogType = 'vehicle_access' | 'user_access' | 'key_distribute' | 'key_collect';
+
+type UserOption = QuickActionDialogOption;
+type VehicleOption = QuickActionDialogOption;
+type CameraOption = QuickActionDialogOption & {
+  direction?: string;
+};
+type RoomOption = QuickActionDialogOption;
+
+type QuickActionFormState = {
+  user: UserOption | null;
+  vehicle: VehicleOption | null;
+  camera: CameraOption | null;
+  room: RoomOption | null;
+  reason: string;
+};
+
+type UserSearchRecord = {
+  id: string;
+  user_type?: string;
+  name?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+};
+
+type VehicleSearchRecord = {
+  id: string;
+  number?: string;
+  country?: string;
+};
+
+type CameraSearchRecord = {
+  id: string;
+  name?: string;
+  direction?: string;
+};
+
+type RoomSearchRecord = {
+  id: string;
+  number?: string;
+  name?: string;
+};
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, AvatarModule, ButtonModule, CardModule, 
-    MenuModule, TableModule, TagModule, DialogModule, AutoCompleteModule, 
-    SelectModule, InputTextModule, TextareaModule, ToastModule
+    CommonModule,
+    ButtonModule,
+    CardModule,
+    TableModule,
+    TagModule,
+    ToastModule,
+    QuickActionDialogComponent,
   ],
   providers: [MessageService],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  @ViewChild('userMenu') private userMenu?: Menu;
-
   protected readonly loading = signal(true);
   protected readonly refreshing = signal(false);
   protected readonly loadError = signal('');
@@ -195,34 +234,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ];
   });
 
-  protected readonly userMenuItems = computed<MenuItem[]>(() => [
-    {
-      label: 'Sign Out',
-      icon: 'pi pi-sign-out',
-      command: () => this.signOut(),
-    },
-  ]);
-
   // Dialog Visibilities
-  protected vehicleAccessDialog = signal(false);
-  protected userAccessDialog = signal(false);
-  protected keyDistributeDialog = signal(false);
-  protected keyCollectDialog = signal(false);
+  protected readonly vehicleAccessDialog = signal(false);
+  protected readonly userAccessDialog = signal(false);
+  protected readonly keyDistributeDialog = signal(false);
+  protected readonly keyCollectDialog = signal(false);
 
   // Autocomplete Suggestions
-  protected suggestedUsers = signal<any[]>([]);
-  protected suggestedVehicles = signal<any[]>([]);
-  protected suggestedCameras = signal<any[]>([]);
-  protected suggestedRooms = signal<any[]>([]);
+  protected readonly suggestedUsers = signal<UserOption[]>([]);
+  protected readonly suggestedVehicles = signal<VehicleOption[]>([]);
+  protected readonly suggestedCameras = signal<CameraOption[]>([]);
+  protected readonly suggestedRooms = signal<RoomOption[]>([]);
 
   // Form Models
-  protected formState = {
-    user: null as any,
-    vehicle: null as any,
-    camera: null as any,
-    room: null as any,
-    reason: ''
-  };
+  protected readonly quickActionForm = signal<QuickActionFormState>(this.createEmptyQuickActionFormState());
 
   private realtimeUnsubscribers: Array<() => void> = [];
   private authStoreUnsubscribe: (() => void) | null = null;
@@ -417,104 +442,170 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  protected toggleUserMenu(event: Event): void {
-    this.userMenu?.toggle(event);
-  }
-
-  private resetFormState() {
-    this.formState = {
+  private createEmptyQuickActionFormState(): QuickActionFormState {
+    return {
       user: null,
       vehicle: null,
       camera: null,
       room: null,
-      reason: ''
+      reason: '',
     };
   }
 
-  protected quickAction(action: 'vehicle_access' | 'user_access' | 'key_distribute' | 'key_collect'): void {
-    this.resetFormState();
+  private patchQuickActionFormState(partial: Partial<QuickActionFormState>): void {
+    this.quickActionForm.update((currentState) => ({
+      ...currentState,
+      ...partial,
+    }));
+  }
+
+  private resetQuickActionFormState(): void {
+    this.quickActionForm.set(this.createEmptyQuickActionFormState());
+  }
+
+  private setDialogVisibility(action: QuickActionDialogType, visible: boolean): void {
     if (action === 'vehicle_access') {
-      this.vehicleAccessDialog.set(true);
-    } else if (action === 'user_access') {
-      this.userAccessDialog.set(true);
-    } else if (action === 'key_distribute') {
-      this.keyDistributeDialog.set(true);
-    } else if (action === 'key_collect') {
-      this.keyCollectDialog.set(true);
+      this.vehicleAccessDialog.set(visible);
+      return;
     }
+
+    if (action === 'user_access') {
+      this.userAccessDialog.set(visible);
+      return;
+    }
+
+    if (action === 'key_distribute') {
+      this.keyDistributeDialog.set(visible);
+      return;
+    }
+
+    this.keyCollectDialog.set(visible);
+  }
+
+  protected onDialogVisibilityChange(action: QuickActionDialogType, visible: boolean): void {
+    this.setDialogVisibility(action, visible);
+    if (!visible) {
+      this.resetQuickActionFormState();
+    }
+  }
+
+  protected setUserSelection(option: QuickActionDialogOption | null): void {
+    this.patchQuickActionFormState({ user: option as UserOption | null });
+  }
+
+  protected setVehicleSelection(option: QuickActionDialogOption | null): void {
+    this.patchQuickActionFormState({ vehicle: option as VehicleOption | null });
+  }
+
+  protected setCameraSelection(option: QuickActionDialogOption | null): void {
+    this.patchQuickActionFormState({ camera: option as CameraOption | null });
+  }
+
+  protected setRoomSelection(option: QuickActionDialogOption | null): void {
+    this.patchQuickActionFormState({ room: option as RoomOption | null });
+  }
+
+  protected setQuickActionReason(reason: string): void {
+    this.patchQuickActionFormState({ reason });
+  }
+
+  protected quickAction(action: QuickActionDialogType): void {
+    this.resetQuickActionFormState();
+    this.setDialogVisibility(action, true);
   }
 
   // Typeahead methods
-  protected async searchUsers(event: AutoCompleteCompleteEvent) {
+  protected async searchUsers(query: string): Promise<void> {
     try {
-      const query = event.query || '';
-      const filterStr = query ? `first_name ~ "${query}" || last_name ~ "${query}" || email ~ "${query}" || name ~ "${query}"` : '';
-      const options = filterStr ? { filter: filterStr } : {};
-      
-      const records = await this.pb.collection('users').getList(1, 10, options);
-      this.suggestedUsers.set(records.items.map(r => ({
-        ...r,
-        displayName: r['user_type'] === 'company' && r['name'] 
-          ? `${r['name']} (${r['email']})` 
-          : `${r['first_name']} ${r['last_name']} (${r['email']})`
-      })));
-    } catch(e) {
-      console.error(e);
+      const normalizedQuery = query.trim();
+      const escapedQuery = this.escapeFilterValue(normalizedQuery);
+      const filter = escapedQuery
+        ? `first_name ~ "${escapedQuery}" || last_name ~ "${escapedQuery}" || email ~ "${escapedQuery}" || name ~ "${escapedQuery}"`
+        : '';
+      const options = filter ? { filter } : {};
+
+      const records = await this.pb.collection('users').getList<UserSearchRecord>(1, 10, options);
+      this.suggestedUsers.set(records.items.map((record) => {
+        const email = (record.email || '').trim();
+        const companyName = (record.name || '').trim();
+        const firstName = (record.first_name || '').trim();
+        const lastName = (record.last_name || '').trim();
+        const fullName = `${firstName} ${lastName}`.trim();
+
+        const displayName = record.user_type === 'company' && companyName
+          ? `${companyName}${email ? ` (${email})` : ''}`
+          : `${fullName || email || 'Unknown user'}${fullName && email ? ` (${email})` : ''}`;
+
+        return {
+          id: record.id,
+          displayName,
+          email,
+          user_type: record.user_type,
+        };
+      }));
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  protected async searchVehicles(event: AutoCompleteCompleteEvent) {
+  protected async searchVehicles(query: string): Promise<void> {
     try {
-      const query = event.query || '';
-      const filterStr = query ? `number ~ "${query}"` : '';
-      const options = filterStr ? { filter: filterStr } : {};
+      const normalizedQuery = query.trim();
+      const escapedQuery = this.escapeFilterValue(normalizedQuery);
+      const filter = escapedQuery ? `number ~ "${escapedQuery}"` : '';
+      const options = filter ? { filter } : {};
 
-      const records = await this.pb.collection('vehicles').getList(1, 10, options);
-      this.suggestedVehicles.set(records.items.map(r => ({
-        ...r,
-        displayName: `${r['number']} ${r['country'] ? ' - ' + r['country'] : ''}`
+      const records = await this.pb.collection('vehicles').getList<VehicleSearchRecord>(1, 10, options);
+      this.suggestedVehicles.set(records.items.map((record) => ({
+        id: record.id,
+        displayName: `${record.number || ''}${record.country ? ` - ${record.country}` : ''}`.trim() || 'Unknown vehicle',
       })));
-    } catch(e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  protected async searchCameras(event: AutoCompleteCompleteEvent) {
+  protected async searchCameras(query: string): Promise<void> {
     try {
-      const query = event.query || '';
-      const filterStr = query ? `name ~ "${query}"` : '';
-      const options = filterStr ? { filter: filterStr } : {};
+      const normalizedQuery = query.trim();
+      const escapedQuery = this.escapeFilterValue(normalizedQuery);
+      const filter = escapedQuery ? `name ~ "${escapedQuery}"` : '';
+      const options = filter ? { filter } : {};
 
-      const records = await this.pb.collection('cameras').getList(1, 10, options);
-      this.suggestedCameras.set(records.items.map(r => ({
-        ...r,
-        displayName: r['name']
+      const records = await this.pb.collection('cameras').getList<CameraSearchRecord>(1, 10, options);
+      this.suggestedCameras.set(records.items.map((record) => ({
+        id: record.id,
+        displayName: record.name || 'Unknown camera',
+        direction: record.direction,
       })));
-    } catch(e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  protected async searchRooms(event: AutoCompleteCompleteEvent) {
+  protected async searchRooms(query: string): Promise<void> {
     try {
-      const query = event.query || '';
-      const filterStr = query ? `number ~ "${query}" || name ~ "${query}"` : '';
-      const options = filterStr ? { filter: filterStr } : {};
+      const normalizedQuery = query.trim();
+      const escapedQuery = this.escapeFilterValue(normalizedQuery);
+      const filter = escapedQuery ? `number ~ "${escapedQuery}" || name ~ "${escapedQuery}"` : '';
+      const options = filter ? { filter } : {};
 
-      const records = await this.pb.collection('rooms').getList(1, 10, options);
-      this.suggestedRooms.set(records.items.map(r => ({
-        ...r,
-        displayName: `${r['number']} ${r['name'] ? '- ' + r['name'] : ''}`
+      const records = await this.pb.collection('rooms').getList<RoomSearchRecord>(1, 10, options);
+      this.suggestedRooms.set(records.items.map((record) => ({
+        id: record.id,
+        displayName: `${record.number || ''}${record.name ? ` - ${record.name}` : ''}`.trim() || 'Unknown room',
       })));
-    } catch(e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 
   // Submit methods
   protected async submitVehicleAccess() {
+    const formState = this.quickActionForm();
+
     try {
-      if (!this.formState.vehicle || !this.formState.camera) {
+      if (!formState.vehicle || !formState.camera) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Vehicle and Camera are required.' });
         return;
       }
@@ -527,86 +618,96 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       await this.pb.collection('accesses').create({
         access_type: 'vehicle',
-        vehicle: this.formState.vehicle.id,
+        vehicle: formState.vehicle.id,
         driver_user: currentUser.id,
-        camera: this.formState.camera.id,
+        camera: formState.camera.id,
         did_leave: false,
-        reason: this.formState.reason,
+        reason: formState.reason,
         made_by_user: currentUser.id,
         deletable: true,
         enabled: true,
       });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vehicle access recorded.' });
       this.vehicleAccessDialog.set(false);
+      this.resetQuickActionFormState();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to record access.' });
     }
   }
 
   protected async submitUserAccess() {
+    const formState = this.quickActionForm();
+
     try {
-      if (!this.formState.user || !this.formState.camera) {
+      if (!formState.user || !formState.camera) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'User and Camera are required.' });
         return;
       }
 
-      const didLeave = this.isEgressCamera(this.formState.camera);
+      const didLeave = this.isEgressCamera(formState.camera);
 
       await this.pb.collection('accesses').create({
         access_type: 'user',
-        user: this.formState.user.id,
-        camera: this.formState.camera.id,
+        user: formState.user.id,
+        camera: formState.camera.id,
         did_leave: didLeave,
-        reason: this.formState.reason,
+        reason: formState.reason,
         made_by_user: this.authService.user()?.id,
         deletable: true,
         enabled: true,
       });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User access recorded.' });
       this.userAccessDialog.set(false);
+      this.resetQuickActionFormState();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to record access.' });
     }
   }
 
   protected async submitKeyDistribute() {
+    const formState = this.quickActionForm();
+
     try {
-      if (!this.formState.user || !this.formState.room) {
+      if (!formState.user || !formState.room) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'User and Room are required.' });
         return;
       }
       await this.pb.collection('room_key_events').create({
-        room: this.formState.room.id,
-        user: this.formState.user.id,
+        room: formState.room.id,
+        user: formState.user.id,
         is_collecting: true,
         did_return_key: false,
-        reason: this.formState.reason,
+        reason: formState.reason,
         enabled: true
       });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Key distributed.' });
       this.keyDistributeDialog.set(false);
+      this.resetQuickActionFormState();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to distribute key.' });
     }
   }
 
   protected async submitKeyCollect() {
+    const formState = this.quickActionForm();
+
     try {
-      if (!this.formState.user || !this.formState.room) {
+      if (!formState.user || !formState.room) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'User and Room are required.' });
         return;
       }
       // Note: we can also lookup if there is a pending event and link it, but let pb_hooks handle it.
       await this.pb.collection('room_key_events').create({
-        room: this.formState.room.id,
-        user: this.formState.user.id,
+        room: formState.room.id,
+        user: formState.user.id,
         is_collecting: false,
         did_return_key: true,
-        reason: this.formState.reason,
+        reason: formState.reason,
         enabled: true
       });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Key collected.' });
       this.keyCollectDialog.set(false);
+      this.resetQuickActionFormState();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to collect key.' });
     }
@@ -624,7 +725,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return 'success';
   }
 
-  private isEgressCamera(camera: any): boolean {
+  private isEgressCamera(camera: CameraOption): boolean {
     const direction = String(camera?.direction || '').toLowerCase();
     return direction === 'out' || direction === 'egress';
   }
@@ -635,6 +736,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   protected accessTypeSeverity(type: AccessType): 'info' | 'contrast' {
     return type === 'vehicle' ? 'contrast' : 'info';
+  }
+
+  private escapeFilterValue(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   }
 
   private get pb() {

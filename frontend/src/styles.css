@@ -49,21 +49,6 @@
     -webkit-user-select: auto;
     -webkit-touch-callout: default;
   }
-
-  /* Disable selection only on mobile and tablet */
-  @media (max-width: 1023px) {
-    body {
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
-    }
-
-    input, textarea, [contenteditable] {
-      -webkit-user-select: text;
-      user-select: text;
-      -webkit-touch-callout: default;
-    }
-  }
 }
 
 /* Shared app polish for all feature pages */

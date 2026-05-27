@@ -25,11 +25,13 @@ SmartVision helps teams monitor and manage facility access with:
 - 🔐 Auth and Roles
   - Admin/operator login only
   - Role-based access rules enforced in PocketBase
+  - User creation requires explicit strong passwords in the UI (no default credentials)
 
 - 📊 Operational Dashboard
   - Live metrics: vehicles inside, people inside, keys distributed
   - Latest vehicle and people access streams
   - Clean direction cards for Ingress, Checkpoint, and Egress
+  - Reusable quick-action dialog component for access and key workflows
   - Realtime-safe behavior with reconnect and fallback refresh
 
 - 🚗👤 Access Management
@@ -55,6 +57,7 @@ SmartVision helps teams monitor and manage facility access with:
 
 - Backend: PocketBase 0.36.9 (migrations + hooks)
 - Frontend: Angular 21 standalone architecture
+- Frontend routing: lazy-loaded standalone screens via `loadComponent`
 - UI: PrimeNG + TailwindCSS
 - Frontend Runtime/Package Manager: Bun
 - Build Output: frontend bundles served by PocketBase from backend/pb_public
@@ -148,5 +151,6 @@ smartvision/
 
 - Keep backend compatibility pinned to PocketBase 0.36.9
 - Keep frontend UI aligned with PrimeNG + TailwindCSS
+- Reuse shared frontend helpers in `frontend/src/app/shared/utils` for table sorting/date formatting consistency
 - Prefer targeted, production-ready changes
 - Update README when architecture, commands, or runtime behavior changes
