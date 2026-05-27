@@ -46,7 +46,11 @@ Legacy/mobile folders are intentionally excluded from active development scope.
   - auto-refresh on new `room_key_events` (keys distributed metric)
   - static "Last Camera In / Checkpoint / Out" cards with placeholders and realtime updates from vehicle accesses
   - latest lists and stats update automatically
+  - automatic subscription recovery with exponential backoff (network/session interruptions)
+  - tab visibility and network-online rebinding to keep each opened dashboard live
+  - periodic consistency refresh fallback when realtime delivery is temporarily degraded
 - Demo mode scheduler (`DEMO_DATA=TRUE`) emits fake vehicle/person ingress/egress every minute (PocketBase 0.36.x cron granularity)
+  - scheduler-created access events also publish an explicit realtime update ping to active `accesses` subscribers for immediate dashboard refresh
 
 ### Master Data CRUD
 

@@ -67,6 +67,36 @@ function getOpenAccessForSubject(accessType, relationField, subjectId) {
     return latest
 }
 
+function notifyAccessesRealtimeUpdate(recordId) {
+    try {
+        const broker = $app.subscriptionsBroker()
+        const clients = broker.clients()
+        const payload = JSON.stringify({
+            action: "update",
+            record: {
+                id: recordId || "",
+            },
+        })
+
+        for (const clientId in clients) {
+            const client = clients[clientId]
+            if (!client || client.isDiscarded()) {
+                continue
+            }
+
+            const subscriptions = client.subscriptions("accesses/")
+            for (const topic in subscriptions) {
+                client.send(new SubscriptionMessage({
+                    name: topic,
+                    data: payload,
+                }))
+            }
+        }
+    } catch (err) {
+        console.error("[demo scheduler] failed to broadcast realtime accesses update:", err)
+    }
+}
+
 function createDemoAccessEvent() {
     try {
         const startedAt = new Date().toISOString()
@@ -157,6 +187,7 @@ function createDemoAccessEvent() {
             )
 
             $app.save(accessRecord)
+            notifyAccessesRealtimeUpdate(accessRecord.id)
 
             if (shouldLeave && openAccess) {
                 openAccess.set("did_leave", true)
@@ -206,6 +237,7 @@ function createDemoAccessEvent() {
             )
 
             $app.save(accessRecord)
+            notifyAccessesRealtimeUpdate(accessRecord.id)
 
             if (shouldLeave && openAccess) {
                 openAccess.set("did_leave", true)

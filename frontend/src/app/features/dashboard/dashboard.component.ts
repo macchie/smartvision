@@ -227,11 +227,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private realtimeUnsubscribers: Array<() => void> = [];
   private authStoreUnsubscribe: (() => void) | null = null;
   private onlineListener: (() => void) | null = null;
+  private visibilityListener: (() => void) | null = null;
   private realtimeSetupInFlight = false;
+  private realtimeRetryTimer: ReturnType<typeof window.setTimeout> | null = null;
+  private realtimeRetryDelayMs = 1000;
+  private readonly realtimeRetryMaxDelayMs = 30000;
   private accessLoadInFlight = false;
   private pendingAccessRefresh = false;
+  private accessReconcileTimer: ReturnType<typeof window.setTimeout> | null = null;
   private keyLoadInFlight = false;
   private pendingKeyRefresh = false;
+  private periodicConsistencyTimer: ReturnType<typeof window.setInterval> | null = null;
+  private readonly periodicConsistencyMs = 30000;
 
   constructor(
     public authService: AuthService,
@@ -244,6 +251,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadDashboard(true);
     this.setupRealtimeSubscriptions();
+    this.startPeriodicConsistencySync();
+
     this.authStoreUnsubscribe = this.pb.authStore.onChange(() => {
       this.setupRealtimeSubscriptions();
       this.triggerAccessRefresh();
@@ -257,6 +266,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.triggerKeyRefresh();
     };
     window.addEventListener('online', this.onlineListener);
+
+    // Rebind subscriptions when the tab becomes active again.
+    this.visibilityListener = () => {
+      if (document.visibilityState !== 'visible') {
+        return;
+      }
+
+      this.setupRealtimeSubscriptions();
+      this.triggerAccessRefresh();
+      this.triggerKeyRefresh();
+    };
+    document.addEventListener('visibilitychange', this.visibilityListener);
   }
 
   ngOnDestroy(): void {
@@ -274,6 +295,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.onlineListener = null;
     }
 
+    if (this.visibilityListener) {
+      document.removeEventListener('visibilitychange', this.visibilityListener);
+      this.visibilityListener = null;
+    }
+
+    this.stopPeriodicConsistencySync();
+    this.clearRealtimeRetryTimer();
+    this.clearAccessReconcileTimer();
+
     this.clearRealtimeSubscriptions();
   }
 
@@ -286,6 +316,96 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     }
     this.realtimeUnsubscribers = [];
+  }
+
+  private clearRealtimeRetryTimer(): void {
+    if (this.realtimeRetryTimer !== null) {
+      window.clearTimeout(this.realtimeRetryTimer);
+      this.realtimeRetryTimer = null;
+    }
+  }
+
+  private clearAccessReconcileTimer(): void {
+    if (this.accessReconcileTimer !== null) {
+      window.clearTimeout(this.accessReconcileTimer);
+      this.accessReconcileTimer = null;
+    }
+  }
+
+  private resetRealtimeRetryBackoff(): void {
+    this.realtimeRetryDelayMs = 1000;
+    this.clearRealtimeRetryTimer();
+  }
+
+  private scheduleRealtimeRetry(reason: string): void {
+    if (this.realtimeRetryTimer !== null) {
+      return;
+    }
+
+    const delayMs = this.realtimeRetryDelayMs;
+    console.warn(`[dashboard realtime] retrying subscription setup in ${delayMs}ms (${reason})`);
+
+    this.realtimeRetryTimer = window.setTimeout(() => {
+      this.realtimeRetryTimer = null;
+      this.setupRealtimeSubscriptions();
+    }, delayMs);
+
+    this.realtimeRetryDelayMs = Math.min(this.realtimeRetryDelayMs * 2, this.realtimeRetryMaxDelayMs);
+  }
+
+  private getRealtimeErrorText(reason: unknown): string {
+    if (reason instanceof Error) {
+      return reason.message || String(reason);
+    }
+
+    return String(reason || '');
+  }
+
+  private async tryRefreshAuthForRealtime(): Promise<boolean> {
+    if (!this.pb.authStore.isValid) {
+      return false;
+    }
+
+    try {
+      await this.pb.collection('users').authRefresh();
+      return true;
+    } catch (error) {
+      console.error('[dashboard realtime] auth refresh failed:', error);
+      return false;
+    }
+  }
+
+  private startPeriodicConsistencySync(): void {
+    if (this.periodicConsistencyTimer !== null) {
+      return;
+    }
+
+    this.periodicConsistencyTimer = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') {
+        return;
+      }
+
+      this.triggerAccessRefresh();
+      this.triggerKeyRefresh();
+    }, this.periodicConsistencyMs);
+  }
+
+  private stopPeriodicConsistencySync(): void {
+    if (this.periodicConsistencyTimer !== null) {
+      window.clearInterval(this.periodicConsistencyTimer);
+      this.periodicConsistencyTimer = null;
+    }
+  }
+
+  private scheduleAccessReconcile(): void {
+    if (this.accessReconcileTimer !== null) {
+      return;
+    }
+
+    this.accessReconcileTimer = window.setTimeout(() => {
+      this.accessReconcileTimer = null;
+      this.triggerAccessRefresh();
+    }, 1200);
   }
 
   protected refreshDashboard(): void {
@@ -526,6 +646,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.pb.authStore.isValid) {
+      this.loadError.set('Realtime paused because the current session is not authenticated.');
+      this.scheduleRealtimeRetry('auth store is not valid');
+      return;
+    }
+
     this.realtimeSetupInFlight = true;
 
     this.clearRealtimeSubscriptions();
@@ -576,27 +702,52 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       let successCount = 0;
       let failureCount = 0;
+      let unauthorizedDetected = false;
       for (const result of results) {
         if (result.status === 'fulfilled') {
           successCount += 1;
           this.realtimeUnsubscribers.push(result.value);
         } else {
           failureCount += 1;
+          const reasonText = this.getRealtimeErrorText(result.reason);
+          if (reasonText.includes('401') || reasonText.toLowerCase().includes('unauthorized')) {
+            unauthorizedDetected = true;
+          }
           console.error('Dashboard realtime subscription failed for one collection', result.reason);
         }
       }
 
-      if (successCount === 0) {
-        this.loadError.set('Unable to initialize realtime subscriptions to PocketBase.');
-      } else {
-        this.loadError.set('');
-        if (failureCount > 0) {
-          console.warn(`Dashboard realtime partially initialized (${successCount}/${targets.length} subscriptions active).`);
+      if (unauthorizedDetected) {
+        const authRefreshed = await this.tryRefreshAuthForRealtime();
+        if (authRefreshed) {
+          this.scheduleRealtimeRetry('authentication refreshed after realtime 401');
+          return;
         }
+
+        this.loadError.set('Session expired. Please sign in again.');
+        this.signOut();
+        return;
       }
+
+      if (successCount === targets.length) {
+        this.resetRealtimeRetryBackoff();
+        this.loadError.set('');
+        return;
+      }
+
+      if (successCount > 0) {
+        this.loadError.set('Realtime is partially connected. Recovering connection...');
+        console.warn(`Dashboard realtime partially initialized (${successCount}/${targets.length} subscriptions active).`);
+        this.scheduleRealtimeRetry('partial realtime subscription state');
+        return;
+      }
+
+      this.loadError.set('Unable to initialize realtime subscriptions to PocketBase. Retrying...');
+      this.scheduleRealtimeRetry('all realtime subscriptions failed');
     } catch (error) {
       console.error('Dashboard realtime subscriptions failed to initialize', error);
-      this.loadError.set('Unable to initialize realtime subscriptions to PocketBase.');
+      this.loadError.set('Unable to initialize realtime subscriptions to PocketBase. Retrying...');
+      this.scheduleRealtimeRetry('subscription setup threw an exception');
     } finally {
       this.realtimeSetupInFlight = false;
     }
@@ -631,7 +782,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.lastUpdatedAt.set(new Date().toLocaleString());
 
     // Reconcile with server-side aggregates in case hooks apply additional logic.
-    this.triggerAccessRefresh();
+    this.scheduleAccessReconcile();
   }
 
   private triggerAccessRefresh(): void {

@@ -126,7 +126,6 @@
                 <th>Driver</th>
                 <th>Camera</th>
                 <th>Direction</th>
-                <th>Status</th>
                 <th>When</th>
               </tr>
             </ng-template>
@@ -138,15 +137,12 @@
                 <td>
                   <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
                 </td>
-                <td>
-                  <p-tag [value]="row.didLeave ? 'Outside' : 'Inside'" [severity]="leaveSeverity(row.didLeave)" />
-                </td>
                 <td>{{ row.eventTime }}</td>
               </tr>
             </ng-template>
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="6" class="text-center text-sm text-slate-500">No recent vehicle accesses.</td>
+                <td colspan="5" class="text-center text-sm text-slate-500">No recent vehicle accesses.</td>
               </tr>
             </ng-template>
           </p-table>
@@ -162,7 +158,6 @@
                 <th>Person</th>
                 <th>Camera</th>
                 <th>Direction</th>
-                <th>Status</th>
                 <th>When</th>
               </tr>
             </ng-template>
@@ -173,15 +168,12 @@
                 <td>
                   <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
                 </td>
-                <td>
-                  <p-tag [value]="row.didLeave ? 'Outside' : 'Inside'" [severity]="leaveSeverity(row.didLeave)" />
-                </td>
                 <td>{{ row.eventTime }}</td>
               </tr>
             </ng-template>
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="5" class="text-center text-sm text-slate-500">No recent people accesses.</td>
+                <td colspan="4" class="text-center text-sm text-slate-500">No recent people accesses.</td>
               </tr>
             </ng-template>
           </p-table>
