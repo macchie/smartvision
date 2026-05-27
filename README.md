@@ -25,7 +25,8 @@ SmartVision helps teams monitor and manage facility access with:
 - 🔐 Auth and Roles
   - Admin/operator login only
   - Role-based access rules enforced in PocketBase
-  - User creation requires explicit strong passwords in the UI (no default credentials)
+  - Users created from UI are business profiles (person, employee, company) with fixed `regular` role
+  - UI user creation does not require manual auth credentials; backend lifecycle hooks auto-provision internal email/password when missing
 
 - 📊 Operational Dashboard
   - Live metrics: vehicles inside, people inside, keys distributed
@@ -46,6 +47,8 @@ SmartVision helps teams monitor and manage facility access with:
 - 🛠 CRUD Modules
   - Cameras, Vehicles, Users, Room Groups, Rooms
   - Consistent UI patterns with PrimeNG + TailwindCSS
+  - Fixed top toolbar with safe-area aware spacing across all pages
+  - Viewport-safe dialogs and overlays that stay fully visible on desktop/mobile
 
 - ⚡ Realtime Reliability
   - PocketBase subscriptions for live updates

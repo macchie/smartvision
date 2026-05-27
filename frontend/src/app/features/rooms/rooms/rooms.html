@@ -215,7 +215,9 @@
   [(visible)]="groupDialogVisible"
   [header]="groupDialogMode === 'create' ? 'Add Room Group' : 'Edit Room Group'"
   [modal]="true"
-  styleClass="w-full max-w-[500px]"
+  styleClass="sv-dialog"
+  appendTo="body"
+  [breakpoints]="{ '1280px': '68vw', '960px': '82vw', '640px': '96vw' }"
   [draggable]="false"
   [resizable]="false"
 >
@@ -250,7 +252,9 @@
   (visibleChange)="roomKeyDialogVisible.set($event)"
   [header]="roomKeyDialogMode === 'distribute' ? 'Distribute Key' : 'Collect Key'"
   [modal]="true"
-  styleClass="w-full max-w-[500px]"
+  styleClass="sv-dialog"
+  appendTo="body"
+  [breakpoints]="{ '1280px': '68vw', '960px': '82vw', '640px': '96vw' }"
   [draggable]="false"
   [resizable]="false"
 >
@@ -328,7 +332,9 @@
   [(visible)]="roomDialogVisible"
   [header]="roomDialogMode === 'create' ? 'Add Room' : 'Edit Room'"
   [modal]="true"
-  styleClass="w-full max-w-[500px]"
+  styleClass="sv-dialog sv-dialog-wide"
+  appendTo="body"
+  [breakpoints]="{ '1280px': '74vw', '960px': '88vw', '640px': '96vw' }"
   [draggable]="false"
   [resizable]="false"
 >

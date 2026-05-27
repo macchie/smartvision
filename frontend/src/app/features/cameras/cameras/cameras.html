@@ -146,7 +146,9 @@
   [(visible)]="dialogVisible"
   [header]="dialogMode === 'create' ? 'Add Camera' : 'Edit Camera'"
   [modal]="true"
-  styleClass="w-full max-w-[500px]"
+  styleClass="sv-dialog"
+  appendTo="body"
+  [breakpoints]="{ '1280px': '68vw', '960px': '82vw', '640px': '96vw' }"
   [draggable]="false"
   [resizable]="false"
 >

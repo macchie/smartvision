@@ -18,10 +18,7 @@ import { compareBoolean, compareText, getSortIcon, toggleSortState } from '../..
 
 type UserRole = 'admin' | 'operator' | 'regular';
 type UserType = 'person' | 'employee' | 'company';
-type UserFormState = Partial<User> & {
-  password?: string;
-  passwordConfirm?: string;
-};
+type UserFormState = Partial<User>;
 
 @Component({
   selector: 'app-users',
@@ -122,12 +119,6 @@ export class Users implements OnInit {
   protected dialogMode: 'create' | 'edit' = 'create';
   protected formState: UserFormState = {};
 
-  protected roleOptions = [
-    { label: 'Admin', value: 'admin' },
-    { label: 'Operator', value: 'operator' },
-    { label: 'User', value: 'regular' }
-  ];
-
   protected userTypeOptions = [
     { label: 'Person', value: 'person' },
     { label: 'Employee', value: 'employee' },
@@ -169,6 +160,8 @@ export class Users implements OnInit {
   }
 
   protected canEdit(user: User): boolean {
+    // This screen manages business users only. Admin/operator accounts are read-only here.
+    if (this.normalizeRole(user.role) !== 'regular') return false;
     if (this.isAdmin()) return true;
     
     // Operators cannot edit themselves, other operators, or admins.
@@ -186,14 +179,10 @@ export class Users implements OnInit {
       first_name: '',
       last_name: '',
       name: '',
-      username: '',
       notes: '',
-      email: '',
       role: 'regular',
       user_type: 'person',
       enabled: true,
-      password: '',
-      passwordConfirm: '',
     };
     this.dialogMode = 'create';
     this.dialogVisible = true;
@@ -224,10 +213,6 @@ export class Users implements OnInit {
 
   protected async saveUser() {
     const userType = this.normalizeUserType(this.formState['user_type']);
-    if (!this.formState.email?.trim()) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Email is required.' });
-      return;
-    }
 
     if ((userType === 'person' || userType === 'employee') && !this.formState.first_name?.trim()) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: `First Name is required for ${userType} users.` });
@@ -239,46 +224,21 @@ export class Users implements OnInit {
       return;
     }
 
-    if (this.dialogMode === 'create') {
-      const password = this.formState.password || '';
-      const passwordConfirm = this.formState.passwordConfirm || '';
-
-      if (!this.isStrongPassword(password)) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Password must be at least 12 characters and include upper, lower, number, and special character.',
-        });
-        return;
-      }
-
-      if (password !== passwordConfirm) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Password and Confirm Password do not match.' });
-        return;
-      }
-    }
-
     this.saving.set(true);
     try {
       const payload = {
-        email: this.formState.email.trim(),
         user_type: userType,
         name: String(this.formState['name'] || '').trim(),
         first_name: this.formState.first_name?.trim() || '',
         last_name: this.formState.last_name?.trim() || '',
-        username: String(this.formState['username'] || '').trim(),
         notes: String(this.formState['notes'] || '').trim(),
-        role: this.normalizeRole(this.formState.role),
+        role: 'regular' as const,
         enabled: this.formState['enabled'] ?? true,
-        emailVisibility: false,
       };
 
       if (this.dialogMode === 'create') {
-        await this.pb.pb.collection('users').create({
-          ...payload,
-          password: this.formState.password,
-          passwordConfirm: this.formState.passwordConfirm,
-        });
+        // Backend lifecycle hook auto-generates auth credentials when absent.
+        await this.pb.pb.collection('users').create(payload);
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User created.' });
       } else {
         await this.pb.pb.collection('users').update(this.formState.id!, payload);
@@ -374,13 +334,5 @@ export class Users implements OnInit {
     }
 
     return 'person';
-  }
-
-  private isStrongPassword(password: string): boolean {
-    return password.length >= 12
-      && /[a-z]/.test(password)
-      && /[A-Z]/.test(password)
-      && /\d/.test(password)
-      && /[^A-Za-z0-9]/.test(password);
   }
 }

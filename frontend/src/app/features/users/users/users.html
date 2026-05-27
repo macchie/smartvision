@@ -153,7 +153,9 @@
   [(visible)]="dialogVisible"
   [header]="dialogMode === 'create' ? 'Add User' : 'Edit User'"
   [modal]="true"
-  styleClass="w-full max-w-[500px]"
+  styleClass="sv-dialog sv-dialog-wide"
+  appendTo="body"
+  [breakpoints]="{ '1280px': '74vw', '960px': '88vw', '640px': '96vw' }"
   [draggable]="false"
   [resizable]="false"
 >
@@ -166,7 +168,6 @@
         [(ngModel)]="formState['user_type']"
         optionLabel="label"
         optionValue="value"
-        appendTo="body"
         styleClass="w-full"
         (onChange)="onUserTypeChange($event.value)"
       />
@@ -189,63 +190,6 @@
         <input id="company_name" type="text" pInputText [(ngModel)]="formState['name']" placeholder="Company Ltd" />
       </div>
     }
-
-    <div class="flex flex-col gap-2">
-      <label for="username" class="text-sm font-semibold text-slate-700">Username</label>
-      <input id="username" type="text" pInputText [(ngModel)]="formState['username']" placeholder="Optional username" />
-    </div>
-    
-    <div class="flex flex-col gap-2">
-      <label for="email" class="text-sm font-semibold text-slate-700">Email <span class="text-red-500">*</span></label>
-      <input id="email" type="email" pInputText [(ngModel)]="formState.email" placeholder="john.doe@example.com" />
-    </div>
-
-    @if (dialogMode === 'create') {
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div class="flex flex-col gap-2">
-          <label for="password" class="text-sm font-semibold text-slate-700">Password <span class="text-red-500">*</span></label>
-          <input
-            id="password"
-            type="password"
-            pInputText
-            [(ngModel)]="formState.password"
-            autocomplete="new-password"
-            placeholder="Minimum 12 chars"
-          />
-        </div>
-        <div class="flex flex-col gap-2">
-          <label for="password_confirm" class="text-sm font-semibold text-slate-700">Confirm Password <span class="text-red-500">*</span></label>
-          <input
-            id="password_confirm"
-            type="password"
-            pInputText
-            [(ngModel)]="formState.passwordConfirm"
-            autocomplete="new-password"
-            placeholder="Repeat password"
-          />
-        </div>
-      </div>
-    }
-
-    <div class="flex flex-col gap-2">
-      <label for="role" class="text-sm font-semibold text-slate-700">Role</label>
-      <!-- Only Admin can give Admin/Operator roles -->
-      <p-select 
-        id="role" 
-        [options]="roleOptions" 
-        [(ngModel)]="formState.role" 
-        [disabled]="!isAdmin()" 
-        optionLabel="label" 
-        optionValue="value" 
-        appendTo="body"
-        styleClass="w-full"
-      />
-    </div>
-
-    <div class="flex items-center gap-2 mt-2">
-      <input type="checkbox" id="enabled" [(ngModel)]="formState['enabled']" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
-      <label for="enabled" class="text-sm font-semibold text-slate-700">Enabled</label>
-    </div>
 
     <div class="flex flex-col gap-2">
       <label for="user_notes" class="text-sm font-semibold text-slate-700">Notes</label>

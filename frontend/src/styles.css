@@ -5,23 +5,36 @@
 
 :root {
   --sv-bg: #f5f5f7;
+  --sv-bg-elevated: #fafafc;
   --sv-bg-soft: #ffffff;
   --sv-surface: #ffffff;
   --sv-surface-strong: #ffffff;
   --sv-border: rgba(0, 0, 0, 0.05);
+  --sv-border-strong: rgba(15, 23, 42, 0.12);
   --sv-text: #1d1d1f;
   --sv-text-muted: #86868b;
   --sv-accent: #007aff;
   --sv-accent-soft: #e5f0ff;
+  --sv-accent-soft-strong: #d8e8ff;
   --sv-radius-sm: 0.625rem;
   --sv-radius-md: 0.75rem;
   --sv-radius-lg: 1rem;
   --sv-radius-pill: 9999px;
   --sv-radius-card: var(--sv-radius-lg);
   --sv-shadow-soft: 0 4px 14px -10px rgba(15, 23, 42, 0.12);
+  --sv-shadow-card: 0 8px 24px -18px rgba(15, 23, 42, 0.2);
+  --sv-topbar-height: 5.25rem;
+  --sv-topbar-height-mobile: 4.5rem;
+  --sv-dialog-max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem);
+  --sv-dialog-width: min(92vw, 42rem);
+  --sv-dialog-wide-width: min(94vw, 50rem);
 }
 
 @layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   button, [role="button"] {
     cursor: pointer;
   }
@@ -38,7 +51,10 @@
   }
   body {
     @apply selection:bg-blue-200/50 selection:text-blue-900;
-    background: #f6f7f9;
+    background:
+      radial-gradient(1200px circle at 0% -10%, #eef5ff 0%, transparent 42%),
+      radial-gradient(1100px circle at 100% -20%, #f3f8ff 0%, transparent 38%),
+      #f6f7f9;
     color: var(--sv-text);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     font-weight: 400;
@@ -55,9 +71,9 @@
 .dashboard-card,
 .glass-surface {
   border-radius: var(--sv-radius-card);
-  border: 1px solid var(--sv-border) !important;
+  border: 1px solid var(--sv-border-strong) !important;
   background: var(--sv-surface-strong) !important;
-  box-shadow: var(--sv-shadow-soft) !important;
+  box-shadow: var(--sv-shadow-card) !important;
 }
 
 .dashboard-table {
@@ -72,12 +88,18 @@ table.dashboard-table {
 
 /* Ensure select dropdowns render above cards/dialog wrappers when appended to body */
 .p-select-overlay,
-.p-dropdown-panel {
-  z-index: 1200 !important;
+.p-dropdown-panel,
+.p-autocomplete-overlay {
+  z-index: 3200 !important;
+}
+
+.p-dialog-mask {
+  z-index: 3000 !important;
 }
 
 .p-toast,
-.p-confirmdialog {
+.p-confirmdialog,
+.p-confirm-dialog {
   z-index: 4000 !important;
 }
 
@@ -226,6 +248,50 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
   border-radius: var(--sv-radius-md);
 }
 
+.p-card .p-card-body {
+  padding: 1rem;
+}
+
+.p-card .p-card-title {
+  color: var(--sv-text);
+  font-weight: 700;
+}
+
+.p-button {
+  border-radius: var(--sv-radius-md);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.p-button.p-button-outlined {
+  background: #ffffff;
+  border-color: var(--sv-border-strong);
+  color: #334155;
+}
+
+.p-button.p-button-outlined:hover {
+  background: #f8fbff;
+  border-color: #bfdbfe;
+}
+
+.p-inputtext,
+.p-select,
+.p-autocomplete-input,
+.p-textarea {
+  border-radius: var(--sv-radius-md);
+  border-color: rgba(148, 163, 184, 0.35);
+  background: #ffffff;
+  min-height: 2.65rem;
+}
+
+.p-inputtext:enabled:focus,
+.p-autocomplete-input:enabled:focus,
+.p-select.p-focus,
+.p-textarea:enabled:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px var(--sv-accent-soft);
+}
+
 .table-toolbar {
   display: flex;
   align-items: center;
@@ -275,7 +341,35 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
   padding-bottom: 0.95rem;
 }
 
-.p-dialog .p-dialog-content {
+.p-dialog-mask {
+  align-items: center !important;
+  justify-content: center !important;
+  padding:
+    max(0.65rem, env(safe-area-inset-top))
+    0.75rem
+    max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.p-dialog {
+  margin: 0 !important;
+  max-width: calc(100vw - 1.5rem) !important;
+  max-height: var(--sv-dialog-max-height) !important;
+}
+
+.p-dialog.sv-dialog {
+  width: var(--sv-dialog-width) !important;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.p-dialog.sv-dialog.sv-dialog-wide {
+  width: var(--sv-dialog-wide-width) !important;
+}
+
+.p-dialog.sv-dialog .p-dialog-content {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  max-height: calc(var(--sv-dialog-max-height) - 8.25rem);
   padding-top: 0.85rem;
 }
 
@@ -311,13 +405,15 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
     padding-right: 0.55rem;
   }
 
-  .p-dialog {
-    width: min(94vw, 30rem) !important;
-    max-height: min(90dvh, 44rem);
+  .p-dialog.sv-dialog,
+  .p-dialog.sv-dialog.sv-dialog-wide {
+    width: min(96vw, 38rem) !important;
+    max-height: var(--sv-dialog-max-height);
     margin: 0 auto;
   }
 
-  .p-dialog .p-dialog-content {
+  .p-dialog.sv-dialog .p-dialog-content {
+    max-height: calc(var(--sv-dialog-max-height) - 7.75rem);
     padding-bottom: calc(0.95rem + env(safe-area-inset-bottom));
   }
 }

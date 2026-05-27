@@ -3,8 +3,16 @@
 }
 
 .dashboard-shell {
+  position: relative;
+  min-height: 100dvh;
   background: var(--sv-bg);
   color: var(--sv-text);
+}
+
+.dashboard-content {
+  position: relative;
+  z-index: 10;
+  padding-top: calc(var(--sv-topbar-height) + env(safe-area-inset-top) + 0.75rem);
 }
 
 .brand-mark {
@@ -13,9 +21,16 @@
 }
 
 .dashboard-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  min-height: var(--sv-topbar-height);
   background: var(--sv-surface-strong);
   border-bottom: 1px solid var(--sv-border);
-  box-shadow: 0 1px 8px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 6px 24px -20px rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(12px);
 }
 
 .top-nav {
@@ -91,7 +106,12 @@
 }
 
 @media (max-width: 768px) {
+  .dashboard-content {
+    padding-top: calc(var(--sv-topbar-height-mobile) + env(safe-area-inset-top) + 0.55rem);
+  }
+
   .dashboard-topbar {
+    min-height: var(--sv-topbar-height-mobile);
     padding-top: max(0.75rem, env(safe-area-inset-top));
   }
 

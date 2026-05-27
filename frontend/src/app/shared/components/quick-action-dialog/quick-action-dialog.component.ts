@@ -21,7 +21,9 @@ export type QuickActionDialogOption = {
       [visible]="visible()"
       (visibleChange)="visible.set($event)"
       [modal]="true"
-      [style]="{ width: '25rem', padding: '1rem' }"
+      styleClass="sv-dialog"
+      appendTo="body"
+      [breakpoints]="{ '1280px': '68vw', '960px': '82vw', '640px': '96vw' }"
     >
       <div class="mt-2 flex flex-col gap-4">
         <div class="flex flex-col gap-2">
