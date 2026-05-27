@@ -90,7 +90,7 @@
           </th>
           <th>Created</th>
           <th>Updated</th>
-          <th style="width: 120px">Actions</th>
+          <th class="table-actions-col" style="width: 120px">Actions</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-camera>
@@ -113,7 +113,7 @@
           </td>
           <td><span class="text-sm text-slate-600">{{ formatDateTime(camera.created) }}</span></td>
           <td><span class="text-sm text-slate-600">{{ formatDateTime(camera.updated) }}</span></td>
-          <td>
+          <td class="table-actions-col">
             <div class="flex gap-2">
               <p-button
                 icon="pi pi-pencil"

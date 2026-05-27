@@ -89,7 +89,7 @@
             </th>
             <th class="px-4 py-3 text-left" style="width: 170px">Created</th>
             <th class="px-4 py-3 text-left" style="width: 170px">Updated</th>
-            <th class="px-4 py-3 text-left" style="width: 132px">Actions</th>
+            <th class="px-4 py-3 text-left table-actions-col" style="width: 132px">Actions</th>
           </tr>
         </thead>
         <tbody *ngIf="!loading()">
@@ -120,7 +120,7 @@
               </td>
               <td class="px-4 py-3 text-sm text-slate-600">{{ formatDateTime(group.created) }}</td>
               <td class="px-4 py-3 text-sm text-slate-600">{{ formatDateTime(group.updated) }}</td>
-              <td class="px-4 py-3">
+              <td class="px-4 py-3 table-actions-col">
                 <div class="flex gap-2">
                   <p-button
                     icon="pi pi-plus"
@@ -174,7 +174,7 @@
               <td class="px-4 py-3 text-slate-400">-</td>
               <td class="px-4 py-3 text-sm text-slate-600">{{ formatDateTime(room.created) }}</td>
               <td class="px-4 py-3 text-sm text-slate-600">{{ formatDateTime(room.updated) }}</td>
-              <td class="px-4 py-3">
+              <td class="px-4 py-3 table-actions-col">
                 <div class="flex gap-2">
                   <p-button
                     [icon]="getRoomKeyActionIcon(room)"

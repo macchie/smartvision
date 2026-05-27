@@ -156,6 +156,48 @@ table.dashboard-table > tbody > tr:hover {
   background: rgba(241, 245, 249, 0.7);
 }
 
+.dashboard-table .p-datatable-thead > tr > th.table-actions-col {
+  position: sticky;
+  right: 0;
+  z-index: 4;
+  background: #f8fafc;
+  box-shadow: -10px 0 10px -10px rgba(15, 23, 42, 0.16);
+}
+
+.dashboard-table .p-datatable-tbody > tr > td.table-actions-col {
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  min-width: 120px;
+  background: #ffffff;
+  box-shadow: -10px 0 10px -10px rgba(15, 23, 42, 0.12);
+}
+
+.dashboard-table .p-datatable-tbody > tr:hover > td.table-actions-col {
+  background: rgba(241, 245, 249, 0.7);
+}
+
+table.dashboard-table > thead > tr > th.table-actions-col {
+  position: sticky;
+  right: 0;
+  z-index: 4;
+  background: #f8fafc;
+  box-shadow: -10px 0 10px -10px rgba(15, 23, 42, 0.16);
+}
+
+table.dashboard-table > tbody > tr > td.table-actions-col {
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  min-width: 120px;
+  background: #ffffff;
+  box-shadow: -10px 0 10px -10px rgba(15, 23, 42, 0.12);
+}
+
+table.dashboard-table > tbody > tr:hover > td.table-actions-col {
+  background: rgba(241, 245, 249, 0.7);
+}
+
 /* Shared page layout rhythm for feature CRUD pages */
 .page-shell {
   display: flex;
