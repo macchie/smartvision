@@ -33,6 +33,15 @@ type AccessRow = {
   createdAt: string;
 };
 
+type CameraDirection = AccessRow['direction'];
+
+type LastDirectionCameraCard = {
+  direction: CameraDirection;
+  title: string;
+  placeholderReason: string;
+  event: AccessRow | null;
+};
+
 type DashboardSummaryResponse = {
   metrics: {
     vehiclesInside: number;
@@ -135,32 +144,55 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }));
   });
 
-  protected readonly cameraVehicleCards = computed(() => {
-    const latestByCamera = new Map<string, AccessRow>();
-    const sortedVehicleRows = this.latestCameraEvents()
-      .filter(row => row.accessType === 'vehicle')
-      .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt));
+  protected readonly lastDirectionCameraCards = computed<LastDirectionCameraCard[]>(() => {
+    const latestByDirection: Record<CameraDirection, AccessRow | null> = {
+      in: null,
+      checkpoint: null,
+      out: null,
+    };
 
-    for (const row of sortedVehicleRows) {
+    const latestTimestampByDirection: Record<CameraDirection, number> = {
+      in: 0,
+      checkpoint: 0,
+      out: 0,
+    };
+
+    for (const row of this.latestCameraEvents()) {
       if (row.accessType !== 'vehicle') {
         continue;
       }
 
-      if (!latestByCamera.has(row.camera)) {
-        latestByCamera.set(row.camera, {
+      const ts = this.toTimestamp(row.createdAt);
+      const currentLatest = latestTimestampByDirection[row.direction];
+      if (ts >= currentLatest) {
+        latestTimestampByDirection[row.direction] = ts;
+        latestByDirection[row.direction] = {
           ...row,
           eventTime: this.formatRelativeTime(row.createdAt),
-        });
+        };
       }
     }
 
-    return Array.from(latestByCamera.values()).sort((a, b) => {
-      if (a.direction !== b.direction) {
-        return this.directionOrder(a.direction) - this.directionOrder(b.direction);
-      }
-
-      return this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt);
-    });
+    return [
+      {
+        direction: 'in',
+        title: 'Ingress',
+        placeholderReason: 'Waiting for the first ingress vehicle event.',
+        event: latestByDirection.in,
+      },
+      {
+        direction: 'checkpoint',
+        title: 'Checkpoint',
+        placeholderReason: 'Waiting for the first checkpoint vehicle event.',
+        event: latestByDirection.checkpoint,
+      },
+      {
+        direction: 'out',
+        title: 'Egress',
+        placeholderReason: 'Waiting for the first egress vehicle event.',
+        event: latestByDirection.out,
+      },
+    ];
   });
 
   protected readonly userMenuItems = computed<MenuItem[]>(() => [
@@ -460,13 +492,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected directionSeverity(direction: AccessRow['direction']): 'success' | 'danger' | 'info' {
+  protected directionSeverity(direction: AccessRow['direction']): 'success' | 'danger' | 'warn' {
     if (direction === 'out') {
       return 'danger';
     }
 
     if (direction === 'checkpoint') {
-      return 'info';
+      return 'warn';
     }
 
     return 'success';
@@ -887,16 +919,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return 'pi-sign-in';
   }
 
-  private directionOrder(direction: AccessRow['direction']): number {
-    if (direction === 'in') {
-      return 0;
+  protected cardThemeClass(direction: CameraDirection): string {
+    if (direction === 'out') {
+      return 'camera-card-out';
     }
 
     if (direction === 'checkpoint') {
-      return 1;
+      return 'camera-card-checkpoint';
     }
 
-    return 2;
+    return 'camera-card-in';
   }
 
   private normalizeDirection(rawDirection: unknown, didLeaveFallback = false): AccessRow['direction'] {

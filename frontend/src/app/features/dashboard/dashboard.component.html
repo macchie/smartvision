@@ -74,42 +74,45 @@
         </p-card>
       </div>
 
-      @if (cameraVehicleCards().length > 0) {
-        <div class="camera-cards-grid grid gap-3">
-          @for (cameraEvent of cameraVehicleCards(); track cameraEvent.camera) {
-            <p-card [styleClass]="'dashboard-card glass-surface camera-card h-full shadow-sm card-enter ' + (cameraEvent.direction === 'in' ? 'camera-card-in' : (cameraEvent.direction === 'out' ? 'camera-card-out' : 'camera-card-checkpoint'))">
-              <ng-template pTemplate="title">
-                <span class="title-with-icon"><i class="pi pi-video"></i><span class="truncate">{{ cameraEvent.camera }}</span></span>
-              </ng-template>
-              <div class="camera-card-body text-slate-600">
-                <div class="camera-overlay-icon" aria-hidden="true">
-                  <i class="pi" [ngClass]="directionIcon(cameraEvent.direction)"></i>
+      <div class="camera-cards-grid grid gap-3">
+        @for (directionCard of lastDirectionCameraCards(); track directionCard.direction) {
+          <p-card [styleClass]="'dashboard-card glass-surface camera-card h-full shadow-sm card-enter ' + cardThemeClass(directionCard.direction)">
+            <ng-template pTemplate="title">
+              <div class="camera-card-header">
+                <div class="camera-card-title-stack">
+                  <p class="camera-card-eyebrow">Last Camera</p>
+                  <p class="camera-card-title-text">{{ directionCard.title }}</p>
                 </div>
-                <div class="grid grid-cols-2 gap-2 text-[12px]">
-                  <div class="rounded-[var(--sv-radius-sm)] border border-slate-200/70 bg-white px-2 py-1">
-                    <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Vehicle</p>
-                    <p class="truncate font-semibold text-slate-900">{{ cameraEvent.subject }}</p>
-                  </div>
-                  <div class="rounded-[var(--sv-radius-sm)] border border-slate-200/70 bg-white px-2 py-1">
-                    <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Driver</p>
-                    <p class="truncate font-semibold text-slate-900">{{ cameraEvent.actor }}</p>
-                  </div>
-                  <div class="col-span-2 flex flex-wrap items-center gap-2 pt-0.5">
-                    <p-tag [value]="directionLabel(cameraEvent.direction)" [severity]="directionSeverity(cameraEvent.direction)" />
-                    <p-tag [value]="cameraEvent.didLeave ? 'Outside' : 'Inside'" [severity]="leaveSeverity(cameraEvent.didLeave)" />
-                  </div>
-                  <p class="col-span-2 truncate"><span class="font-semibold text-slate-900">Reason:</span> {{ cameraEvent.reason }}</p>
-                  <p class="col-span-2 truncate"><span class="font-semibold text-slate-900">When:</span> {{ cameraEvent.eventTime }}</p>
-                </div>
+                <span class="camera-card-direction-icon" aria-hidden="true">
+                  <i class="pi" [ngClass]="directionIcon(directionCard.direction)"></i>
+                </span>
               </div>
-            </p-card>
-          }
-        </div>
-      } @else {
-        <p-card styleClass="dashboard-card glass-surface border border-slate-200/80 shadow-sm">
-          <p class="text-sm text-slate-500"><i class="pi pi-info-circle mr-2"></i>No vehicle events are available for camera cards yet.</p>
-        </p-card>
-      }
+            </ng-template>
+            <div class="camera-card-body text-slate-600">
+              <div class="camera-card-content text-[12px]">
+                <div class="camera-primary-row">
+                  <p class="camera-name">{{ directionCard.event?.camera || 'No camera event yet' }}</p>
+                  <p class="camera-time">{{ directionCard.event?.eventTime || 'No recent event' }}</p>
+                </div>
+
+                <div class="camera-detail-grid">
+                  <div class="camera-detail-chip">
+                    <i class="pi pi-car"></i>
+                    <span class="truncate">{{ directionCard.event?.subject || 'Vehicle not available' }}</span>
+                  </div>
+
+                  <div class="camera-detail-chip">
+                    <i class="pi pi-user"></i>
+                    <span class="truncate">{{ directionCard.event?.actor || 'Driver not available' }}</span>
+                  </div>
+                </div>
+
+                <p class="camera-reason">{{ directionCard.event?.reason || directionCard.placeholderReason }}</p>
+              </div>
+            </div>
+          </p-card>
+        }
+      </div>
 
       <div class="grid gap-6 lg:grid-cols-2">
         <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-sm overflow-hidden">

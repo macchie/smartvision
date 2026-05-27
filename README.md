@@ -44,7 +44,8 @@ Legacy/mobile folders are intentionally excluded from active development scope.
 - Realtime dashboard updates via PocketBase subscriptions:
   - auto-refresh on new `accesses` (vehicle/user)
   - auto-refresh on new `room_key_events` (keys distributed metric)
-  - camera cards, latest lists, and stats update automatically
+  - static "Last Camera In / Checkpoint / Out" cards with placeholders and realtime updates from vehicle accesses
+  - latest lists and stats update automatically
 - Demo mode scheduler (`DEMO_DATA=TRUE`) emits fake vehicle/person ingress/egress every minute (PocketBase 0.36.x cron granularity)
 
 ### Master Data CRUD

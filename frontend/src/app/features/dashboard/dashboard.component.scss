@@ -77,8 +77,8 @@
 }
 
 .camera-card-checkpoint .title-with-icon i {
-  color: #1d4ed8;
-  background: #dbeafe;
+  color: #b45309;
+  background: #ffedd5;
 }
 
 .glass-surface {
@@ -96,7 +96,7 @@
 }
 
 .camera-cards-grid {
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 /* Removed top border gradients for a cleaner Apple aesthetic */
@@ -109,69 +109,157 @@
   border-style: solid;
 }
 
+.camera-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.camera-card-title-stack {
+  min-width: 0;
+}
+
+.camera-card-eyebrow {
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.camera-card-title-text {
+  margin: 0.06rem 0 0;
+  font-size: 1.65rem;
+  line-height: 1;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.camera-card-direction-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--sv-radius-pill);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(255, 255, 255, 0.76);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.camera-card-direction-icon i {
+  font-size: 0.94rem;
+}
+
 .camera-card-body {
   position: relative;
 }
 
-.camera-overlay-icon {
-  position: absolute;
-  top: -2.15rem;
-  right: 0.1rem;
-  width: 2.8rem;
-  height: 2.8rem;
-  border-radius: var(--sv-radius-pill);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--sv-surface-strong);
-  border: 1px solid var(--sv-border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+.camera-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.58rem;
 }
 
-.camera-overlay-icon i {
-  font-size: 1.15rem;
+.camera-primary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--sv-radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.camera-name {
+  min-width: 0;
+  font-weight: 800;
+  font-size: 0.83rem;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.camera-time {
+  flex-shrink: 0;
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: 0.01em;
+}
+
+.camera-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.camera-detail-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.44rem 0.58rem;
+  border-radius: var(--sv-radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.76);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+.camera-detail-chip i {
+  color: #475569;
+  font-size: 0.72rem;
+}
+
+.camera-reason {
+  margin: 0;
+  padding: 0.32rem 0.25rem 0;
+  font-size: 0.76rem;
+  line-height: 1.3;
+  color: #475569;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .camera-card-in {
   border-color: #15803d !important;
-  background: #f5fbf7 !important;
+  background: linear-gradient(180deg, #f7fcf8 0%, #f2fbf5 100%) !important;
 }
 
-.camera-card-in .camera-overlay-icon {
-  background: #dcfce7;
-  border-color: #86efac;
-}
-
-.camera-card-in .camera-overlay-icon i {
+.camera-card-in .camera-card-direction-icon i {
   color: #15803d;
 }
 
 .camera-card-out {
   border-color: #b91c1c !important;
-  background: #fdf6f6 !important;
+  background: linear-gradient(180deg, #fff7f7 0%, #fdf1f1 100%) !important;
 }
 
-.camera-card-out .camera-overlay-icon {
-  background: #fee2e2;
-  border-color: #fca5a5;
-}
-
-.camera-card-out .camera-overlay-icon i {
+.camera-card-out .camera-card-direction-icon i {
   color: #b91c1c;
 }
 
 .camera-card-checkpoint {
-  border-color: #1d4ed8 !important;
-  background: #f5f9ff !important;
+  border-color: #f59e0b !important;
+  background: linear-gradient(180deg, #fffaf0 0%, #fff4df 100%) !important;
 }
 
-.camera-card-checkpoint .camera-overlay-icon {
-  background: #dbeafe;
-  border-color: #93c5fd;
+.camera-card-checkpoint .camera-card-direction-icon i {
+  color: #b45309;
 }
 
-.camera-card-checkpoint .camera-overlay-icon i {
-  color: #1d4ed8;
+@media (max-width: 1099px) {
+  .camera-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* Specific styling for the quick action buttons to fit Apple aesthetics */
@@ -214,9 +302,15 @@
   }
 
   .camera-cards-grid {
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .camera-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .camera-card-title-text {
+    font-size: 1.4rem;
   }
 
   :host ::ng-deep .stats-grid .p-card,
@@ -241,11 +335,6 @@
     padding: 0.62rem;
   }
 
-  :host ::ng-deep .camera-cards-grid .p-tag {
-    font-size: 0.62rem;
-    padding: 0.12rem 0.35rem;
-  }
-
   .dashboard-card:hover {
     box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.03) !important;
   }
@@ -257,12 +346,5 @@
     padding-right: 0.9rem;
   }
 
-  .camera-overlay-icon {
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: var(--sv-radius-pill);
-    top: -1.95rem;
-    right: 0;
-  }
 }
 
