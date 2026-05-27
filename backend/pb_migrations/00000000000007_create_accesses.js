@@ -92,6 +92,14 @@ migrate((app) => {
         max: 2000,
         pattern: "",
       }),
+      new Field({
+        name: "created_at",
+        type: "date",
+      }),
+      new Field({
+        name: "updated_at",
+        type: "date",
+      }),
     ],
     indexes: [
       "CREATE INDEX idx_accesses_user_created    ON accesses (user, created)",
@@ -99,8 +107,8 @@ migrate((app) => {
       "CREATE INDEX idx_accesses_driver_user     ON accesses (driver_user)",
       "CREATE INDEX idx_accesses_camera          ON accesses (camera)",
     ],
-    listRule:   "@request.auth.id != ''",
-    viewRule:   "user = @request.auth.id || @request.auth.role = 'admin' || @request.auth.role = 'operator'",
+    listRule:   "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''",
+    viewRule:   "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''",
     createRule: "@request.auth.role = 'admin' || @request.auth.role = 'operator'",
     updateRule: "@request.auth.role = 'admin' || @request.auth.role = 'operator'",
     deleteRule: "@request.auth.role = 'admin' || @request.auth.role = 'operator'",

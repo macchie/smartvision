@@ -16,7 +16,7 @@ interface Camera {
   id: string;
   name: string;
   camera_id: string;
-  direction: 'in' | 'out';
+  direction: 'in' | 'out' | 'checkpoint';
   metadata?: unknown;
   metadataText?: string;
   notes?: string;
@@ -121,6 +121,7 @@ export class Cameras implements OnInit {
   protected readonly directionOptions = [
     { label: 'Entry (in)', value: 'in' },
     { label: 'Exit (out)', value: 'out' },
+    { label: 'Checkpoint', value: 'checkpoint' },
   ];
 
   constructor(
@@ -141,7 +142,7 @@ export class Cameras implements OnInit {
       });
       this.cameras.set(records.map(record => ({
         ...record,
-        direction: record.direction === 'out' ? 'out' : 'in',
+        direction: this.normalizeDirection(record.direction),
         metadataText: this.stringifyMetadata(record.metadata),
         notes: record.notes ?? record.description ?? '',
         created: this.resolveTimestamp(record, 'created'),
@@ -164,7 +165,7 @@ export class Cameras implements OnInit {
     this.formState = {
       ...camera,
       notes: camera.notes ?? camera.description ?? '',
-      direction: camera.direction === 'out' ? 'out' : 'in',
+      direction: this.normalizeDirection(camera.direction),
       metadataText: this.stringifyMetadata(camera.metadata),
     };
     this.dialogMode = 'edit';
@@ -192,7 +193,7 @@ export class Cameras implements OnInit {
       const payload = {
         name: this.formState.name.trim(),
         camera_id: this.formState.camera_id.trim(),
-        direction: this.formState.direction === 'out' ? 'out' : 'in',
+        direction: this.normalizeDirection(this.formState.direction),
         metadata: metadataPayload,
         notes: this.formState.notes?.trim() || '',
         enabled: this.formState.enabled ?? true,
@@ -311,5 +312,29 @@ export class Cameras implements OnInit {
     }
 
     return source;
+  }
+
+  protected directionLabel(direction: Camera['direction']): string {
+    switch (direction) {
+      case 'out':
+        return 'Out';
+      case 'checkpoint':
+        return 'Checkpoint';
+      case 'in':
+      default:
+        return 'In';
+    }
+  }
+
+  private normalizeDirection(direction: unknown): Camera['direction'] {
+    if (direction === 'out') {
+      return 'out';
+    }
+
+    if (direction === 'checkpoint') {
+      return 'checkpoint';
+    }
+
+    return 'in';
   }
 }

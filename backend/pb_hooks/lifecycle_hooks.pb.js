@@ -318,6 +318,12 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             }
         }
 
+        const normalizeDirection = (rawDirection) => {
+            if (rawDirection === "out") return "out"
+            if (rawDirection === "checkpoint") return "checkpoint"
+            return "in"
+        }
+
         const getCameraData = (cameraId) => {
             if (!cameraId) return { name: "Unknown camera", direction: "in" }
             if (camerasCache[cameraId]) return camerasCache[cameraId]
@@ -326,7 +332,7 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
                 const camera = $app.findRecordById("cameras", cameraId)
                 const data = {
                     name: camera.getString("name") || cameraId,
-                    direction: camera.getString("direction") === "out" ? "out" : "in",
+                    direction: normalizeDirection(camera.getString("direction")),
                 }
                 camerasCache[cameraId] = data
                 return data

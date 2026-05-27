@@ -134,7 +134,7 @@
           <td>{{ row.actor }}</td>
           <td>{{ row.camera }}</td>
           <td>
-            <p-tag [value]="row.direction === 'in' ? 'Ingress' : 'Egress'" [severity]="directionSeverity(row.direction)" />
+            <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
           </td>
           <td>
             <p-tag [value]="row.didLeave ? 'Outside' : 'Inside'" [severity]="statusSeverity(row.didLeave)" />

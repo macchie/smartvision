@@ -76,6 +76,11 @@
   background: #fee2e2;
 }
 
+.camera-card-checkpoint .title-with-icon i {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
 .glass-surface {
   background: var(--sv-surface-strong) !important;
   backdrop-filter: auto;
@@ -153,6 +158,20 @@
 
 .camera-card-out .camera-overlay-icon i {
   color: #b91c1c;
+}
+
+.camera-card-checkpoint {
+  border-color: #1d4ed8 !important;
+  background: #f5f9ff !important;
+}
+
+.camera-card-checkpoint .camera-overlay-icon {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.camera-card-checkpoint .camera-overlay-icon i {
+  color: #1d4ed8;
 }
 
 /* Specific styling for the quick action buttons to fit Apple aesthetics */

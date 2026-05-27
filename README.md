@@ -50,6 +50,7 @@ Legacy/mobile folders are intentionally excluded from active development scope.
 ### Master Data CRUD
 
 - Cameras CRUD
+  - supported directions: `in`, `out`, and `checkpoint` (vehicle tracking at internal points)
 - Vehicles CRUD
 - Users CRUD
   - supported user types: `person`, `employee`, and `company`
@@ -81,9 +82,11 @@ Legacy/mobile folders are intentionally excluded from active development scope.
 
 - PocketBase runtime pinned to version 0.36.9
 - Schema and data lifecycle managed via backend/pb_migrations
+- Core entity schemas are defined in their own create migrations (`00000000000001` ... `00000000000008`) without relying on a global schema-repair migration
+- Legacy corrective migrations `00000000000012_relax_admin_read_rules`, `00000000000013_repair_core_collections_schema`, `00000000000016_fix_core_crud_rules`, and `00000000000021_restrict_users_auth_to_admin_operator` are retained as no-op compatibility stubs
 - Domain behavior and API hooks in backend/pb_hooks
 - Demo data support controlled by DEMO_DATA environment variable
-- Demo seed includes users, cameras, vehicles, room groups, rooms, and sample access events
+- Demo seed includes users, cameras (including a checkpoint example), vehicles, room groups, rooms, and sample access events
 
 Seeded local credentials:
 

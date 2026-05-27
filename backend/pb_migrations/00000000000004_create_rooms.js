@@ -48,6 +48,14 @@ migrate((app) => {
         max: 2000,
         pattern: "",
       }),
+      new Field({
+        name: "created_at",
+        type: "date",
+      }),
+      new Field({
+        name: "updated_at",
+        type: "date",
+      }),
     ],
     indexes: [
       "CREATE INDEX idx_rooms_number     ON rooms (number)",

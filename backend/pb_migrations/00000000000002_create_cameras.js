@@ -23,13 +23,13 @@ migrate((app) => {
         max: null,
         pattern: "",
       }),
-      // "in" = entry camera, "out" = exit camera
+      // "in" = entry camera, "out" = exit camera, "checkpoint" = tracking point
       new Field({
         name: "direction",
         type: "select",
         required: true,
         maxSelect: 1,
-        values: ["in", "out"],
+        values: ["in", "out", "checkpoint"],
       }),
       // Arbitrary camera metadata (IP, location, model …)
       new Field({
@@ -47,6 +47,14 @@ migrate((app) => {
         min: null,
         max: 2000,
         pattern: "",
+      }),
+      new Field({
+        name: "created_at",
+        type: "date",
+      }),
+      new Field({
+        name: "updated_at",
+        type: "date",
       }),
     ],
     indexes: [

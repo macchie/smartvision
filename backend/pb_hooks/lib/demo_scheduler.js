@@ -120,9 +120,9 @@ function createDemoAccessEvent() {
             const openAccess = getOpenAccessForSubject("vehicle", "vehicle", vehicle.id)
             const shouldLeave = !!openAccess
             const preferredCameras = shouldLeave ? outCameras : inCameras
-            const camera = pickRandom(preferredCameras.length > 0 ? preferredCameras : allCameras)
+            const camera = pickRandom(preferredCameras)
             if (!camera) {
-                console.log("[demo scheduler] skipped: no camera available for vehicle branch")
+                console.log("[demo scheduler] skipped: no matching ingress/egress camera available for vehicle branch")
                 return null
             }
 
@@ -173,9 +173,9 @@ function createDemoAccessEvent() {
             const openAccess = getOpenAccessForSubject("user", "user", user.id)
             const shouldLeave = !!openAccess
             const preferredCameras = shouldLeave ? outCameras : inCameras
-            const camera = pickRandom(preferredCameras.length > 0 ? preferredCameras : allCameras)
+            const camera = pickRandom(preferredCameras)
             if (!camera) {
-                console.log("[demo scheduler] skipped: no camera available for user branch")
+                console.log("[demo scheduler] skipped: no matching ingress/egress camera available for user branch")
                 return null
             }
 

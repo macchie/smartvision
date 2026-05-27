@@ -26,7 +26,7 @@ type AccessRow = {
   subject: string;
   actor: string;
   camera: string;
-  direction: 'in' | 'out';
+  direction: 'in' | 'out' | 'checkpoint';
   didLeave: boolean;
   reason: string;
   eventTime: string;
@@ -45,7 +45,7 @@ type DashboardSummaryResponse = {
     subject: string;
     actor: string;
     camera: string;
-    direction: 'in' | 'out';
+    direction: 'in' | 'out' | 'checkpoint';
     didLeave: boolean;
     reason: string;
     createdAt: string;
@@ -156,7 +156,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     return Array.from(latestByCamera.values()).sort((a, b) => {
       if (a.direction !== b.direction) {
-        return a.direction === 'in' ? -1 : 1;
+        return this.directionOrder(a.direction) - this.directionOrder(b.direction);
       }
 
       return this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt);
@@ -460,8 +460,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected directionSeverity(direction: 'in' | 'out'): 'success' | 'danger' {
-    return direction === 'in' ? 'success' : 'danger';
+  protected directionSeverity(direction: AccessRow['direction']): 'success' | 'danger' | 'info' {
+    if (direction === 'out') {
+      return 'danger';
+    }
+
+    if (direction === 'checkpoint') {
+      return 'info';
+    }
+
+    return 'success';
   }
 
   private isEgressCamera(camera: any): boolean {
@@ -781,13 +789,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const createdAt = this.getRecordCreatedAt(record);
 
+    const cameraDirection = this.normalizeDirection(expandedCamera?.direction, didLeave);
+
     return {
       id: record.id,
       accessType,
       subject: subject || (accessType === 'vehicle' ? 'Unknown vehicle' : 'Unknown person'),
       actor: actor || 'System',
       camera: expandedCamera?.name || record.camera || 'Unknown camera',
-      direction: didLeave ? 'out' : 'in',
+      direction: cameraDirection,
       didLeave,
       reason: record.reason || '-',
       eventTime: this.formatRelativeTime(createdAt),
@@ -851,5 +861,53 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private toTimestamp(isoDate: string): number {
     const ts = Date.parse(isoDate || '');
     return Number.isFinite(ts) ? ts : 0;
+  }
+
+  protected directionLabel(direction: AccessRow['direction']): string {
+    if (direction === 'out') {
+      return 'Egress';
+    }
+
+    if (direction === 'checkpoint') {
+      return 'Checkpoint';
+    }
+
+    return 'Ingress';
+  }
+
+  protected directionIcon(direction: AccessRow['direction']): string {
+    if (direction === 'out') {
+      return 'pi-sign-out';
+    }
+
+    if (direction === 'checkpoint') {
+      return 'pi-map-marker';
+    }
+
+    return 'pi-sign-in';
+  }
+
+  private directionOrder(direction: AccessRow['direction']): number {
+    if (direction === 'in') {
+      return 0;
+    }
+
+    if (direction === 'checkpoint') {
+      return 1;
+    }
+
+    return 2;
+  }
+
+  private normalizeDirection(rawDirection: unknown, didLeaveFallback = false): AccessRow['direction'] {
+    if (rawDirection === 'out' || rawDirection === 'egress') {
+      return 'out';
+    }
+
+    if (rawDirection === 'checkpoint') {
+      return 'checkpoint';
+    }
+
+    return didLeaveFallback ? 'out' : 'in';
   }
 }

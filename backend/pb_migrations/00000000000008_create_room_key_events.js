@@ -57,13 +57,21 @@ migrate((app) => {
         max: 2000,
         pattern: "",
       }),
+      new Field({
+        name: "created_at",
+        type: "date",
+      }),
+      new Field({
+        name: "updated_at",
+        type: "date",
+      }),
     ],
     indexes: [
       "CREATE INDEX idx_room_key_events_room         ON room_key_events (room)",
       "CREATE INDEX idx_room_key_events_user_created ON room_key_events (user, created)",
     ],
-    listRule:   "@request.auth.id != ''",
-    viewRule:   "user = @request.auth.id || @request.auth.role = 'admin' || @request.auth.role = 'operator'",
+    listRule:   "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''",
+    viewRule:   "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''",
     createRule: "@request.auth.role = 'admin' || @request.auth.role = 'operator'",
     updateRule: "@request.auth.role = 'admin' || @request.auth.role = 'operator'",
     deleteRule: "@request.auth.role = 'admin'",

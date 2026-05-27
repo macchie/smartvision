@@ -44,6 +44,14 @@ migrate((app) => {
         max: 2000,
         pattern: "",
       }),
+      new Field({
+        name: "created_at",
+        type: "date",
+      }),
+      new Field({
+        name: "updated_at",
+        type: "date",
+      }),
     ],
     indexes: [
       "CREATE UNIQUE INDEX idx_vehicles_number ON vehicles (number)",

@@ -16,7 +16,7 @@
  *   2. Find or auto-create the vehicle by plate_number
  *   3. Apply min-stay guard (30 s) and direction-alternation check
  *   4. Create a vehicle access record; close the previous one on exit
- *   5. Create a user access record for the vehicle owner
+ *   5. Create a user access record for the vehicle owner (in/out only)
  */
 routerAdd("POST", "/api/camera-event", (e) => {
   const body        = $apis.requestInfo(e).body
@@ -38,7 +38,7 @@ routerAdd("POST", "/api/camera-event", (e) => {
     return e.notFoundError("camera not found", null)
   }
   const camera    = cameras[0]
-  const direction = camera.getString("direction")
+  const direction = normalizeCameraDirection(camera.getString("direction"))
 
   // 2. Find or auto-create vehicle
   let vehicle
@@ -73,10 +73,16 @@ routerAdd("POST", "/api/camera-event", (e) => {
     const last    = lastVehicleAccess[0]
     const elapsed = (Date.now() - new Date(last.getString("created")).getTime()) / 1000
     const lastDirection = getCameraDirectionById(last.getString("camera"))
-    if (elapsed < MIN_STAY_SEC || lastDirection === direction) {
+
+    if (direction === "checkpoint") {
+      // Prevent duplicate checkpoint spam from the same camera in short bursts.
+      if (elapsed < MIN_STAY_SEC && last.getString("camera") === camera.id) {
+        shouldCreate = false
+      }
+    } else if (elapsed < MIN_STAY_SEC || lastDirection === direction) {
       shouldCreate = false
     }
-  } else if (direction !== "in") {
+  } else if (direction === "out") {
     // First-ever event for this vehicle must be an entry
     shouldCreate = false
   }
@@ -113,7 +119,7 @@ routerAdd("POST", "/api/camera-event", (e) => {
   }
 
   // 5. User access for vehicle owner
-  if (ownerId) {
+  if (ownerId && direction !== "checkpoint") {
     createUserAccess(ownerId, camera)
   }
 
@@ -134,7 +140,11 @@ routerAdd("POST", "/api/camera-event", (e) => {
  */
 function createUserAccess(userId, camera) {
   const MIN_STAY_SEC = 30
-  const direction = camera.getString("direction")
+  const direction = normalizeCameraDirection(camera.getString("direction"))
+
+  if (direction === "checkpoint") {
+    return
+  }
 
   const lastUserAccess = $app.findRecordsByFilter(
     "accesses",
@@ -183,5 +193,11 @@ function getCameraDirectionById(cameraId) {
   )
 
   if (cams.length === 0) return ""
-  return cams[0].getString("direction")
+  return normalizeCameraDirection(cams[0].getString("direction"))
+}
+
+function normalizeCameraDirection(rawDirection) {
+  if (rawDirection === "out") return "out"
+  if (rawDirection === "checkpoint") return "checkpoint"
+  return "in"
 }

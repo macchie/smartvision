@@ -92,8 +92,11 @@
           <td class="font-medium text-slate-900">{{ camera.name }}</td>
           <td><span class="text-slate-600">{{ camera.camera_id || '-' }}</span></td>
           <td>
-            <span class="text-sm font-semibold" [ngClass]="camera.direction === 'out' ? 'text-orange-600' : 'text-emerald-600'">
-              {{ camera.direction === 'out' ? 'Out' : 'In' }}
+            <span
+              class="text-sm font-semibold"
+              [ngClass]="camera.direction === 'out' ? 'text-orange-600' : (camera.direction === 'checkpoint' ? 'text-blue-600' : 'text-emerald-600')"
+            >
+              {{ directionLabel(camera.direction) }}
             </span>
           </td>
           <td>

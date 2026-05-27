@@ -77,13 +77,13 @@
       @if (cameraVehicleCards().length > 0) {
         <div class="camera-cards-grid grid gap-3">
           @for (cameraEvent of cameraVehicleCards(); track cameraEvent.camera) {
-            <p-card [styleClass]="'dashboard-card glass-surface camera-card h-full shadow-sm card-enter ' + (cameraEvent.direction === 'in' ? 'camera-card-in' : 'camera-card-out')">
+            <p-card [styleClass]="'dashboard-card glass-surface camera-card h-full shadow-sm card-enter ' + (cameraEvent.direction === 'in' ? 'camera-card-in' : (cameraEvent.direction === 'out' ? 'camera-card-out' : 'camera-card-checkpoint'))">
               <ng-template pTemplate="title">
                 <span class="title-with-icon"><i class="pi pi-video"></i><span class="truncate">{{ cameraEvent.camera }}</span></span>
               </ng-template>
               <div class="camera-card-body text-slate-600">
                 <div class="camera-overlay-icon" aria-hidden="true">
-                  <i class="pi" [ngClass]="cameraEvent.direction === 'in' ? 'pi-sign-in' : 'pi-sign-out'"></i>
+                  <i class="pi" [ngClass]="directionIcon(cameraEvent.direction)"></i>
                 </div>
                 <div class="grid grid-cols-2 gap-2 text-[12px]">
                   <div class="rounded-[var(--sv-radius-sm)] border border-slate-200/70 bg-white px-2 py-1">
@@ -95,7 +95,7 @@
                     <p class="truncate font-semibold text-slate-900">{{ cameraEvent.actor }}</p>
                   </div>
                   <div class="col-span-2 flex flex-wrap items-center gap-2 pt-0.5">
-                    <p-tag [value]="cameraEvent.direction === 'in' ? 'Ingress' : 'Egress'" [severity]="directionSeverity(cameraEvent.direction)" />
+                    <p-tag [value]="directionLabel(cameraEvent.direction)" [severity]="directionSeverity(cameraEvent.direction)" />
                     <p-tag [value]="cameraEvent.didLeave ? 'Outside' : 'Inside'" [severity]="leaveSeverity(cameraEvent.didLeave)" />
                   </div>
                   <p class="col-span-2 truncate"><span class="font-semibold text-slate-900">Reason:</span> {{ cameraEvent.reason }}</p>
@@ -133,7 +133,7 @@
                 <td>{{ row.actor }}</td>
                 <td>{{ row.camera }}</td>
                 <td>
-                  <p-tag [value]="row.direction === 'in' ? 'Ingress' : 'Egress'" [severity]="directionSeverity(row.direction)" />
+                  <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
                 </td>
                 <td>
                   <p-tag [value]="row.didLeave ? 'Outside' : 'Inside'" [severity]="leaveSeverity(row.didLeave)" />
@@ -168,7 +168,7 @@
                 <td><span class="font-semibold text-slate-900">{{ row.subject }}</span></td>
                 <td>{{ row.camera }}</td>
                 <td>
-                  <p-tag [value]="row.direction === 'in' ? 'Ingress' : 'Egress'" [severity]="directionSeverity(row.direction)" />
+                  <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
                 </td>
                 <td>
                   <p-tag [value]="row.didLeave ? 'Outside' : 'Inside'" [severity]="leaveSeverity(row.didLeave)" />

@@ -11,7 +11,7 @@ import { MessageService } from 'primeng/api';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
 
 type AccessTypeFilter = 'all' | 'vehicle' | 'user';
-type DirectionFilter = 'all' | 'in' | 'out';
+type DirectionFilter = 'all' | 'in' | 'out' | 'checkpoint';
 
 type AccessLogRow = {
   id: string;
@@ -19,7 +19,7 @@ type AccessLogRow = {
   subject: string;
   actor: string;
   camera: string;
-  direction: 'in' | 'out';
+  direction: 'in' | 'out' | 'checkpoint';
   didLeave: boolean;
   reason: string;
   createdAt: string;
@@ -33,7 +33,7 @@ type DashboardSummaryEvent = {
   subject?: string;
   actor?: string;
   camera?: string;
-  direction?: 'in' | 'out';
+  direction?: 'in' | 'out' | 'checkpoint';
   didLeave?: boolean;
   did_leave?: boolean;
   reason?: string;
@@ -81,6 +81,7 @@ export class AccessLogs implements OnInit {
     { label: 'All Directions', value: 'all' as const },
     { label: 'Ingress', value: 'in' as const },
     { label: 'Egress', value: 'out' as const },
+    { label: 'Checkpoint', value: 'checkpoint' as const },
   ];
 
   protected readonly filteredLogs = computed(() => {
@@ -242,8 +243,16 @@ export class AccessLogs implements OnInit {
       : 'pi-sort-amount-down text-blue-600';
   }
 
-  protected directionSeverity(direction: 'in' | 'out'): 'success' | 'danger' {
-    return direction === 'in' ? 'success' : 'danger';
+  protected directionSeverity(direction: AccessLogRow['direction']): 'success' | 'danger' | 'info' {
+    if (direction === 'out') {
+      return 'danger';
+    }
+
+    if (direction === 'checkpoint') {
+      return 'info';
+    }
+
+    return 'success';
   }
 
   protected statusSeverity(didLeave: boolean): 'warn' | 'success' {
@@ -274,7 +283,7 @@ export class AccessLogs implements OnInit {
 
   private mapAccessRecord(record: any): AccessLogRow {
     const accessType = record.access_type === 'vehicle' ? 'vehicle' : 'user';
-    const direction: 'in' | 'out' = record.did_leave ? 'out' : 'in';
+    const direction = this.normalizeDirection(record.expand?.camera?.direction, !!record.did_leave);
 
     const expandedUser = record.expand?.user;
     const expandedVehicle = record.expand?.vehicle;
@@ -319,12 +328,36 @@ export class AccessLogs implements OnInit {
       subject: event.subject || (accessType === 'vehicle' ? 'Unknown vehicle' : 'Unknown person'),
       actor: event.actor || 'System',
       camera: event.camera || 'Unknown camera',
-      direction: event.direction === 'out' ? 'out' : 'in',
+      direction: this.normalizeDirection(event.direction, didLeave),
       didLeave,
       reason: event.reason || '-',
       createdAt,
       updatedAt,
     };
+  }
+
+  protected directionLabel(direction: AccessLogRow['direction']): string {
+    if (direction === 'out') {
+      return 'Egress';
+    }
+
+    if (direction === 'checkpoint') {
+      return 'Checkpoint';
+    }
+
+    return 'Ingress';
+  }
+
+  private normalizeDirection(rawDirection: unknown, didLeaveFallback = false): AccessLogRow['direction'] {
+    if (rawDirection === 'out' || rawDirection === 'egress') {
+      return 'out';
+    }
+
+    if (rawDirection === 'checkpoint') {
+      return 'checkpoint';
+    }
+
+    return didLeaveFallback ? 'out' : 'in';
   }
 
   private getUserDisplayName(user: any, fallbackId?: string): string {

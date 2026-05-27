@@ -26,6 +26,16 @@ migrate((app) => {
   const roomsCol = app.findCollectionByNameOrId("rooms")
   const accessesCol = app.findCollectionByNameOrId("accesses")
 
+  // Ensure the direction select supports checkpoint before seeding the example camera.
+  const directionField = camerasCol.fields.find((field) => field.name === "direction")
+  if (directionField) {
+    const currentValues = Array.isArray(directionField.values) ? directionField.values : []
+    if (!currentValues.includes("checkpoint")) {
+      directionField.values = ["in", "out", "checkpoint"]
+      app.save(camerasCol)
+    }
+  }
+
   const tag = "demo_seed_v3"
 
   const admin = findBy(app, "users", (u) => u.getString("email") === "admin@smartvision.local")
@@ -113,6 +123,17 @@ migrate((app) => {
     camOut.set("enabled", true)
     camOut.set("notes", tag)
     app.save(camOut)
+  }
+
+  let camCheckpoint = findBy(app, "cameras", (c) => c.getString("camera_id") === "demo-cam-checkpoint-yard")
+  if (!camCheckpoint) {
+    camCheckpoint = new Record(camerasCol)
+    camCheckpoint.set("name", "Demo Yard Checkpoint")
+    camCheckpoint.set("camera_id", "demo-cam-checkpoint-yard")
+    camCheckpoint.set("direction", "checkpoint")
+    camCheckpoint.set("enabled", true)
+    camCheckpoint.set("notes", tag)
+    app.save(camCheckpoint)
   }
 
   const frontOfficeGroup = findBy(app, "room_groups", (g) => g.getString("name") === "Front Office") || (() => {

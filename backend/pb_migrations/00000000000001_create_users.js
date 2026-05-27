@@ -14,7 +14,8 @@ migrate((app) => {
   }
 
   // Auth options
-  collection.authRule = "" // any valid credentials can authenticate
+  // Only enabled admin/operator users can authenticate.
+  collection.authRule = "enabled = true && (role = 'admin' || role = 'operator')"
   collection.passwordAuth = {
     enabled: true,
     identityFields: ["email", "username"],
@@ -84,6 +85,16 @@ migrate((app) => {
         min: null,
         max: 2000,
         pattern: "",
+      }),
+
+      // Explicit audit timestamps kept for compatibility with dashboard tables.
+      new Field({
+        name: "created_at",
+        type: "date",
+      }),
+      new Field({
+        name: "updated_at",
+        type: "date",
       }),
   ]
 
