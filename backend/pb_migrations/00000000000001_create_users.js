@@ -22,80 +22,80 @@ migrate((app) => {
   }
 
   collection.fields = [
-      // Distinguishes people from companies in this unified collection.
-      new Field({
-        name: "user_type",
-        type: "select",
-        required: true,
-        maxSelect: 1,
-        values: ["person", "employee", "company"],
-      }),
+    // Distinguishes people from companies in this unified collection.
+    new Field({
+      name: "user_type",
+      type: "select",
+      required: true,
+      maxSelect: 1,
+      values: ["person", "employee", "company"],
+    }),
 
-      // Display name used for company records and as optional full name.
-      new Field({
-        name: "name",
-        type: "text",
-        min: null,
-        max: null,
-        pattern: "",
-      }),
+    // Display name used for company records and as optional full name.
+    new Field({
+      name: "name",
+      type: "text",
+      min: null,
+      max: null,
+      pattern: "",
+    }),
 
-      new Field({
-        name: "first_name",
-        type: "text",
-        min: null,
-        max: null,
-        pattern: "",
-      }),
-      new Field({
-        name: "last_name",
-        type: "text",
-        min: null,
-        max: null,
-        pattern: "",
-      }),
-      new Field({
-        name: "username",
-        type: "text",
-        min: null,
-        max: null,
-        pattern: "",
-      }),
+    new Field({
+      name: "first_name",
+      type: "text",
+      min: null,
+      max: null,
+      pattern: "",
+    }),
+    new Field({
+      name: "last_name",
+      type: "text",
+      min: null,
+      max: null,
+      pattern: "",
+    }),
+    new Field({
+      name: "username",
+      type: "text",
+      min: null,
+      max: null,
+      pattern: "",
+    }),
 
-      // Authorization role.
-      // Default "regular" is enforced in lifecycle_hooks.pb.js on create.
-      new Field({
-        name: "role",
-        type: "select",
-        required: true,
-        maxSelect: 1,
-        values: ["regular", "operator", "admin"],
-      }),
+    // Authorization role.
+    // Default "regular" is enforced in lifecycle_hooks.pb.js on create.
+    new Field({
+      name: "role",
+      type: "select",
+      required: true,
+      maxSelect: 1,
+      values: ["regular", "operator", "admin"],
+    }),
 
-      // Soft-disable without deleting (mirrors Enabled mixin)
-      new Field({
-        name: "enabled",
-        type: "bool",
-      }),
+    // Soft-disable without deleting (mirrors Enabled mixin)
+    new Field({
+      name: "enabled",
+      type: "bool",
+    }),
 
-      // Free-text notes (mirrors Notes mixin)
-      new Field({
-        name: "notes",
-        type: "text",
-        min: null,
-        max: 2000,
-        pattern: "",
-      }),
+    // Free-text notes (mirrors Notes mixin)
+    new Field({
+      name: "notes",
+      type: "text",
+      min: null,
+      max: 2000,
+      pattern: "",
+    }),
 
-      // Explicit audit timestamps kept for compatibility with dashboard tables.
-      new Field({
-        name: "created_at",
-        type: "date",
-      }),
-      new Field({
-        name: "updated_at",
-        type: "date",
-      }),
+    // Explicit audit timestamps kept for compatibility with dashboard tables.
+    new Field({
+      name: "created_at",
+      type: "date",
+    }),
+    new Field({
+      name: "updated_at",
+      type: "date",
+    }),
   ]
 
   collection.indexes = [
