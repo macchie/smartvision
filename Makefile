@@ -8,7 +8,7 @@ DEMO_DATA ?= TRUE
 all: install dev
 
 install:
-	cd frontend && npm install
+	cd frontend && bun install
 
 dev:
 	@echo "Starting PocketBase + Angular dev server..."
@@ -21,12 +21,12 @@ backend:
 	cd backend && DEMO_DATA=$(DEMO_DATA) ./pocketbase serve --http=0.0.0.0:8090
 
 frontend:
-	cd frontend && npm run start
+	cd frontend && bun run start
 
 # ─── Production Build ───
 
 build:
-	cd frontend && npm run build
+	cd frontend && bun run build
 	@echo "✓ Frontend built to backend/pb_public/"
 
 # ─── Docker ───
@@ -47,6 +47,6 @@ clean-data:
 	@rm -rf backend/pb_public/*
 
 clean:
-	@rm -rf frontend/node_modules frontend/package-lock.json frontend/dist
+	@rm -rf frontend/node_modules frontend/package-lock.json frontend/bun.lock frontend/bun.lockb frontend/dist
 	@rm -rf backend/pb_public/*
 	@touch backend/pb_public/.gitkeep

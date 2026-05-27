@@ -109,8 +109,7 @@ Seeded local credentials:
 
 ## Prerequisites
 
-- Node.js (LTS recommended)
-- npm
+- Bun (1.3+ recommended)
 - PocketBase binary in backend, version 0.36.9
 - Docker and Docker Compose (optional)
 
