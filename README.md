@@ -1,156 +1,112 @@
 # SmartVision
 
 ![PocketBase](https://img.shields.io/badge/PocketBase-0.36.9-blue)
-![Angular](https://img.shields.io/badge/Frontend-Angular%20%2B%20PrimeNG-red)
+![Angular](https://img.shields.io/badge/Frontend-Angular%2021-red)
+![PrimeNG](https://img.shields.io/badge/UI-PrimeNG-009688)
 ![TailwindCSS](https://img.shields.io/badge/Styling-TailwindCSS-06B6D4)
+![Bun](https://img.shields.io/badge/Runtime-Bun%201.3%2B-F9F1E1)
 ![Docker](https://img.shields.io/badge/Deploy-Docker%20Compose-2496ED)
+![Realtime](https://img.shields.io/badge/Updates-Realtime-success)
 
-SmartVision is a web platform for operational access control management.
-It centralizes people, vehicle, camera, and room data, and provides a live dashboard for monitoring ingress/egress activity and room key workflows.
+SmartVision is a web-based access control platform for operational teams.
+It centralizes people, vehicles, cameras, and room keys in a single dashboard with realtime updates and production-ready CRUD workflows.
 
-## Project Goal
+## Overview
 
-Deliver a production-ready, role-aware access control dashboard that:
+SmartVision helps teams monitor and manage facility access with:
 
-- keeps core operations in one web app (no mobile dependency)
-- provides consistent CRUD workflows for all master data entities
-- surfaces real backend state from PocketBase with clear user feedback
-- supports secure, maintainable evolution through migrations and hooks
+- live ingress, egress, and checkpoint visibility
+- role-aware authentication and authorization
+- full master-data management (users, vehicles, cameras, rooms)
+- realtime dashboard and access logs for fast operational decisions
 
-## Current Scope
+## Key Features
 
-This repository currently treats only these folders as source of truth:
+- 🔐 Auth and Roles
+  - Admin/operator login only
+  - Role-based access rules enforced in PocketBase
 
-- backend (PocketBase server, migrations, hooks)
-- frontend (Angular application with PrimeNG and TailwindCSS)
+- 📊 Operational Dashboard
+  - Live metrics: vehicles inside, people inside, keys distributed
+  - Latest vehicle and people access streams
+  - Clean direction cards for Ingress, Checkpoint, and Egress
+  - Realtime-safe behavior with reconnect and fallback refresh
 
-Legacy/mobile folders are intentionally excluded from active development scope.
+- 🚗👤 Access Management
+  - Track both vehicle and user access events
+  - Direction support: in, out, checkpoint
+  - Fast filters and search in access logs
 
-## Current Feature Set
+- 🗝 Room Key Workflow
+  - Key distribution and collection events
+  - Room key state synchronization
 
-### Authentication and Roles
+- 🛠 CRUD Modules
+  - Cameras, Vehicles, Users, Room Groups, Rooms
+  - Consistent UI patterns with PrimeNG + TailwindCSS
 
-- PocketBase auth with role-based rules (admin/operator/regular)
-- Sign-in restricted to enabled admin/operator accounts only
-- Self-registration is disabled; users are managed by admins/operators
-- Admin and superuser seed accounts for local development
-- Rule-repair migration to prevent drift to superuser-only CRUD behavior
+- ⚡ Realtime Reliability
+  - PocketBase subscriptions for live updates
+  - Visibility/online rebinding and subscription recovery
+  - Periodic consistency sync when realtime is degraded
+  - Demo scheduler emits events and sends realtime update pings
 
-### Operational Dashboard
+## Tech Stack
 
-- Live summary metrics (vehicles inside, people inside, keys distributed)
-- Latest access events for users and vehicles
-- Backend summary endpoint at /api/dashboard/summary for role-safe reads
-- Realtime dashboard updates via PocketBase subscriptions:
-  - auto-refresh on new `accesses` (vehicle/user)
-  - auto-refresh on new `room_key_events` (keys distributed metric)
-  - static "Last Camera In / Checkpoint / Out" cards with placeholders and realtime updates from vehicle accesses
-  - latest lists and stats update automatically
-  - automatic subscription recovery with exponential backoff (network/session interruptions)
-  - tab visibility and network-online rebinding to keep each opened dashboard live
-  - periodic consistency refresh fallback when realtime delivery is temporarily degraded
-- Demo mode scheduler (`DEMO_DATA=TRUE`) emits fake vehicle/person ingress/egress every minute (PocketBase 0.36.x cron granularity)
-  - scheduler-created access events also publish an explicit realtime update ping to active `accesses` subscribers for immediate dashboard refresh
+- Backend: PocketBase 0.36.9 (migrations + hooks)
+- Frontend: Angular 21 standalone architecture
+- UI: PrimeNG + TailwindCSS
+- Frontend Runtime/Package Manager: Bun
+- Build Output: frontend bundles served by PocketBase from backend/pb_public
 
-### Master Data CRUD
+## Quick Start
 
-- Cameras CRUD
-  - supported directions: `in`, `out`, and `checkpoint` (vehicle tracking at internal points)
-- Vehicles CRUD
-- Users CRUD
-  - supported user types: `person`, `employee`, and `company`
-- Access Logs page:
-  - unified table for people and vehicle accesses
-  - default sort by latest event first
-  - free-text search + quick filters by type and direction
-- Unified Rooms experience:
-  - room groups shown as parent rows
-  - rooms shown as sub-entries in one page/table
-- Entity audit timestamps:
-  - explicit `created_at` and `updated_at` fields are maintained for core entities (`users`, `cameras`, `room_groups`, `rooms`, `vehicles`, `accesses`, `room_key_events`)
-  - schema-repair migration backfills missing timestamp values for legacy records
-  - hooks populate/refresh audit timestamps on create/update requests using PocketBase date-compatible format
-  - users list queries request explicit timestamp fields so Created/Updated columns are always available in the dashboard tables
+### 1. Prerequisites
 
-### UX and Interaction
+- Bun 1.3+
+- PocketBase binary in backend/
+- Docker + Docker Compose (optional)
 
-- Responsive top toolbar with active-page highlighting
-- PrimeNG toast notifications for success/error operation feedback
-- PrimeNG confirmation dialogs (no native browser confirm dialogs)
-- Free-text search bars on Cameras, Rooms, Vehicles, and Users pages
-- Sort selectors on list tables for quick ordering by key fields
-- Production-style UI with PrimeNG + TailwindCSS
-
-## Architecture
-
-### Backend
-
-- PocketBase runtime pinned to version 0.36.9
-- Schema and data lifecycle managed via backend/pb_migrations
-- Core entity schemas are defined in their own create migrations (`00000000000001` ... `00000000000008`) without relying on a global schema-repair migration
-- Legacy corrective migrations `00000000000012_relax_admin_read_rules`, `00000000000013_repair_core_collections_schema`, `00000000000016_fix_core_crud_rules`, and `00000000000021_restrict_users_auth_to_admin_operator` are retained as no-op compatibility stubs
-- Domain behavior and API hooks in backend/pb_hooks
-- Demo data support controlled by DEMO_DATA environment variable
-- Demo seed includes users, cameras (including a checkpoint example), vehicles, room groups, rooms, and sample access events
-
-Seeded local credentials:
-
-- App admin user: admin@smartvision.local / Admin123!
-- PocketBase superuser: superadmin@smartvision.local / Admin123!
-
-### Frontend
-
-- Angular standalone architecture
-- PrimeNG component system
-- TailwindCSS styling (with tailwindcss-primeui)
-- Web-only runtime
-- Core app pages are eagerly loaded to avoid route-change style flash (FOUC)
-- Production build output to backend/pb_public
-
-## Prerequisites
-
-- Bun (1.3+ recommended)
-- PocketBase binary in backend, version 0.36.9
-- Docker and Docker Compose (optional)
-
-## Local Development
-
-From repository root:
+### 2. Install and Run
 
 ```bash
 make install
 make dev
 ```
 
-Disable demo data seeding:
+### 3. Open the App
+
+- Frontend: http://0.0.0.0:4200
+- PocketBase Admin: http://0.0.0.0:8090/_/
+
+## Command Examples
+
+### Development
+
+```bash
+make install
+make dev
+make backend
+make frontend
+```
+
+### Build
+
+```bash
+make build
+
+# frontend-only
+cd frontend
+bun run build
+```
+
+### Demo Data Toggle
 
 ```bash
 make DEMO_DATA=FALSE backend
 ```
 
-Useful URLs:
-
-- PocketBase Admin: http://0.0.0.0:8090/_/
-- Frontend Dev Server: http://0.0.0.0:4200
-
-Run one service only:
-
-```bash
-make backend
-make frontend
-```
-
-## Build
-
-```bash
-make build
-```
-
-Output directory:
-
-- backend/pb_public
-
-## Deploy with Docker
+### Docker
 
 ```bash
 make docker
@@ -158,16 +114,39 @@ make docker-down
 make docker-logs
 ```
 
-## Maintenance
+### Maintenance
 
 ```bash
 make clean-data
 make clean
 ```
 
-## Contribution Guidelines
+## Project Structure
+
+```text
+smartvision/
+├── backend/
+│   ├── pb_migrations/
+│   ├── pb_hooks/
+│   └── pocketbase
+├── frontend/
+│   ├── src/
+│   ├── angular.json
+│   ├── package.json
+│   └── bun.lock
+├── Makefile
+├── Dockerfile
+└── docker-compose.yml
+```
+
+## Local Demo Credentials
+
+- App admin: admin@smartvision.local / Admin123!
+- PocketBase superuser: superadmin@smartvision.local / Admin123!
+
+## Contributing
 
 - Keep backend compatibility pinned to PocketBase 0.36.9
 - Keep frontend UI aligned with PrimeNG + TailwindCSS
 - Prefer targeted, production-ready changes
-- Update this README whenever behavior, architecture, commands, or compatibility changes
+- Update README when architecture, commands, or runtime behavior changes
