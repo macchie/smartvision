@@ -219,25 +219,6 @@
           </p-autoComplete>
       </div>
       <div class="flex flex-col gap-2">
-          <label for="va-driver" class="text-sm font-semibold">Driver <span class="text-[--sv-text-muted] font-normal">(Optional)</span></label>
-          <p-autoComplete 
-            id="va-driver" 
-            [(ngModel)]="formState.driver" 
-            [suggestions]="suggestedDrivers()" 
-            (completeMethod)="searchDrivers($event)" 
-            field="displayName" 
-            optionLabel="displayName"
-            dataKey="id" 
-            placeholder="Search driver..."
-            [dropdown]="true" 
-            [completeOnFocus]="true"
-            appendTo="body"
-            styleClass="w-full"
-            [fluid]="true">
-            <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
-          </p-autoComplete>
-      </div>
-      <div class="flex flex-col gap-2">
           <label for="va-camera" class="text-sm font-semibold">Camera</label>
           <p-autoComplete 
             id="va-camera" 

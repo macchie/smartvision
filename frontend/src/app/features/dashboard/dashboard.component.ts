@@ -83,6 +83,11 @@ type RoomKeyEventRecord = {
   enabled?: boolean;
 };
 
+type RealtimeEvent<TRecord = any> = {
+  action: string;
+  record?: TRecord;
+};
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -174,7 +179,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Autocomplete Suggestions
   protected suggestedUsers = signal<any[]>([]);
-  protected suggestedDrivers = signal<any[]>([]);
   protected suggestedVehicles = signal<any[]>([]);
   protected suggestedCameras = signal<any[]>([]);
   protected suggestedRooms = signal<any[]>([]);
@@ -183,7 +187,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected formState = {
     user: null as any,
     vehicle: null as any,
-    driver: null as any,
     camera: null as any,
     room: null as any,
     reason: ''
@@ -270,7 +273,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.formState = {
       user: null,
       vehicle: null,
-      driver: null,
       camera: null,
       room: null,
       reason: ''
@@ -303,22 +305,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         displayName: r['user_type'] === 'company' && r['name'] 
           ? `${r['name']} (${r['email']})` 
           : `${r['first_name']} ${r['last_name']} (${r['email']})`
-      })));
-    } catch(e) {
-      console.error(e);
-    }
-  }
-
-  protected async searchDrivers(event: AutoCompleteCompleteEvent) {
-    try {
-      const query = event.query || '';
-      const baseFilter = `(first_name != "" || last_name != "")`;
-      const filterStr = query ? `(${baseFilter}) && (first_name ~ "${query}" || last_name ~ "${query}")` : baseFilter;
-      
-      const records = await this.pb.collection('users').getList(1, 10, { filter: filterStr });
-      this.suggestedDrivers.set(records.items.map(r => ({
-        ...r,
-        displayName: `${r['first_name']} ${r['last_name']}`.trim()
       })));
     } catch(e) {
       console.error(e);
@@ -380,14 +366,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Vehicle and Camera are required.' });
         return;
       }
+
+      const currentUser = this.authService.user();
+      if (!currentUser?.id) {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Authenticated driver is required to record vehicle access.' });
+        return;
+      }
+
       await this.pb.collection('accesses').create({
         access_type: 'vehicle',
         vehicle: this.formState.vehicle.id,
-        driver_user: this.formState.driver?.id || null,
+        driver_user: currentUser.id,
         camera: this.formState.camera.id,
         did_leave: false,
         reason: this.formState.reason,
-        made_by_user: this.authService.user()?.id,
+        made_by_user: currentUser.id,
         deletable: true,
         enabled: true,
       });
@@ -498,20 +491,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.clearRealtimeSubscriptions();
 
     try {
-      const onAccessLikeEvent = (event: { action: string }) => {
-        if (
-          event.action === 'create'
-          || event.action === 'update'
-          || event.action === 'delete'
-          || event.action === 'PB_CONNECT'
-        ) {
-          this.ngZone.run(() => {
+      const onAccessEvent = (event: RealtimeEvent<AccessRecord>) => {
+        this.ngZone.run(() => {
+          if (event.action === 'create' && event.record) {
+            this.applyRealtimeAccessCreate(event.record);
+            return;
+          }
+
+          if (
+            event.action === 'update'
+            || event.action === 'delete'
+            || event.action === 'PB_CONNECT'
+          ) {
             this.triggerAccessRefresh();
-          });
-        }
+          }
+        });
       };
 
-      const onRoomKeyEvent = (event: { action: string }) => {
+      const onRoomKeyEvent = (event: RealtimeEvent<RoomKeyEventRecord>) => {
         if (
           event.action === 'create'
           || event.action === 'update'
@@ -525,10 +522,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       };
 
       const targets: Array<Promise<() => void>> = [
-        this.pb.collection('accesses').subscribe('*', onAccessLikeEvent),
-        this.pb.collection('cameras').subscribe('*', onAccessLikeEvent),
-        this.pb.collection('users').subscribe('*', onAccessLikeEvent),
-        this.pb.collection('vehicles').subscribe('*', onAccessLikeEvent),
+        this.pb.collection('accesses').subscribe('*', onAccessEvent, {
+          expand: 'user,vehicle,driver_user,made_by_user,camera',
+          requestKey: null,
+        }),
+        this.pb.collection('cameras').subscribe('*', () => this.ngZone.run(() => this.triggerAccessRefresh())),
+        this.pb.collection('users').subscribe('*', () => this.ngZone.run(() => this.triggerAccessRefresh())),
+        this.pb.collection('vehicles').subscribe('*', () => this.ngZone.run(() => this.triggerAccessRefresh())),
         this.pb.collection('room_key_events').subscribe('*', onRoomKeyEvent),
       ];
 
@@ -560,6 +560,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } finally {
       this.realtimeSetupInFlight = false;
     }
+  }
+
+  private applyRealtimeAccessCreate(record: AccessRecord): void {
+    if (record.enabled === false) {
+      return;
+    }
+
+    const mapped = this.mapAccessRecord(record);
+
+    this.latestCameraEvents.update((existingRows) => {
+      const nextRows = [
+        mapped,
+        ...existingRows.filter((row) => row.id !== mapped.id),
+      ]
+        .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt))
+        .slice(0, 50);
+
+      return nextRows;
+    });
+
+    if (mapped.accessType === 'vehicle' && !mapped.didLeave) {
+      this.vehiclesInside.update((count) => count + 1);
+    }
+
+    if (mapped.accessType === 'user' && !mapped.didLeave) {
+      this.usersInside.update((count) => count + 1);
+    }
+
+    this.lastUpdatedAt.set(new Date().toLocaleString());
+
+    // Reconcile with server-side aggregates in case hooks apply additional logic.
+    this.triggerAccessRefresh();
   }
 
   private triggerAccessRefresh(): void {

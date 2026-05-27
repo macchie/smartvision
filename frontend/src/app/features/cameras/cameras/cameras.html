@@ -71,12 +71,6 @@
             </button>
           </th>
           <th>
-            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('metadata')">
-              Metadata
-              <i class="pi text-[11px]" [ngClass]="getSortIcon('metadata')"></i>
-            </button>
-          </th>
-          <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('enabled')">
               Enabled
               <i class="pi text-[11px]" [ngClass]="getSortIcon('enabled')"></i>
@@ -101,9 +95,6 @@
             <span class="text-sm font-semibold" [ngClass]="camera.direction === 'out' ? 'text-orange-600' : 'text-emerald-600'">
               {{ camera.direction === 'out' ? 'Out' : 'In' }}
             </span>
-          </td>
-          <td>
-            <span class="text-xs text-slate-500 line-clamp-1 max-w-xs">{{ camera.metadataText || '-' }}</span>
           </td>
           <td>
             <p-tag [value]="camera.enabled ? 'Yes' : 'No'" [severity]="camera.enabled ? 'success' : 'secondary'"></p-tag>
@@ -137,7 +128,7 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9" class="text-center py-8 text-slate-500">
+          <td colspan="8" class="text-center py-8 text-slate-500">
             <i class="pi pi-camera text-3xl mb-3 text-slate-300 block"></i>
             No cameras found. Add one to get started.
           </td>
