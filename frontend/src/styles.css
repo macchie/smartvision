@@ -144,6 +144,15 @@ table.dashboard-table {
   z-index: 3200 !important;
 }
 
+/*
+  The overlay PORTAL wrapper is what actually stacks against the dialog mask.
+  It must sit above the mask (3000) so dropdown options inside a modal dialog
+  are clickable — otherwise the mask swallows the clicks and selection fails.
+*/
+.p-overlay {
+  z-index: 3500 !important;
+}
+
 .p-dialog-mask {
   z-index: 3000 !important;
 }
@@ -462,7 +471,6 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
 
 /* Form fields inside dialogs adopt the app's input surface */
 .p-dialog .p-inputtext,
-.p-dialog .p-autocomplete-input,
 .p-dialog .p-textarea,
 .p-dialog .p-select,
 .p-dialog .p-select-label {
@@ -473,6 +481,55 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
 
 .p-dialog .p-select {
   border: 1px solid var(--sv-border-strong) !important;
+}
+
+.p-select-dropdown {
+  background: transparent !important;
+  color: var(--sv-text-muted) !important;
+}
+
+/*
+  Render the autocomplete (input + dropdown trigger) as a single clean control
+  so the border and radius wrap the whole group — no double borders or the
+  mismatched grey dropdown button that PrimeNG renders by default.
+*/
+.p-autocomplete {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  background: var(--sv-input-bg);
+  border: 1px solid var(--sv-border-strong);
+  border-radius: var(--sv-radius-md);
+  overflow: hidden;
+}
+
+.p-autocomplete:focus-within {
+  border-color: var(--sv-accent);
+  box-shadow: 0 0 0 3px var(--sv-accent-soft);
+}
+
+.p-autocomplete .p-autocomplete-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--sv-text) !important;
+}
+
+.p-autocomplete .p-autocomplete-dropdown {
+  flex: 0 0 auto;
+  width: 2.75rem;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--sv-text-muted) !important;
+}
+
+.p-autocomplete .p-autocomplete-dropdown:hover {
+  background: var(--sv-accent-soft) !important;
+  color: var(--sv-text) !important;
 }
 
 /* Autocomplete / select dropdown panels (appended to body) */
