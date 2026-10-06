@@ -77,25 +77,11 @@
             </button>
           </th>
           <th>
-            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('email')">
-              Email
-              <i class="pi text-[11px]" [ngClass]="getSortIcon('email')"></i>
-            </button>
-          </th>
-          <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('role')">
               Role
               <i class="pi text-[11px]" [ngClass]="getSortIcon('role')"></i>
             </button>
           </th>
-          <th>
-            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('notes')">
-              Notes
-              <i class="pi text-[11px]" [ngClass]="getSortIcon('notes')"></i>
-            </button>
-          </th>
-          <th>Created</th>
-          <th>Updated</th>
           <th class="table-actions-col" style="width: 120px">Actions</th>
         </tr>
       </ng-template>
@@ -107,13 +93,9 @@
           <td><span class="text-slate-600">{{ user.username || '-' }}</span></td>
           <td class="font-medium text-slate-900">{{ getDisplayName(user) }}</td>
           <td><span class="text-slate-600">{{ user.name || '-' }}</span></td>
-          <td><span class="text-slate-600">{{ user.email }}</span></td>
           <td>
             <p-tag [value]="user.role" [severity]="getRoleSeverity(user.role)"></p-tag>
           </td>
-          <td><span class="text-sm text-slate-500 line-clamp-1 max-w-[220px]">{{ user.notes || '-' }}</span></td>
-          <td><span class="text-sm text-slate-600">{{ formatDateTime(user.created) }}</span></td>
-          <td><span class="text-sm text-slate-600">{{ formatDateTime(user.updated) }}</span></td>
           <td class="table-actions-col">
             <div class="flex gap-2" *ngIf="canEdit(user)">
               <p-button
@@ -138,7 +120,7 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="10" class="text-center py-8 text-slate-500">
+          <td colspan="6" class="text-center py-8 text-slate-500">
             <i class="pi pi-users text-3xl mb-3 text-slate-300 block"></i>
             No users found.
           </td>

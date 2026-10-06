@@ -1,4 +1,13 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[var(--sv-bg)] p-4 safe-top safe-bottom md:p-6 text-[var(--sv-text)]">
+  <button
+    type="button"
+    (click)="toggleTheme()"
+    [attr.aria-pressed]="themeService.isDark()"
+    [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+    class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--sv-border-strong)] bg-[var(--sv-surface-strong)] text-[var(--sv-text-muted)] transition-colors hover:text-[var(--sv-text)] safe-top-margin">
+    <lucide-icon [img]="themeService.isDark() ? Sun : Moon" class="h-5 w-5"></lucide-icon>
+  </button>
+
   <div class="glass relative w-full max-w-[420px] rounded-[var(--sv-radius-lg)] p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[var(--sv-border)] bg-[var(--sv-surface-strong)] animate-fade-in-up">
     <div class="mb-2 flex items-center justify-center gap-3" aria-hidden="true">
       <div class="flex h-12 w-12 items-center justify-center rounded-[var(--sv-radius-lg)] bg-[var(--sv-text)] text-white shadow-sm">

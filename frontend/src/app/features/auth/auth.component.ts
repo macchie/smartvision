@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { LucideAngularModule, Camera, AlertCircle } from 'lucide-angular';
+import { ThemeService } from '../../core/services/theme.service';
+import { LucideAngularModule, Camera, AlertCircle, Sun, Moon } from 'lucide-angular';
 
 @Component({
   selector: 'app-auth',
@@ -14,6 +15,8 @@ import { LucideAngularModule, Camera, AlertCircle } from 'lucide-angular';
 export class AuthComponent {
   readonly Camera = Camera;
   readonly AlertCircle = AlertCircle;
+  readonly Sun = Sun;
+  readonly Moon = Moon;
 
   authError = signal('');
   loading = signal(false);
@@ -21,8 +24,13 @@ export class AuthComponent {
 
   constructor(
     private authService: AuthService,
+    public themeService: ThemeService,
     private router: Router,
   ) {}
+
+  toggleTheme(): void {
+    this.themeService.toggle();
+  }
 
   async auth(): Promise<void> {
     this.loading.set(true);

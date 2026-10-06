@@ -12,22 +12,64 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="SmartVision" />
   <meta name="application-name" content="SmartVision" />
-  <meta name="theme-color" content="#4f46e5" />
+  <meta name="theme-color" content="#ffffff" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='50' text-anchor='middle' dominant-baseline='central' font-size='54'>📷</text></svg>" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='88'>📷</text></svg>" />
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!--
+    Apply the saved colour scheme before the first paint so the app never
+    flashes the wrong theme while Angular boots. Defaults to light and never
+    consults the OS preference, so the theme only changes when the user asks.
+  -->
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('sv-theme');
+        var isDark = stored === 'dark';
+        var root = document.documentElement;
+        if (isDark) root.classList.add('dark');
+        root.style.colorScheme = isDark ? 'dark' : 'light';
+      } catch (e) { /* ignore storage errors */ }
+    })();
+  </script>
 
   <style>
-    /* Ensure the background is consistent during load */
-    body { background-color: #f9fafb; }
+    /* Boot background + splash — avoids a blank/white flash during load. */
+    html { background-color: #f6f7f9; }
+    html.dark { background-color: #0b1120; }
+
+    #sv-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f6f7f9;
+      z-index: 2147483647;
+    }
+    html.dark #sv-splash { background-color: #0b1120; }
+
+    #sv-splash .sv-spinner {
+      width: 38px;
+      height: 38px;
+      border-radius: 9999px;
+      border: 3px solid rgba(100, 116, 139, 0.25);
+      border-top-color: #007aff;
+      animation: sv-spin 0.7s linear infinite;
+    }
+    @keyframes sv-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      #sv-splash .sv-spinner { animation-duration: 1.4s; }
+    }
+
+    /* Once Angular renders <app-root> content, hide the splash. */
+    app-root:not(:empty) + #sv-splash { display: none; }
   </style>
 
   <base href="/">
 </head>
 <body>
   <app-root></app-root>
+  <div id="sv-splash" aria-hidden="true"><div class="sv-spinner"></div></div>
 </body>
 </html>

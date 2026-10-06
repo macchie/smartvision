@@ -6,28 +6,36 @@
           <i class="pi pi-camera text-sm"></i>
         </a>
         <div class="hidden sm:block">
-          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700/90 md:text-xs">SmartVision</p>
-          <a routerLink="/dashboard"><h1 class="text-lg font-black tracking-tight text-slate-900 md:text-2xl">Dashboard</h1></a>
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700/90 dark:text-blue-300/90 md:text-xs">SmartVision</p>
+          <a routerLink="/dashboard"><h1 class="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100 md:text-2xl">Dashboard</h1></a>
         </div>
       </div>
 
       <div class="flex items-center gap-2 md:ml-auto md:gap-3">
         <!-- Desktop navigation links -->
-        <nav class="top-nav hidden md:flex gap-1.5 border border-slate-200/70 bg-white/85 p-1 shadow-sm backdrop-blur">
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/cameras" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Cameras</a>
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/rooms" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Rooms</a>
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/access-logs" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Access Logs</a>
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/vehicles" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Vehicles</a>
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 px-3 py-2 transition-colors" routerLink="/users" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Users</a>
+        <nav class="top-nav hidden md:flex gap-1.5 border border-slate-200/70 bg-white/85 p-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/cameras" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Cameras</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/rooms" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Rooms</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/access-logs" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Access Logs</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/vehicles" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Vehicles</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/users" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Users</a>
         </nav>
 
-        <!-- Mobile nav menu button could go here -->
-        
+        <button
+          type="button"
+          class="theme-toggle inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/95 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white md:h-10 md:w-10"
+          (click)="toggleTheme()"
+          [attr.aria-pressed]="themeService.isDark()"
+          [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+        >
+          <i class="pi" [ngClass]="themeService.isDark() ? 'pi-sun' : 'pi-moon'"></i>
+        </button>
+
         <button
           type="button"
           pButton
-          class="user-menu-trigger !rounded-full !border !border-slate-200/80 !bg-white/95 !px-2 !py-1.5"
+          class="user-menu-trigger !rounded-full !border !border-slate-200/80 !bg-white/95 dark:!border-white/10 dark:!bg-white/5 !px-2 !py-1.5"
           (click)="toggleUserMenu($event)"
           aria-label="Open user menu"
         >

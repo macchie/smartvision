@@ -59,12 +59,6 @@
             </button>
           </th>
           <th>
-            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('camera_id')">
-              Camera ID
-              <i class="pi text-[11px]" [ngClass]="getSortIcon('camera_id')"></i>
-            </button>
-          </th>
-          <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('direction')">
               Direction
               <i class="pi text-[11px]" [ngClass]="getSortIcon('direction')"></i>
@@ -76,21 +70,12 @@
               <i class="pi text-[11px]" [ngClass]="getSortIcon('enabled')"></i>
             </button>
           </th>
-          <th>
-            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('notes')">
-              Camera Details
-              <i class="pi text-[11px]" [ngClass]="getSortIcon('notes')"></i>
-            </button>
-          </th>
-          <th>Created</th>
-          <th>Updated</th>
           <th class="table-actions-col" style="width: 120px">Actions</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-camera>
         <tr>
           <td class="font-medium text-slate-900">{{ camera.name }}</td>
-          <td><span class="text-slate-600">{{ camera.camera_id || '-' }}</span></td>
           <td>
             <span
               class="text-sm font-semibold"
@@ -102,11 +87,6 @@
           <td>
             <p-tag [value]="camera.enabled ? 'Yes' : 'No'" [severity]="camera.enabled ? 'success' : 'secondary'"></p-tag>
           </td>
-          <td>
-            <span class="text-sm text-slate-500 line-clamp-1 max-w-xs">{{ camera.notes || camera.description || '-' }}</span>
-          </td>
-          <td><span class="text-sm text-slate-600">{{ formatDateTime(camera.created) }}</span></td>
-          <td><span class="text-sm text-slate-600">{{ formatDateTime(camera.updated) }}</span></td>
           <td class="table-actions-col">
             <div class="flex gap-2">
               <p-button
@@ -131,7 +111,7 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8" class="text-center py-8 text-slate-500">
+          <td colspan="4" class="text-center py-8 text-slate-500">
             <i class="pi pi-camera text-3xl mb-3 text-slate-300 block"></i>
             No cameras found. Add one to get started.
           </td>

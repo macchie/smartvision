@@ -2,6 +2,7 @@ import { Component, computed, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
+import { ThemeService } from '../../../core/services/theme.service';
 import { ButtonModule } from 'primeng/button';
 import { Menu, MenuModule } from 'primeng/menu';
 import { AvatarModule } from 'primeng/avatar';
@@ -27,11 +28,16 @@ export class LayoutComponent {
 
   constructor(
     public authService: AuthService,
+    public themeService: ThemeService,
     private router: Router
   ) {}
 
   protected toggleUserMenu(event: Event): void {
     this.userMenu?.toggle(event);
+  }
+
+  protected toggleTheme(): void {
+    this.themeService.toggle();
   }
 
   protected signOut(): void {

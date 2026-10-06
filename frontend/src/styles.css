@@ -3,12 +3,22 @@
 
 @import "primeicons/primeicons.css";
 
+/*
+  Dark mode is driven by a `.dark` class on <html> (toggled by ThemeService),
+  never by the OS preference — so `dark:` utilities only apply when the user
+  explicitly opts in.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --sv-bg: #f5f5f7;
   --sv-bg-elevated: #fafafc;
   --sv-bg-soft: #ffffff;
   --sv-surface: #ffffff;
   --sv-surface-strong: #ffffff;
+  --sv-muted-surface: #f8fafc;
+  --sv-table-head-bg: #edf3fc;
+  --sv-table-row-alt: #f6f9fe;
   --sv-border: rgba(0, 0, 0, 0.05);
   --sv-border-strong: rgba(15, 23, 42, 0.12);
   --sv-text: #1d1d1f;
@@ -16,6 +26,11 @@
   --sv-accent: #007aff;
   --sv-accent-soft: #e5f0ff;
   --sv-accent-soft-strong: #d8e8ff;
+  --sv-input-bg: #ffffff;
+  --sv-th-text: #64748b;
+  --sv-table-border: rgba(148, 163, 184, 0.18);
+  --sv-table-border-soft: rgba(148, 163, 184, 0.14);
+  --sv-row-hover: rgba(241, 245, 249, 0.7);
   --sv-radius-sm: 0.625rem;
   --sv-radius-md: 0.75rem;
   --sv-radius-lg: 1rem;
@@ -28,6 +43,31 @@
   --sv-dialog-max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem);
   --sv-dialog-width: min(92vw, 42rem);
   --sv-dialog-wide-width: min(94vw, 50rem);
+}
+
+html.dark {
+  --sv-bg: #0b1120;
+  --sv-bg-elevated: #111a2e;
+  --sv-bg-soft: #0f1829;
+  --sv-surface: #131c30;
+  --sv-surface-strong: #131c30;
+  --sv-muted-surface: #0f1829;
+  --sv-table-head-bg: #152138;
+  --sv-table-row-alt: #1b2438;
+  --sv-border: rgba(255, 255, 255, 0.08);
+  --sv-border-strong: rgba(255, 255, 255, 0.14);
+  --sv-text: #e5e9f0;
+  --sv-text-muted: #94a3b8;
+  --sv-accent: #0a84ff;
+  --sv-accent-soft: rgba(10, 132, 255, 0.18);
+  --sv-accent-soft-strong: rgba(10, 132, 255, 0.28);
+  --sv-input-bg: #0f1829;
+  --sv-th-text: #94a3b8;
+  --sv-table-border: rgba(148, 163, 184, 0.2);
+  --sv-table-border-soft: rgba(148, 163, 184, 0.12);
+  --sv-row-hover: rgba(148, 163, 184, 0.1);
+  --sv-shadow-soft: 0 4px 14px -10px rgba(0, 0, 0, 0.5);
+  --sv-shadow-card: 0 8px 24px -18px rgba(0, 0, 0, 0.7);
 }
 
 @layer base {
@@ -48,6 +88,10 @@
     overscroll-behavior-y: none;
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
   body {
     @apply selection:bg-blue-200/50 selection:text-blue-900;
@@ -64,6 +108,13 @@
     user-select: auto;
     -webkit-user-select: auto;
     -webkit-touch-callout: default;
+  }
+  html.dark body {
+    @apply selection:bg-blue-500/30 selection:text-blue-100;
+    background:
+      radial-gradient(1200px circle at 0% -10%, #13213f 0%, transparent 42%),
+      radial-gradient(1100px circle at 100% -20%, #101a30 0%, transparent 38%),
+      #0b1120;
   }
 }
 
@@ -103,106 +154,101 @@ table.dashboard-table {
   z-index: 4000 !important;
 }
 
-.dashboard-table .p-datatable-thead > tr > th {
-  background: #f8fafc;
-  color: #64748b;
-  font-size: 0.76rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  font-weight: 700;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-  padding-top: 0.85rem;
-  padding-bottom: 0.85rem;
+/*
+  Canonical table look shared by every page. The rooms page (a plain
+  <table class="dashboard-table">) is the reference; PrimeNG's runtime theme
+  (e.g. p-datatable-sm) is overridden with !important so p-tables render with
+  the exact same blueish header, padding and row height everywhere.
+*/
+/*
+  PrimeNG paints the datatable on its own (near-black in dark mode) surface.
+  Make every wrapper transparent so the table inherits the navy card surface
+  — the same way the plain rooms table does — and let our header tint / zebra
+  stripes provide the only backgrounds.
+*/
+.dashboard-table.p-datatable,
+.dashboard-table .p-datatable-table-container,
+.dashboard-table .p-datatable-table,
+.dashboard-table .p-datatable-thead,
+.dashboard-table .p-datatable-tbody,
+.dashboard-table .p-datatable-tbody > tr,
+.dashboard-table .p-datatable-header,
+.dashboard-table .p-datatable-footer,
+.dashboard-table .p-paginator {
+  background: transparent !important;
 }
 
-.dashboard-table .p-datatable-tbody > tr > td {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-  padding-top: 0.85rem;
-  padding-bottom: 0.85rem;
-}
-
-.dashboard-table .p-datatable-tbody > tr:last-child > td {
-  border-bottom: none;
-}
-
-.dashboard-table .p-datatable-tbody > tr {
-  transition: background-color 0.12s ease;
-}
-
-.dashboard-table .p-datatable-tbody > tr:hover {
-  background: rgba(241, 245, 249, 0.7);
-}
-
+.dashboard-table .p-datatable-thead > tr > th,
 table.dashboard-table > thead > tr > th {
-  background: #f8fafc;
-  color: #64748b;
+  background: var(--sv-table-head-bg) !important;
+  color: var(--sv-th-text) !important;
   font-size: 0.76rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-weight: 700;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-  padding-top: 0.85rem;
-  padding-bottom: 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--sv-table-border) !important;
+  padding: 0.85rem 1rem !important;
 }
 
+.dashboard-table .p-datatable-tbody > tr > td,
 table.dashboard-table > tbody > tr > td {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-  padding-top: 0.85rem;
-  padding-bottom: 0.85rem;
+  background: transparent;
+  color: var(--sv-text);
+  border-bottom: 1px solid var(--sv-table-border-soft) !important;
+  padding: 0.85rem 1rem !important;
 }
 
+.dashboard-table .p-datatable-tbody > tr:last-child > td,
 table.dashboard-table > tbody > tr:last-child > td {
-  border-bottom: none;
+  border-bottom: none !important;
 }
 
+.dashboard-table .p-datatable-tbody > tr,
 table.dashboard-table > tbody > tr {
   transition: background-color 0.12s ease;
 }
 
-table.dashboard-table > tbody > tr:hover {
-  background: rgba(241, 245, 249, 0.7);
+/*
+  Zebra striping for the flat p-tables so their body picks up the same blue
+  banded look as the rooms reference (whose grouped rows are already tinted).
+  The plain rooms table is intentionally excluded — it bands itself.
+*/
+.dashboard-table .p-datatable-tbody > tr:nth-child(even) > td {
+  background: var(--sv-table-row-alt);
 }
 
-.dashboard-table .p-datatable-thead > tr > th.table-actions-col {
-  position: sticky;
-  right: 0;
-  z-index: 4;
-  background: #f8fafc;
-  box-shadow: -10px 0 10px -10px rgba(15, 23, 42, 0.16);
+.dashboard-table .p-datatable-tbody > tr:hover > td,
+table.dashboard-table > tbody > tr:hover > td {
+  background: var(--sv-row-hover) !important;
 }
 
-.dashboard-table .p-datatable-tbody > tr > td.table-actions-col {
-  position: sticky;
-  right: 0;
-  z-index: 3;
-  min-width: 120px;
-  background: #ffffff;
-  box-shadow: -10px 0 10px -10px rgba(15, 23, 42, 0.12);
-}
-
-.dashboard-table .p-datatable-tbody > tr:hover > td.table-actions-col {
-  background: rgba(241, 245, 249, 0.7);
-}
-
+.dashboard-table .p-datatable-thead > tr > th.table-actions-col,
 table.dashboard-table > thead > tr > th.table-actions-col {
   position: sticky;
   right: 0;
   z-index: 4;
-  background: #f8fafc;
-  box-shadow: -10px 0 10px -10px rgba(15, 23, 42, 0.16);
+  background: var(--sv-table-head-bg) !important;
+  border-left: 1px solid var(--sv-table-border) !important;
 }
 
+.dashboard-table .p-datatable-tbody > tr > td.table-actions-col,
 table.dashboard-table > tbody > tr > td.table-actions-col {
   position: sticky;
   right: 0;
   z-index: 3;
   min-width: 120px;
-  background: #ffffff;
-  box-shadow: -10px 0 10px -10px rgba(15, 23, 42, 0.12);
+  background: var(--sv-surface);
+  border-left: 1px solid var(--sv-table-border-soft) !important;
 }
 
+.dashboard-table .p-datatable-tbody > tr:nth-child(even) > td.table-actions-col {
+  background: var(--sv-table-row-alt);
+}
+
+.dashboard-table .p-datatable-tbody > tr:hover > td.table-actions-col,
 table.dashboard-table > tbody > tr:hover > td.table-actions-col {
-  background: rgba(241, 245, 249, 0.7);
+  background: var(--sv-row-hover) !important;
 }
 
 /* Shared page layout rhythm for feature CRUD pages */
@@ -222,7 +268,7 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
   font-size: 1.5rem;
   line-height: 1.95rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--sv-text);
 }
 
 .page-actions {
@@ -264,14 +310,14 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
 }
 
 .p-button.p-button-outlined {
-  background: #ffffff;
+  background: var(--sv-surface);
   border-color: var(--sv-border-strong);
-  color: #334155;
+  color: var(--sv-text);
 }
 
 .p-button.p-button-outlined:hover {
-  background: #f8fbff;
-  border-color: #bfdbfe;
+  background: var(--sv-accent-soft);
+  border-color: var(--sv-accent);
 }
 
 .p-inputtext,
@@ -279,8 +325,9 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
 .p-autocomplete-input,
 .p-textarea {
   border-radius: var(--sv-radius-md);
-  border-color: rgba(148, 163, 184, 0.35);
-  background: #ffffff;
+  border-color: var(--sv-border-strong);
+  background: var(--sv-input-bg);
+  color: var(--sv-text);
   min-height: 2.65rem;
 }
 
@@ -288,7 +335,7 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
 .p-autocomplete-input:enabled:focus,
 .p-select.p-focus,
 .p-textarea:enabled:focus {
-  border-color: #93c5fd;
+  border-color: var(--sv-accent);
   box-shadow: 0 0 0 3px var(--sv-accent-soft);
 }
 
@@ -299,7 +346,7 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
   flex-wrap: wrap;
   gap: 0.75rem;
   padding: 0.9rem 1rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  border-bottom: 1px solid var(--sv-table-border);
 }
 
 .table-search-shell {
@@ -311,13 +358,13 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
   min-height: 2.5rem;
   padding: 0.55rem 0.85rem;
   border-radius: var(--sv-radius-md);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: #ffffff;
+  border: 1px solid var(--sv-border-strong);
+  background: var(--sv-surface);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
 .table-search-shell .pi {
-  color: #94a3b8;
+  color: var(--sv-text-muted);
   font-size: 0.9rem;
 }
 
@@ -325,6 +372,7 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
   width: 100%;
   border: 0 !important;
   background: transparent !important;
+  color: var(--sv-text);
   padding: 0 !important;
   box-shadow: none !important;
   line-height: 1.3;
@@ -337,7 +385,7 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
 }
 
 .p-dialog .p-dialog-header {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid var(--sv-table-border);
   padding-bottom: 0.95rem;
 }
 
@@ -374,7 +422,7 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
 }
 
 .p-dialog .p-dialog-footer {
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  border-top: 1px solid var(--sv-table-border);
   padding-top: 0.85rem;
 }
 
@@ -439,7 +487,7 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
 
 /* Mesh gradient background for auth */
 .auth-bg {
-  background: #eef2f7;
+  background: var(--sv-bg);
 }
 
 /* Glass card effect */
@@ -474,3 +522,43 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
 .safe-top-margin {
   margin-top: env(safe-area-inset-top);
 }
+
+/*
+  Dark-mode remaps for the fixed Tailwind palette utilities used across the
+  feature templates. These classes are only ever used for "dark content on a
+  light surface", so in dark mode they flip to light-on-dark equivalents.
+  Scoped under html.dark so light mode is untouched.
+*/
+html.dark .text-slate-900 { color: #f1f5f9; }
+html.dark .text-slate-800 { color: #e2e8f0; }
+html.dark .text-slate-700 { color: #cbd5e1; }
+html.dark .text-slate-600 { color: #b7c2d0; }
+html.dark .text-slate-500 { color: #94a3b8; }
+html.dark .text-slate-400 { color: #7c8aa0; }
+html.dark .text-slate-300 { color: #64748b; }
+
+html.dark .text-blue-700 { color: #60a5fa; }
+html.dark .text-blue-600 { color: #60a5fa; }
+html.dark .text-teal-700 { color: #2dd4bf; }
+html.dark .text-emerald-700,
+html.dark .text-emerald-600 { color: #6ee7b7; }
+html.dark .text-indigo-700 { color: #a5b4fc; }
+html.dark .text-orange-600 { color: #fb923c; }
+html.dark .text-red-600,
+html.dark .text-red-500 { color: #f87171; }
+
+html.dark .bg-white { background-color: var(--sv-surface); }
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/60 { background-color: rgba(148, 163, 184, 0.08); }
+html.dark .bg-indigo-50 { background-color: rgba(129, 140, 248, 0.16); }
+html.dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.16); }
+html.dark .bg-red-50 { background-color: rgba(248, 113, 113, 0.14); }
+
+html.dark .border-slate-200,
+html.dark .border-slate-300,
+html.dark .border-slate-200\/70,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/90 { border-color: var(--sv-border-strong); }
+html.dark .border-indigo-100 { border-color: rgba(129, 140, 248, 0.3); }
+html.dark .border-emerald-100 { border-color: rgba(16, 185, 129, 0.3); }
+html.dark .border-red-100 { border-color: rgba(248, 113, 113, 0.3); }

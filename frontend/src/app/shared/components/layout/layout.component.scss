@@ -87,6 +87,16 @@
   border: 1px solid #bfdbfe;
 }
 
+:host-context(html.dark) .mobile-tab-link {
+  color: #94a3b8;
+}
+
+:host-context(html.dark) .mobile-tab-link.active-nav {
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.22);
+  border-color: rgba(59, 130, 246, 0.45);
+}
+
 .pb-mobile-nav {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
@@ -98,6 +108,12 @@
   border: 1px solid #bfdbfe;
   border-radius: var(--sv-radius-md);
   box-shadow: none;
+}
+
+:host-context(html.dark) ::ng-deep .top-nav-link.active-nav {
+  color: #93c5fd !important;
+  background: rgba(37, 99, 235, 0.22) !important;
+  border-color: rgba(59, 130, 246, 0.45);
 }
 
 :host ::ng-deep .user-menu-trigger.p-button {
