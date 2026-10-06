@@ -120,6 +120,10 @@ type VehicleSearchRecord = {
   id: string;
   number?: string;
   country?: string;
+  owner?: string;
+  expand?: {
+    owner?: any;
+  };
 };
 
 type CameraSearchRecord = {
@@ -580,14 +584,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
     try {
       const normalizedQuery = query.trim();
       const escapedQuery = this.escapeFilterValue(normalizedQuery);
-      const filter = escapedQuery ? `number ~ "${escapedQuery}"` : '';
-      const options = filter ? { filter } : {};
+      // Match the plate number as well as the owner's name/company/email.
+      const filter = escapedQuery
+        ? `number ~ "${escapedQuery}"`
+          + ` || owner.first_name ~ "${escapedQuery}"`
+          + ` || owner.last_name ~ "${escapedQuery}"`
+          + ` || owner.name ~ "${escapedQuery}"`
+          + ` || owner.email ~ "${escapedQuery}"`
+        : '';
+      const options: Record<string, unknown> = { expand: 'owner' };
+      if (filter) {
+        options['filter'] = filter;
+      }
 
       const records = await this.pb.collection('vehicles').getList<VehicleSearchRecord>(1, 10, options);
-      this.suggestedVehicles.set(records.items.map((record) => ({
-        id: record.id,
-        displayName: `${record.number || ''}${record.country ? ` - ${record.country}` : ''}`.trim() || 'Unknown vehicle',
-      })));
+      this.suggestedVehicles.set(records.items.map((record) => {
+        const base = `${record.number || ''}${record.country ? ` - ${record.country}` : ''}`.trim() || 'Unknown vehicle';
+        const ownerName = this.getUserDisplayName(record.expand?.owner);
+        return {
+          id: record.id,
+          displayName: ownerName ? `${base} · ${ownerName}` : base,
+        };
+      }));
     } catch (error) {
       console.error(error);
     }
