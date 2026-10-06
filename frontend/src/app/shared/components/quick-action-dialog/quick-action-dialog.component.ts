@@ -97,25 +97,25 @@ export class QuickActionDialogComponent {
 
   readonly primaryId = input.required<string>();
   readonly primaryLabel = input.required<string>();
-  readonly primaryPlaceholder = input('Search...');
+  readonly primaryPlaceholder = input($localize`:@@common.search:Search...`);
   readonly primarySuggestions = input<QuickActionDialogOption[]>([]);
   readonly primaryCompleteOnFocus = input(true);
   readonly primaryValue = model<QuickActionDialogOption | null>(null);
 
   readonly secondaryId = input.required<string>();
   readonly secondaryLabel = input.required<string>();
-  readonly secondaryPlaceholder = input('Search...');
+  readonly secondaryPlaceholder = input($localize`:@@common.search:Search...`);
   readonly secondarySuggestions = input<QuickActionDialogOption[]>([]);
   readonly secondaryCompleteOnFocus = input(false);
   readonly secondaryValue = model<QuickActionDialogOption | null>(null);
 
   readonly reasonId = input.required<string>();
-  readonly reasonLabel = input('Reason / Notes');
-  readonly reasonPlaceholder = input('Enter optional notes...');
+  readonly reasonLabel = input($localize`:@@common.reasonNotes:Reason / Notes`);
+  readonly reasonPlaceholder = input($localize`:@@common.optionalNotes:Enter optional notes...`);
   readonly reason = model('');
 
-  readonly submitLabel = input('Save');
-  readonly cancelLabel = input('Cancel');
+  readonly submitLabel = input($localize`:@@common.save:Save`);
+  readonly cancelLabel = input($localize`:@@common.cancel:Cancel`);
   readonly submitDisabled = input(false);
 
   readonly primarySearch = output<string>();

@@ -20,37 +20,40 @@
  */
 
 // ---------------------------------------------------------------------------
-// 1. Users: enforce default role "regular" if not set
+// Audit timestamps (created_at / updated_at)
+//
+// IMPORTANT: PocketBase executes each hook callback in an isolated JSVM
+// context, so callbacks CANNOT reference functions or variables declared in
+// this file's module scope — doing so throws "ReferenceError: <name> is not
+// defined" and fails the whole request with a 400. Every handler must be
+// fully self-contained (only globals like Date and the `e` argument).
 // ---------------------------------------------------------------------------
-function applyAuditTimestamps(record, isCreate) {
-    const now = new Date().toISOString().replace("T", " ")
-
-    if (isCreate) {
-        try {
-            if (!record.getString("created_at")) {
-                record.set("created_at", now)
-            }
-        } catch (_) {
-            // ignore if field doesn't exist in this collection context
-        }
-    }
-
-    try {
-        record.set("updated_at", now)
-    } catch (_) {
-        // ignore if field doesn't exist in this collection context
-    }
-}
-
-const AUDITED_COLLECTIONS = ["users", "cameras", "room_groups", "rooms", "vehicles", "accesses", "room_key_events"]
+const AUDITED_COLLECTIONS = ["users", "cameras", "room_groups", "rooms", "vehicles", "accesses", "room_key_events", "users_config"]
 for (const collectionName of AUDITED_COLLECTIONS) {
     onRecordCreateRequest((e) => {
-        applyAuditTimestamps(e.record, true)
+        const now = new Date().toISOString().replace("T", " ")
+        try {
+            if (!e.record.getString("created_at")) {
+                e.record.set("created_at", now)
+            }
+        } catch (_) {
+            // ignore if the field doesn't exist in this collection context
+        }
+        try {
+            e.record.set("updated_at", now)
+        } catch (_) {
+            // ignore if the field doesn't exist in this collection context
+        }
         e.next()
     }, collectionName)
 
     onRecordUpdateRequest((e) => {
-        applyAuditTimestamps(e.record, false)
+        const now = new Date().toISOString().replace("T", " ")
+        try {
+            e.record.set("updated_at", now)
+        } catch (_) {
+            // ignore if the field doesn't exist in this collection context
+        }
         e.next()
     }, collectionName)
 }

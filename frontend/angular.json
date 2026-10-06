@@ -25,6 +25,7 @@
               "browser": ""
             },
             "browser": "src/main.ts",
+            "polyfills": ["@angular/localize/init"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -58,7 +59,7 @@
 
                 {
                   "type": "initial",
-                  "maximumWarning": "600kB",
+                  "maximumWarning": "800kB",
                   "maximumError": "2MB"
                 },
                 {

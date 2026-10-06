@@ -7,19 +7,19 @@
         </a>
         <div class="hidden sm:block">
           <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700/90 dark:text-blue-300/90 md:text-xs">SmartVision</p>
-          <a routerLink="/dashboard"><h1 class="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100 md:text-2xl">Dashboard</h1></a>
+          <a routerLink="/dashboard"><h1 class="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100 md:text-2xl" i18n="@@nav.dashboard">Dashboard</h1></a>
         </div>
       </div>
 
       <div class="flex items-center gap-2 md:ml-auto md:gap-3">
         <!-- Desktop navigation links -->
         <nav class="top-nav hidden md:flex gap-1.5 border border-slate-200/70 bg-white/85 p-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/cameras" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Cameras</a>
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/rooms" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Rooms</a>
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/access-logs" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Access Logs</a>
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/vehicles" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Vehicles</a>
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/users" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">Users</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.dashboard">Dashboard</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/cameras" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.cameras">Cameras</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/rooms" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.rooms">Rooms</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/access-logs" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.accessLogs">Access Logs</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/vehicles" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.vehicles">Vehicles</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/users" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.users">Users</a>
         </nav>
 
         <button
@@ -27,7 +27,7 @@
           class="theme-toggle inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/95 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white md:h-10 md:w-10"
           (click)="toggleTheme()"
           [attr.aria-pressed]="themeService.isDark()"
-          [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+          [attr.aria-label]="themeService.isDark() ? lightModeLabel : darkModeLabel"
         >
           <i class="pi" [ngClass]="themeService.isDark() ? 'pi-sun' : 'pi-moon'"></i>
         </button>
@@ -37,7 +37,7 @@
           pButton
           class="user-menu-trigger !rounded-full !border !border-slate-200/80 !bg-white/95 dark:!border-white/10 dark:!bg-white/5 !px-2 !py-1.5"
           (click)="toggleUserMenu($event)"
-          aria-label="Open user menu"
+          [attr.aria-label]="userMenuLabel"
         >
           <div class="flex items-center gap-2">
             <p-avatar [label]="authService.userInitials" shape="circle" styleClass="!bg-slate-900 !text-white" />
@@ -57,27 +57,29 @@
   <nav class="mobile-bottom-nav md:hidden" aria-label="Primary mobile navigation">
     <a class="mobile-tab-link" routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
       <i class="pi pi-home"></i>
-      <span>Home</span>
+      <span i18n="@@nav.home">Home</span>
     </a>
     <a class="mobile-tab-link" routerLink="/cameras" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
       <i class="pi pi-video"></i>
-      <span>Cameras</span>
+      <span i18n="@@nav.cameras">Cameras</span>
     </a>
     <a class="mobile-tab-link" routerLink="/rooms" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
       <i class="pi pi-building"></i>
-      <span>Rooms</span>
+      <span i18n="@@nav.rooms">Rooms</span>
     </a>
     <a class="mobile-tab-link" routerLink="/access-logs" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
       <i class="pi pi-history"></i>
-      <span>Logs</span>
+      <span i18n="@@nav.logs">Logs</span>
     </a>
     <a class="mobile-tab-link" routerLink="/vehicles" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
       <i class="pi pi-car"></i>
-      <span>Vehicles</span>
+      <span i18n="@@nav.vehicles">Vehicles</span>
     </a>
     <a class="mobile-tab-link" routerLink="/users" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
       <i class="pi pi-users"></i>
-      <span>Users</span>
+      <span i18n="@@nav.users">Users</span>
     </a>
   </nav>
+
+  <app-settings-dialog [(visible)]="settingsVisible" />
 </div>

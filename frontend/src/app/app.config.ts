@@ -6,6 +6,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 import { AuthService } from './core/services/auth.service';
+import { UserConfigService } from './core/services/user-config.service';
 
 import { routes } from './app.routes';
 
@@ -34,9 +35,14 @@ const MyPreset = definePreset(Aura, {
     }
 });
 
-function initializeApp(auth: AuthService) {
+function initializeApp(auth: AuthService, userConfig: UserConfigService) {
   return async () => {
     await auth.init();
+    // Load per-user preferences (language/theme) once auth state is known.
+    // A mismatching stored language triggers a reload inside load().
+    if (auth.isAuthenticated()) {
+      await userConfig.load();
+    }
   };
 }
 
@@ -50,7 +56,7 @@ export const appConfig: ApplicationConfig = {
     {
       provide: APP_INITIALIZER,
       useFactory: initializeApp,
-      deps: [AuthService],
+      deps: [AuthService, UserConfigService],
       multi: true,
     },
     providePrimeNG({

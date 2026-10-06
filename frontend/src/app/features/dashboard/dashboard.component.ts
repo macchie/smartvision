@@ -159,6 +159,58 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly refreshing = signal(false);
   protected readonly loadError = signal('');
 
+  /** Localized, user-facing strings for toasts and status messages. */
+  private readonly msg = {
+    error: $localize`:@@common.error:Error`,
+    success: $localize`:@@common.success:Success`,
+    vehicleCameraRequired: $localize`:@@dashboard.msg.vehicleCameraRequired:Vehicle and Camera are required.`,
+    driverRequired: $localize`:@@dashboard.msg.driverRequired:Authenticated driver is required to record vehicle access.`,
+    vehicleRecorded: $localize`:@@dashboard.msg.vehicleRecorded:Vehicle access recorded.`,
+    accessFailed: $localize`:@@dashboard.msg.accessFailed:Failed to record access.`,
+    userCameraRequired: $localize`:@@dashboard.msg.userCameraRequired:User and Camera are required.`,
+    userRecorded: $localize`:@@dashboard.msg.userRecorded:User access recorded.`,
+    userRoomRequired: $localize`:@@dashboard.msg.userRoomRequired:User and Room are required.`,
+    keyDistributed: $localize`:@@dashboard.msg.keyDistributed:Key distributed.`,
+    keyDistributeFailed: $localize`:@@dashboard.msg.keyDistributeFailed:Failed to distribute key.`,
+    keyCollected: $localize`:@@dashboard.msg.keyCollected:Key collected.`,
+    keyCollectFailed: $localize`:@@dashboard.msg.keyCollectFailed:Failed to collect key.`,
+    realtimePaused: $localize`:@@dashboard.err.realtimePaused:Realtime paused because the current session is not authenticated.`,
+    sessionExpired: $localize`:@@dashboard.err.sessionExpired:Session expired. Please sign in again.`,
+    realtimePartial: $localize`:@@dashboard.err.realtimePartial:Realtime is partially connected. Recovering connection...`,
+    realtimeFailed: $localize`:@@dashboard.err.realtimeFailed:Unable to initialize realtime subscriptions to PocketBase. Retrying...`,
+    loadAccessFailed: $localize`:@@dashboard.err.loadAccessFailed:Unable to load the latest access data from PocketBase.`,
+    loadEventsFailed: $localize`:@@dashboard.err.loadEventsFailed:Unable to load latest access events from PocketBase.`,
+    loadKeyFailed: $localize`:@@dashboard.err.loadKeyFailed:Unable to load key distribution metric from PocketBase.`,
+  };
+
+  /** Localized labels bound into component inputs (PrimeNG props / fallbacks). */
+  protected readonly ui = {
+    refresh: $localize`:@@common.refresh:Refresh`,
+    addVehicleAccess: $localize`:@@dashboard.action.addVehicleAccess:Add Vehicle Access`,
+    addUserAccess: $localize`:@@dashboard.action.addUserAccess:Add User Access`,
+    distributeKey: $localize`:@@dashboard.action.distributeKey:Distribute Key`,
+    collectKey: $localize`:@@dashboard.action.collectKey:Collect Key`,
+    noCameraEvent: $localize`:@@dashboard.camera.noEvent:No camera event yet`,
+    noRecentEvent: $localize`:@@dashboard.camera.noRecent:No recent event`,
+    vehicleNotAvailable: $localize`:@@dashboard.camera.vehicleNA:Vehicle not available`,
+    driverNotAvailable: $localize`:@@dashboard.camera.driverNA:Driver not available`,
+    // Quick-action dialog field labels, placeholders and submit buttons.
+    dlgVehicleAccess: $localize`:@@dashboard.dlg.vehicleAccess:Vehicle Access`,
+    dlgUserAccess: $localize`:@@dashboard.dlg.userAccess:User Access`,
+    fieldVehicle: $localize`:@@field.vehicle:Vehicle`,
+    fieldCamera: $localize`:@@field.camera:Camera`,
+    fieldUser: $localize`:@@field.user:User`,
+    fieldRoom: $localize`:@@field.room:Room`,
+    confirmReturnByUser: $localize`:@@dashboard.dlg.confirmReturnByUser:Confirm Return by User`,
+    searchPlate: $localize`:@@dashboard.ph.searchPlate:Search license plate...`,
+    searchCamera: $localize`:@@dashboard.ph.searchCamera:Search camera...`,
+    searchUser: $localize`:@@dashboard.ph.searchUser:Search user...`,
+    searchRoom: $localize`:@@dashboard.ph.searchRoom:Search room...`,
+    saveAccess: $localize`:@@dashboard.action.saveAccess:Save Access`,
+    distribute: $localize`:@@dashboard.action.distribute:Distribute`,
+    collect: $localize`:@@dashboard.action.collect:Collect`,
+  };
+
   protected readonly latestCameraEvents = signal<AccessRow[]>([]);
   protected readonly vehiclesInside = signal(0);
   protected readonly usersInside = signal(0);
@@ -219,20 +271,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return [
       {
         direction: 'in',
-        title: 'Ingress',
-        placeholderReason: 'Waiting for the first ingress vehicle event.',
+        title: $localize`:@@direction.ingress:Ingress`,
+        placeholderReason: $localize`:@@dashboard.camera.waitIngress:Waiting for the first ingress vehicle event.`,
         event: latestByDirection.in,
       },
       {
         direction: 'checkpoint',
-        title: 'Checkpoint',
-        placeholderReason: 'Waiting for the first checkpoint vehicle event.',
+        title: $localize`:@@direction.checkpoint:Checkpoint`,
+        placeholderReason: $localize`:@@dashboard.camera.waitCheckpoint:Waiting for the first checkpoint vehicle event.`,
         event: latestByDirection.checkpoint,
       },
       {
         direction: 'out',
-        title: 'Egress',
-        placeholderReason: 'Waiting for the first egress vehicle event.',
+        title: $localize`:@@direction.egress:Egress`,
+        placeholderReason: $localize`:@@dashboard.camera.waitEgress:Waiting for the first egress vehicle event.`,
         event: latestByDirection.out,
       },
     ];
@@ -652,13 +704,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     try {
       if (!formState.vehicle || !formState.camera) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Vehicle and Camera are required.' });
+        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.vehicleCameraRequired });
         return;
       }
 
       const currentUser = this.authService.user();
       if (!currentUser?.id) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Authenticated driver is required to record vehicle access.' });
+        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.driverRequired });
         return;
       }
 
@@ -673,11 +725,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         deletable: true,
         enabled: true,
       });
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vehicle access recorded.' });
+      this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.vehicleRecorded });
       this.vehicleAccessDialog.set(false);
       this.resetQuickActionFormState();
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to record access.' });
+      this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e.message || this.msg.accessFailed });
     }
   }
 
@@ -686,7 +738,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     try {
       if (!formState.user || !formState.camera) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'User and Camera are required.' });
+        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.userCameraRequired });
         return;
       }
 
@@ -702,11 +754,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         deletable: true,
         enabled: true,
       });
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User access recorded.' });
+      this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.userRecorded });
       this.userAccessDialog.set(false);
       this.resetQuickActionFormState();
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to record access.' });
+      this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e.message || this.msg.accessFailed });
     }
   }
 
@@ -715,7 +767,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     try {
       if (!formState.user || !formState.room) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'User and Room are required.' });
+        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.userRoomRequired });
         return;
       }
       await this.pb.collection('room_key_events').create({
@@ -726,11 +778,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         reason: formState.reason,
         enabled: true
       });
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Key distributed.' });
+      this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.keyDistributed });
       this.keyDistributeDialog.set(false);
       this.resetQuickActionFormState();
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to distribute key.' });
+      this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e.message || this.msg.keyDistributeFailed });
     }
   }
 
@@ -739,7 +791,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     try {
       if (!formState.user || !formState.room) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'User and Room are required.' });
+        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.userRoomRequired });
         return;
       }
       // Note: we can also lookup if there is a pending event and link it, but let pb_hooks handle it.
@@ -751,11 +803,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         reason: formState.reason,
         enabled: true
       });
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Key collected.' });
+      this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.keyCollected });
       this.keyCollectDialog.set(false);
       this.resetQuickActionFormState();
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to collect key.' });
+      this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e.message || this.msg.keyCollectFailed });
     }
   }
 
@@ -798,7 +850,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     if (!this.pb.authStore.isValid) {
-      this.loadError.set('Realtime paused because the current session is not authenticated.');
+      this.loadError.set(this.msg.realtimePaused);
       this.scheduleRealtimeRetry('auth store is not valid');
       return;
     }
@@ -875,7 +927,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           return;
         }
 
-        this.loadError.set('Session expired. Please sign in again.');
+        this.loadError.set(this.msg.sessionExpired);
         this.signOut();
         return;
       }
@@ -887,17 +939,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
 
       if (successCount > 0) {
-        this.loadError.set('Realtime is partially connected. Recovering connection...');
+        this.loadError.set(this.msg.realtimePartial);
         console.warn(`Dashboard realtime partially initialized (${successCount}/${targets.length} subscriptions active).`);
         this.scheduleRealtimeRetry('partial realtime subscription state');
         return;
       }
 
-      this.loadError.set('Unable to initialize realtime subscriptions to PocketBase. Retrying...');
+      this.loadError.set(this.msg.realtimeFailed);
       this.scheduleRealtimeRetry('all realtime subscriptions failed');
     } catch (error) {
       console.error('Dashboard realtime subscriptions failed to initialize', error);
-      this.loadError.set('Unable to initialize realtime subscriptions to PocketBase. Retrying...');
+      this.loadError.set(this.msg.realtimeFailed);
       this.scheduleRealtimeRetry('subscription setup threw an exception');
     } finally {
       this.realtimeSetupInFlight = false;
@@ -984,7 +1036,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.loadError.set('');
     } catch (error) {
       console.error('Dashboard data load failed', error);
-      this.loadError.set('Unable to load the latest access data from PocketBase.');
+      this.loadError.set(this.msg.loadAccessFailed);
     } finally {
       this.loading.set(false);
     }
@@ -1043,7 +1095,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.loadError.set('');
     } catch (error) {
       console.error('Dashboard access data load failed', error);
-      this.loadError.set('Unable to load latest access events from PocketBase.');
+      this.loadError.set(this.msg.loadEventsFailed);
     } finally {
       if (!initialLoad) {
         this.refreshing.set(false);
@@ -1081,7 +1133,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.loadError.set('');
     } catch (error) {
       console.error('Dashboard key metric load failed', error);
-      this.loadError.set('Unable to load key distribution metric from PocketBase.');
+      this.loadError.set(this.msg.loadKeyFailed);
     } finally {
       if (!initialLoad) {
         this.refreshing.set(false);
@@ -1199,14 +1251,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   protected directionLabel(direction: AccessRow['direction']): string {
     if (direction === 'out') {
-      return 'Egress';
+      return $localize`:@@direction.egress:Egress`;
     }
 
     if (direction === 'checkpoint') {
-      return 'Checkpoint';
+      return $localize`:@@direction.checkpoint:Checkpoint`;
     }
 
-    return 'Ingress';
+    return $localize`:@@direction.ingress:Ingress`;
   }
 
   protected directionIcon(direction: AccessRow['direction']): string {

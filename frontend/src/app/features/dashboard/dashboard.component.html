@@ -1,17 +1,17 @@
 <div class="page-shell">
   <div class="page-header">
     <div class="flex items-center gap-3">
-      <h2 class="page-title">Overview</h2>
+      <h2 class="page-title" i18n="@@dashboard.overview">Overview</h2>
       @if (lastUpdatedAt()) {
         <span class="rounded-full border border-slate-200/80 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm dark:border-white/10 dark:bg-white/5">
           <i class="pi pi-clock mr-1.5"></i>
-          Updated {{ lastUpdatedAt() }}
+          <ng-container i18n="@@dashboard.updated">Updated</ng-container> {{ lastUpdatedAt() }}
         </span>
       }
     </div>
     <div class="page-actions">
       <p-button
-        label="Refresh"
+        [label]="ui.refresh"
         icon="pi pi-refresh"
         [loading]="refreshing()"
         styleClass="action-btn"
@@ -27,10 +27,10 @@
     
     <!-- Quick Actions Bar -->
     <div class="quick-actions-strip grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center md:gap-3">
-      <p-button styleClass="quick-action-btn" outlined icon="pi pi-car" label="Add Vehicle Access" (onClick)="quickAction('vehicle_access')" />
-      <p-button styleClass="quick-action-btn" outlined icon="pi pi-user" label="Add User Access" (onClick)="quickAction('user_access')" />
-      <p-button styleClass="quick-action-btn" outlined icon="pi pi-key" label="Distribute Key" (onClick)="quickAction('key_distribute')" />
-      <p-button styleClass="quick-action-btn" outlined icon="pi pi-check-circle" label="Collect Key" (onClick)="quickAction('key_collect')" />
+      <p-button styleClass="quick-action-btn" outlined icon="pi pi-car" [label]="ui.addVehicleAccess" (onClick)="quickAction('vehicle_access')" />
+      <p-button styleClass="quick-action-btn" outlined icon="pi pi-user" [label]="ui.addUserAccess" (onClick)="quickAction('user_access')" />
+      <p-button styleClass="quick-action-btn" outlined icon="pi pi-key" [label]="ui.distributeKey" (onClick)="quickAction('key_distribute')" />
+      <p-button styleClass="quick-action-btn" outlined icon="pi pi-check-circle" [label]="ui.collectKey" (onClick)="quickAction('key_collect')" />
     </div>
 
     @if (loadError()) {
@@ -44,33 +44,33 @@
       <p-card styleClass="dashboard-card glass-surface border border-slate-200/80 shadow-sm">
         <div class="flex items-center justify-center gap-3 py-10 text-slate-500">
           <i class="pi pi-spin pi-spinner text-base"></i>
-          <span class="text-sm font-medium">Loading dashboard data from PocketBase...</span>
+          <span class="text-sm font-medium" i18n="@@dashboard.loading">Loading dashboard data from PocketBase...</span>
         </div>
       </p-card>
     } @else {
       <div class="stats-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <p-card styleClass="dashboard-card glass-surface metric-card metric-vehicles h-full shadow-sm card-enter">
           <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-car"></i><span class="sm:hidden">Vehicles</span><span class="hidden sm:inline">Vehicles Inside</span></span>
+            <span class="title-with-icon"><i class="pi pi-car"></i><span class="sm:hidden" i18n="@@field.vehicles">Vehicles</span><span class="hidden sm:inline" i18n="@@dashboard.metric.vehiclesInside">Vehicles Inside</span></span>
           </ng-template>
           <p class="text-2xl font-black leading-tight text-blue-700 sm:text-4xl">{{ vehiclesInside() }}</p>
-          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block">Active vehicles that have not exited yet.</p>
+          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block" i18n="@@dashboard.metric.vehiclesHint">Active vehicles that have not exited yet.</p>
         </p-card>
 
         <p-card styleClass="dashboard-card glass-surface metric-card metric-people h-full shadow-sm card-enter">
           <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-users"></i><span class="sm:hidden">People</span><span class="hidden sm:inline">People Inside</span></span>
+            <span class="title-with-icon"><i class="pi pi-users"></i><span class="sm:hidden" i18n="@@field.people">People</span><span class="hidden sm:inline" i18n="@@dashboard.metric.peopleInside">People Inside</span></span>
           </ng-template>
           <p class="text-2xl font-black leading-tight text-teal-700 sm:text-4xl">{{ usersInside() }}</p>
-          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block">Individuals currently marked as inside.</p>
+          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block" i18n="@@dashboard.metric.peopleHint">Individuals currently marked as inside.</p>
         </p-card>
 
         <p-card styleClass="dashboard-card glass-surface metric-card metric-keys h-full shadow-sm card-enter">
           <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-key"></i><span class="sm:hidden">Keys</span><span class="hidden sm:inline">Keys Distributed</span></span>
+            <span class="title-with-icon"><i class="pi pi-key"></i><span class="sm:hidden" i18n="@@field.keys">Keys</span><span class="hidden sm:inline" i18n="@@dashboard.metric.keysDistributed">Keys Distributed</span></span>
           </ng-template>
           <p class="text-2xl font-black leading-tight text-slate-700 sm:text-4xl">{{ keyDistributed() }}</p>
-          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block">Collected keys still pending return.</p>
+          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block" i18n="@@dashboard.metric.keysHint">Collected keys still pending return.</p>
         </p-card>
       </div>
 
@@ -80,7 +80,7 @@
             <ng-template pTemplate="title">
               <div class="camera-card-header">
                 <div class="camera-card-title-stack">
-                  <p class="camera-card-eyebrow">Last Camera</p>
+                  <p class="camera-card-eyebrow" i18n="@@dashboard.lastCamera">Last Camera</p>
                   <p class="camera-card-title-text">{{ directionCard.title }}</p>
                 </div>
                 <span class="camera-card-direction-icon" aria-hidden="true">
@@ -91,19 +91,19 @@
             <div class="camera-card-body text-slate-600">
               <div class="camera-card-content text-[12px]">
                 <div class="camera-primary-row">
-                  <p class="camera-name">{{ directionCard.event?.camera || 'No camera event yet' }}</p>
-                  <p class="camera-time">{{ directionCard.event?.eventTime || 'No recent event' }}</p>
+                  <p class="camera-name">{{ directionCard.event?.camera || ui.noCameraEvent }}</p>
+                  <p class="camera-time">{{ directionCard.event?.eventTime || ui.noRecentEvent }}</p>
                 </div>
 
                 <div class="camera-detail-grid">
                   <div class="camera-detail-chip">
                     <i class="pi pi-car"></i>
-                    <span class="truncate">{{ directionCard.event?.subject || 'Vehicle not available' }}</span>
+                    <span class="truncate">{{ directionCard.event?.subject || ui.vehicleNotAvailable }}</span>
                   </div>
 
                   <div class="camera-detail-chip">
                     <i class="pi pi-user"></i>
-                    <span class="truncate">{{ directionCard.event?.actor || 'Driver not available' }}</span>
+                    <span class="truncate">{{ directionCard.event?.actor || ui.driverNotAvailable }}</span>
                   </div>
                 </div>
 
@@ -117,16 +117,16 @@
       <div class="grid gap-6 lg:grid-cols-2">
         <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-sm overflow-hidden">
           <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-car"></i> Latest Vehicle Accesses</span>
+            <span class="title-with-icon"><i class="pi pi-car"></i> <ng-container i18n="@@dashboard.table.latestVehicle">Latest Vehicle Accesses</ng-container></span>
           </ng-template>
           <p-table [value]="vehicleRows()" responsiveLayout="scroll" styleClass="dashboard-table p-datatable-sm">
             <ng-template pTemplate="header">
               <tr>
-                <th>Vehicle</th>
-                <th>Driver</th>
-                <th>Camera</th>
-                <th>Direction</th>
-                <th>When</th>
+                <th i18n="@@field.vehicle">Vehicle</th>
+                <th i18n="@@field.driver">Driver</th>
+                <th i18n="@@field.camera">Camera</th>
+                <th i18n="@@field.direction">Direction</th>
+                <th i18n="@@field.when">When</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-row>
@@ -142,7 +142,7 @@
             </ng-template>
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="5" class="text-center text-sm text-slate-500">No recent vehicle accesses.</td>
+                <td colspan="5" class="text-center text-sm text-slate-500" i18n="@@dashboard.table.emptyVehicle">No recent vehicle accesses.</td>
               </tr>
             </ng-template>
           </p-table>
@@ -150,15 +150,15 @@
 
         <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-sm overflow-hidden">
           <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-users"></i> Latest People Accesses</span>
+            <span class="title-with-icon"><i class="pi pi-users"></i> <ng-container i18n="@@dashboard.table.latestPeople">Latest People Accesses</ng-container></span>
           </ng-template>
           <p-table [value]="userRows()" responsiveLayout="scroll" styleClass="dashboard-table p-datatable-sm">
             <ng-template pTemplate="header">
               <tr>
-                <th>Person</th>
-                <th>Camera</th>
-                <th>Direction</th>
-                <th>When</th>
+                <th i18n="@@field.person">Person</th>
+                <th i18n="@@field.camera">Camera</th>
+                <th i18n="@@field.direction">Direction</th>
+                <th i18n="@@field.when">When</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-row>
@@ -173,7 +173,7 @@
             </ng-template>
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="4" class="text-center text-sm text-slate-500">No recent people accesses.</td>
+                <td colspan="4" class="text-center text-sm text-slate-500" i18n="@@dashboard.table.emptyPeople">No recent people accesses.</td>
               </tr>
             </ng-template>
           </p-table>
@@ -186,20 +186,20 @@
 <p-toast></p-toast>
 
 <app-quick-action-dialog
-  [title]="'Vehicle Access'"
+  [title]="ui.dlgVehicleAccess"
   [visible]="vehicleAccessDialog()"
   (visibleChange)="onDialogVisibilityChange('vehicle_access', $event)"
   [primaryId]="'va-vehicle'"
-  [primaryLabel]="'Vehicle'"
-  [primaryPlaceholder]="'Search license plate...'"
+  [primaryLabel]="ui.fieldVehicle"
+  [primaryPlaceholder]="ui.searchPlate"
   [primarySuggestions]="suggestedVehicles()"
   [primaryCompleteOnFocus]="true"
   [primaryValue]="quickActionForm().vehicle"
   (primaryValueChange)="setVehicleSelection($event)"
   (primarySearch)="searchVehicles($event)"
   [secondaryId]="'va-camera'"
-  [secondaryLabel]="'Camera'"
-  [secondaryPlaceholder]="'Search camera...'"
+  [secondaryLabel]="ui.fieldCamera"
+  [secondaryPlaceholder]="ui.searchCamera"
   [secondarySuggestions]="suggestedCameras()"
   [secondaryValue]="quickActionForm().camera"
   (secondaryValueChange)="setCameraSelection($event)"
@@ -207,25 +207,25 @@
   [reasonId]="'va-reason'"
   [reason]="quickActionForm().reason"
   (reasonChange)="setQuickActionReason($event)"
-  [submitLabel]="'Save Access'"
+  [submitLabel]="ui.saveAccess"
   (submitted)="submitVehicleAccess()"
 ></app-quick-action-dialog>
 
 <app-quick-action-dialog
-  [title]="'User Access'"
+  [title]="ui.dlgUserAccess"
   [visible]="userAccessDialog()"
   (visibleChange)="onDialogVisibilityChange('user_access', $event)"
   [primaryId]="'ua-user'"
-  [primaryLabel]="'User'"
-  [primaryPlaceholder]="'Search user...'"
+  [primaryLabel]="ui.fieldUser"
+  [primaryPlaceholder]="ui.searchUser"
   [primarySuggestions]="suggestedUsers()"
   [primaryCompleteOnFocus]="true"
   [primaryValue]="quickActionForm().user"
   (primaryValueChange)="setUserSelection($event)"
   (primarySearch)="searchUsers($event)"
   [secondaryId]="'ua-camera'"
-  [secondaryLabel]="'Camera'"
-  [secondaryPlaceholder]="'Search camera...'"
+  [secondaryLabel]="ui.fieldCamera"
+  [secondaryPlaceholder]="ui.searchCamera"
   [secondarySuggestions]="suggestedCameras()"
   [secondaryValue]="quickActionForm().camera"
   (secondaryValueChange)="setCameraSelection($event)"
@@ -233,25 +233,25 @@
   [reasonId]="'ua-reason'"
   [reason]="quickActionForm().reason"
   (reasonChange)="setQuickActionReason($event)"
-  [submitLabel]="'Save Access'"
+  [submitLabel]="ui.saveAccess"
   (submitted)="submitUserAccess()"
 ></app-quick-action-dialog>
 
 <app-quick-action-dialog
-  [title]="'Distribute Key'"
+  [title]="ui.distributeKey"
   [visible]="keyDistributeDialog()"
   (visibleChange)="onDialogVisibilityChange('key_distribute', $event)"
   [primaryId]="'kd-user'"
-  [primaryLabel]="'User'"
-  [primaryPlaceholder]="'Search user...'"
+  [primaryLabel]="ui.fieldUser"
+  [primaryPlaceholder]="ui.searchUser"
   [primarySuggestions]="suggestedUsers()"
   [primaryCompleteOnFocus]="true"
   [primaryValue]="quickActionForm().user"
   (primaryValueChange)="setUserSelection($event)"
   (primarySearch)="searchEmployees($event)"
   [secondaryId]="'kd-room'"
-  [secondaryLabel]="'Room'"
-  [secondaryPlaceholder]="'Search room...'"
+  [secondaryLabel]="ui.fieldRoom"
+  [secondaryPlaceholder]="ui.searchRoom"
   [secondarySuggestions]="suggestedRooms()"
   [secondaryValue]="quickActionForm().room"
   (secondaryValueChange)="setRoomSelection($event)"
@@ -259,25 +259,25 @@
   [reasonId]="'kd-reason'"
   [reason]="quickActionForm().reason"
   (reasonChange)="setQuickActionReason($event)"
-  [submitLabel]="'Distribute'"
+  [submitLabel]="ui.distribute"
   (submitted)="submitKeyDistribute()"
 ></app-quick-action-dialog>
 
 <app-quick-action-dialog
-  [title]="'Collect Key'"
+  [title]="ui.collectKey"
   [visible]="keyCollectDialog()"
   (visibleChange)="onDialogVisibilityChange('key_collect', $event)"
   [primaryId]="'kc-user'"
-  [primaryLabel]="'Confirm Return by User'"
-  [primaryPlaceholder]="'Search user...'"
+  [primaryLabel]="ui.confirmReturnByUser"
+  [primaryPlaceholder]="ui.searchUser"
   [primarySuggestions]="suggestedUsers()"
   [primaryCompleteOnFocus]="true"
   [primaryValue]="quickActionForm().user"
   (primaryValueChange)="setUserSelection($event)"
   (primarySearch)="searchEmployees($event)"
   [secondaryId]="'kc-room'"
-  [secondaryLabel]="'Room'"
-  [secondaryPlaceholder]="'Search room...'"
+  [secondaryLabel]="ui.fieldRoom"
+  [secondaryPlaceholder]="ui.searchRoom"
   [secondarySuggestions]="suggestedRooms()"
   [secondaryValue]="quickActionForm().room"
   (secondaryValueChange)="setRoomSelection($event)"
@@ -285,6 +285,6 @@
   [reasonId]="'kc-reason'"
   [reason]="quickActionForm().reason"
   (reasonChange)="setQuickActionReason($event)"
-  [submitLabel]="'Collect'"
+  [submitLabel]="ui.collect"
   (submitted)="submitKeyCollect()"
 ></app-quick-action-dialog>

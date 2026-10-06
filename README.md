@@ -50,6 +50,13 @@ SmartVision helps teams monitor and manage facility access with:
   - Fixed top toolbar with safe-area aware spacing across all pages
   - Viewport-safe dialogs and overlays that stay fully visible on desktop/mobile
 
+- 🌐 Per-user Preferences & i18n
+  - `users_config` collection stores each user's language, colour scheme and dashboard layout
+  - In-app Settings dialog (user menu) to switch language and light/dark theme
+  - Preferences persist server-side and follow the user across devices
+  - Internationalization built on Angular's official `@angular/localize`
+  - English (source) + Italian, Spanish, French, applied at runtime (no per-locale builds)
+
 - ⚡ Realtime Reliability
   - PocketBase subscriptions for live updates
   - Visibility/online rebinding and subscription recovery
@@ -144,6 +151,37 @@ smartvision/
 ├── Dockerfile
 └── docker-compose.yml
 ```
+
+## Internationalization (i18n)
+
+SmartVision uses Angular's official **`@angular/localize`** in its **runtime
+translation** mode, so the app is built once and locales are applied on the fly.
+
+- Source locale is English (`en`); templates mark strings with `i18n`/`$localize`
+  and stable custom IDs (e.g. `@@nav.dashboard`).
+- Translation bundles live in `frontend/public/i18n/<lang>.json` as flat
+  `{ "id": "text" }` maps under a `translations` key.
+- At boot, `src/main.ts` reads the preferred locale and calls `loadTranslations()`
+  before `bootstrapApplication` — non-English locales are fetched from
+  `/i18n/<lang>.json`.
+- The active locale is resolved from `localStorage['sv-lang']` (synced from the
+  user's `users_config.language`), falling back to the browser language, then `en`.
+- Switching language in **Settings** persists the choice and reloads the app so
+  the new bundle is applied.
+
+### Adding or updating a language
+
+1. Add the locale code to `SUPPORTED_LANGUAGES` in
+   `frontend/src/app/core/i18n/locales.ts` and the `language` field values in the
+   `users_config` migration.
+2. Create `frontend/public/i18n/<lang>.json` (copy `en.json` and translate values).
+3. Mark any new strings in templates with `i18n="@@your.id"` (or `$localize` in
+   TypeScript) and add the matching keys to every bundle.
+
+> Note: the app chrome, authentication screen and dashboard are fully localized.
+> The feature CRUD screens (users, vehicles, rooms, access logs, cameras, room
+> groups) follow the same pattern and can be localized incrementally by marking
+> their strings and extending the JSON bundles.
 
 ## Local Demo Credentials
 
