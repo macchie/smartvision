@@ -12,7 +12,7 @@ migrate((app) => {
       type: "auth",
     })
   }
-
+1
   // Auth options
   // Only enabled admin/operator users can authenticate.
   collection.authRule = "enabled = true && (role = 'admin' || role = 'operator')"

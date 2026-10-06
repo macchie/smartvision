@@ -426,6 +426,84 @@ table.dashboard-table > tbody > tr:hover > td.table-actions-col {
   padding-top: 0.85rem;
 }
 
+/*
+  PrimeNG renders dialogs and overlays on its own near-black dark surface.
+  Re-skin them with the app palette so dialogs, their form fields and the
+  autocomplete / select dropdowns match the rest of the UI in both themes.
+  !important is needed to beat PrimeNG's more specific runtime theme selectors.
+*/
+.p-dialog,
+.p-confirmdialog,
+.p-confirm-dialog {
+  background: var(--sv-surface-strong) !important;
+  color: var(--sv-text) !important;
+  border: 1px solid var(--sv-border-strong) !important;
+}
+
+.p-dialog .p-dialog-header,
+.p-dialog .p-dialog-content,
+.p-dialog .p-dialog-footer {
+  background: var(--sv-surface-strong) !important;
+  color: var(--sv-text) !important;
+}
+
+.p-dialog .p-dialog-title {
+  color: var(--sv-text) !important;
+}
+
+.p-dialog .p-dialog-header-icon {
+  color: var(--sv-text-muted) !important;
+}
+
+.p-dialog .p-dialog-header-icon:hover {
+  background: var(--sv-accent-soft) !important;
+  color: var(--sv-text) !important;
+}
+
+/* Form fields inside dialogs adopt the app's input surface */
+.p-dialog .p-inputtext,
+.p-dialog .p-autocomplete-input,
+.p-dialog .p-textarea,
+.p-dialog .p-select,
+.p-dialog .p-select-label {
+  background: var(--sv-input-bg) !important;
+  color: var(--sv-text) !important;
+  border-color: var(--sv-border-strong) !important;
+}
+
+.p-dialog .p-select {
+  border: 1px solid var(--sv-border-strong) !important;
+}
+
+/* Autocomplete / select dropdown panels (appended to body) */
+.p-autocomplete-overlay,
+.p-select-overlay {
+  background: var(--sv-surface-strong) !important;
+  color: var(--sv-text) !important;
+  border: 1px solid var(--sv-border-strong) !important;
+  box-shadow: var(--sv-shadow-card) !important;
+}
+
+.p-autocomplete-option,
+.p-select-option,
+.p-autocomplete-empty-message {
+  color: var(--sv-text) !important;
+}
+
+.p-autocomplete-option:hover,
+.p-autocomplete-option.p-focus,
+.p-select-option:hover,
+.p-select-option.p-focus {
+  background: var(--sv-accent-soft) !important;
+  color: var(--sv-text) !important;
+}
+
+.p-select-option.p-select-option-selected,
+.p-autocomplete-option.p-autocomplete-option-selected {
+  background: var(--sv-accent-soft-strong) !important;
+  color: var(--sv-text) !important;
+}
+
 .p-inputtext,
 .p-select,
 .p-textarea {

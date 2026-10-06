@@ -10,8 +10,6 @@ Operate only on the active SmartVision stack:
 - `frontend/`
 - root infra/config files (e.g. `Makefile`, `Dockerfile`, `docker-compose.yml`, `README.md`)
 
-Do not use `SmartVisionIonic/` or `SmartVisionLoopback/` as project sources of truth.
-
 ## 2) Backend Compatibility (PocketBase)
 
 - Required PocketBase version: **0.36.9**.
