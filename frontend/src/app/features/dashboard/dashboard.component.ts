@@ -34,6 +34,29 @@ type LastDirectionGateCard = {
   event: AccessRow | null;
 };
 
+type PresentVehicle = {
+  id: string;
+  number: string;
+  driver: string;
+  gate: string;
+  since: string;
+};
+
+type PresentPerson = {
+  id: string;
+  name: string;
+  via: 'foot' | 'vehicle';
+  vehicle?: string;
+  since: string;
+};
+
+type DistributedKey = {
+  id: string;
+  room: string;
+  holder: string;
+  since: string;
+};
+
 type DashboardSummaryResponse = {
   metrics: {
     vehiclesInside: number;
@@ -42,6 +65,9 @@ type DashboardSummaryResponse = {
   };
   insideVehicleIds?: string[];
   insideUserIds?: string[];
+  presentVehicles?: PresentVehicle[];
+  presentPeople?: PresentPerson[];
+  distributedKeys?: DistributedKey[];
   events: Array<{
     id: string;
     accessType: AccessType;
@@ -214,6 +240,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     saveAccess: $localize`:@@dashboard.action.saveAccess:Save Access`,
     distribute: $localize`:@@dashboard.action.distribute:Distribute`,
     collect: $localize`:@@dashboard.action.collect:Collect`,
+    // Current-status section
+    statusVehicles: $localize`:@@dashboard.status.vehicles:Present Vehicles`,
+    statusPeople: $localize`:@@dashboard.status.people:Present People`,
+    statusKeys: $localize`:@@dashboard.status.keys:Distributed Keys`,
+    statusEmptyVehicles: $localize`:@@dashboard.status.emptyVehicles:No vehicles inside`,
+    statusEmptyPeople: $localize`:@@dashboard.status.emptyPeople:No one inside`,
+    statusEmptyKeys: $localize`:@@dashboard.status.emptyKeys:No keys distributed`,
+    statusViaFoot: $localize`:@@dashboard.status.viaFoot:On foot`,
+    statusViaVehicle: $localize`:@@dashboard.status.viaVehicle:By vehicle`,
+    statusUnknownDriver: $localize`:@@dashboard.status.unknownDriver:Driver not recorded`,
   };
 
   /** Localized user-type labels surfaced in the key dialogs' user dropdown. */
@@ -232,6 +268,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly usersInside = signal(0);
   protected readonly keyDistributed = signal(0);
   protected readonly lastUpdatedAt = signal('');
+
+  // Current-status lists (who/what is inside right now) fed by the summary endpoint.
+  protected readonly presentVehicles = signal<PresentVehicle[]>([]);
+  protected readonly presentPeople = signal<PresentPerson[]>([]);
+  protected readonly distributedKeys = signal<DistributedKey[]>([]);
+
+  /** Status rows with a freshly-computed relative "since" label for display. */
+  protected readonly presentVehicleRows = computed(() =>
+    this.presentVehicles().map((v) => ({ ...v, sinceLabel: this.formatRelativeTime(v.since) })),
+  );
+  protected readonly presentPeopleRows = computed(() =>
+    this.presentPeople().map((p) => ({ ...p, sinceLabel: this.formatRelativeTime(p.since) })),
+  );
+  protected readonly distributedKeyRows = computed(() =>
+    this.distributedKeys().map((k) => ({ ...k, sinceLabel: this.formatRelativeTime(k.since) })),
+  );
 
   /** Per-direction glow trigger, pulsed briefly when a fresh realtime event lands on a gate card. */
   protected readonly gateFlash = signal<Record<GateDirection, boolean>>({
@@ -1214,11 +1266,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     // Optimistic nudge: ingress enters, egress leaves, checkpoints don't change the
-    // count. The server reconcile below corrects any drift (e.g. repeated passes).
+    // count. A vehicle also carries its driver, so it nudges the people count too.
+    // The server reconcile below corrects any drift (repeated passes, dedupe, etc.).
     if (mapped.direction !== 'checkpoint') {
       const delta = mapped.direction === 'out' ? -1 : 1;
       if (mapped.accessType === 'vehicle') {
         this.vehiclesInside.update((count) => Math.max(0, count + delta));
+        this.usersInside.update((count) => Math.max(0, count + delta));
       } else if (mapped.accessType === 'user') {
         this.usersInside.update((count) => Math.max(0, count + delta));
       }
@@ -1306,6 +1360,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.usersInside.set(summary.metrics.usersInside);
         this.insideVehicleIds.set(new Set(summary.insideVehicleIds ?? []));
         this.insideUserIds.set(new Set(summary.insideUserIds ?? []));
+        this.presentVehicles.set(summary.presentVehicles ?? []);
+        this.presentPeople.set(summary.presentPeople ?? []);
+        this.distributedKeys.set(summary.distributedKeys ?? []);
       } catch (summaryError) {
         console.warn('Dashboard summary unavailable, falling back to direct accesses query.', summaryError);
 
@@ -1323,8 +1380,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const seenUser = new Set<string>();
         const insideVehicles = new Set<string>();
         const insideUsers = new Set<string>();
-        let vehiclesInside = 0;
-        let usersInside = 0;
+        const presentVehicles: PresentVehicle[] = [];
+        const peopleById = new Map<string, PresentPerson>();
+        const driverCandidates: Array<{ id: string; name: string; vehicle: string; since: string }> = [];
         for (const record of enabledRecords) {
           const direction = this.normalizeDirection(record.expand?.gate?.direction, !!record.did_leave);
           if (direction === 'checkpoint') {
@@ -1337,8 +1395,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
             }
             seenVehicle.add(id);
             if (direction === 'in') {
-              vehiclesInside += 1;
               insideVehicles.add(id);
+              const since = this.getRecordCreatedAt(record);
+              const driverId = record.driver_user || record.made_by_user || '';
+              const driverName = this.getUserDisplayName(record.expand?.driver_user ?? record.expand?.made_by_user, driverId);
+              const number = record.expand?.vehicle?.number || record.vehicle || id;
+              presentVehicles.push({ id, number, driver: driverName, gate: record.expand?.gate?.name || record.gate || '', since });
+              if (driverId) {
+                driverCandidates.push({ id: driverId, name: driverName, vehicle: number, since });
+              }
             }
           } else if (record.access_type === 'user') {
             const id = record.user;
@@ -1347,11 +1412,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
             }
             seenUser.add(id);
             if (direction === 'in') {
-              usersInside += 1;
               insideUsers.add(id);
+              peopleById.set(id, {
+                id,
+                name: this.getUserDisplayName(record.expand?.user, id),
+                via: 'foot',
+                vehicle: '',
+                since: this.getRecordCreatedAt(record),
+              });
             }
           }
         }
+
+        // Vehicle drivers count as present people unless they also walked in.
+        for (const d of driverCandidates) {
+          if (!peopleById.has(d.id)) {
+            peopleById.set(d.id, { id: d.id, name: d.name, via: 'vehicle', vehicle: d.vehicle, since: d.since });
+          }
+        }
+
+        const bySince = (a: { since: string }, b: { since: string }) => this.toTimestamp(b.since) - this.toTimestamp(a.since);
+        presentVehicles.sort(bySince);
+        const presentPeople = Array.from(peopleById.values()).sort(bySince);
 
         const latestEvents = enabledRecords
           .slice()
@@ -1360,10 +1442,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
           .map((record) => this.mapAccessRecord(record));
 
         this.latestGateEvents.set(latestEvents);
-        this.vehiclesInside.set(vehiclesInside);
-        this.usersInside.set(usersInside);
+        this.vehiclesInside.set(presentVehicles.length);
+        // Occupancy includes vehicle drivers, matching presentPeople.
+        this.usersInside.set(presentPeople.length);
         this.insideVehicleIds.set(insideVehicles);
         this.insideUserIds.set(insideUsers);
+        this.presentVehicles.set(presentVehicles);
+        this.presentPeople.set(presentPeople);
+        // Distributed-key holders need a room_key_events lookup; the summary endpoint
+        // provides them. On this degraded fallback the metric card still shows the count.
+        this.distributedKeys.set([]);
       }
 
       this.lastUpdatedAt.set(new Date().toLocaleString());

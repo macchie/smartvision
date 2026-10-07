@@ -252,6 +252,16 @@
     "dashboard.msg.vehicleNotInside": "Seuls les véhicules actuellement à l'intérieur peuvent sortir par un portail de sortie.",
 
     "dashboard.msg.userAlreadyInside": "Cette personne est déjà à l'intérieur et ne peut pas entrer à nouveau.",
-    "dashboard.msg.userNotInside": "Seules les personnes actuellement à l'intérieur peuvent sortir par un portail de sortie."
+    "dashboard.msg.userNotInside": "Seules les personnes actuellement à l'intérieur peuvent sortir par un portail de sortie.",
+
+    "dashboard.status.vehicles": "Véhicules présents",
+    "dashboard.status.people": "Personnes présentes",
+    "dashboard.status.keys": "Clés distribuées",
+    "dashboard.status.emptyVehicles": "Aucun véhicule à l'intérieur",
+    "dashboard.status.emptyPeople": "Personne à l'intérieur",
+    "dashboard.status.emptyKeys": "Aucune clé distribuée",
+    "dashboard.status.viaFoot": "À pied",
+    "dashboard.status.viaVehicle": "En véhicule",
+    "dashboard.status.unknownDriver": "Conducteur non enregistré"
   }
 }

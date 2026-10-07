@@ -294,6 +294,24 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
         const usersCache = {}
         const gatesCache = {}
         const vehiclesCache = {}
+        const roomsCache = {}
+
+        const getRoomLabel = (roomId) => {
+            if (!roomId) return "Unknown room"
+            if (roomsCache[roomId]) return roomsCache[roomId]
+
+            try {
+                const room = $app.findRecordById("rooms", roomId)
+                const number = room.getString("number") || ""
+                const name = room.getString("name") || ""
+                const label = (number && name) ? (number + " · " + name) : (number || name || roomId)
+                roomsCache[roomId] = label
+                return label
+            } catch (_) {
+                roomsCache[roomId] = roomId
+                return roomId
+            }
+        }
 
         const getUserLabel = (userId) => {
             if (!userId) return ""
@@ -363,11 +381,9 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
         // A subject is "inside" when its most recent ingress/egress event was an
         // ingress. Each ingress event enters and each egress event leaves; checkpoint
         // events never change the inside/outside status. We therefore track the latest
-        // in/out event per vehicle and per user rather than counting raw events.
-        const latestVehicleInside = {}
-        const latestVehicleTs = {}
-        const latestUserInside = {}
-        const latestUserTs = {}
+        // in/out record per vehicle and per user rather than counting raw events.
+        const latestVehicle = {}  // vehicleId -> { ts, inside, access }
+        const latestUser = {}     // userId    -> { ts, inside, access }
 
         for (const access of accessesAll) {
             if (!isEnabledAccess(access) || isLegacyRecoveredAccess(access)) {
@@ -386,43 +402,103 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             if (accessType === "vehicle") {
                 const vehicleId = getStr(access, "vehicle")
                 if (!vehicleId) continue
-                if (latestVehicleTs[vehicleId] === undefined || ts >= latestVehicleTs[vehicleId]) {
-                    latestVehicleTs[vehicleId] = ts
-                    latestVehicleInside[vehicleId] = inside
+                if (latestVehicle[vehicleId] === undefined || ts >= latestVehicle[vehicleId].ts) {
+                    latestVehicle[vehicleId] = { ts: ts, inside: inside, access: access }
                 }
             } else if (accessType === "user") {
                 const userId = getStr(access, "user")
                 if (!userId) continue
-                if (latestUserTs[userId] === undefined || ts >= latestUserTs[userId]) {
-                    latestUserTs[userId] = ts
-                    latestUserInside[userId] = inside
+                if (latestUser[userId] === undefined || ts >= latestUser[userId].ts) {
+                    latestUser[userId] = { ts: ts, inside: inside, access: access }
                 }
             }
         }
 
-        let vehiclesInside = 0
-        for (const id in latestVehicleInside) {
-            if (latestVehicleInside[id]) vehiclesInside += 1
-        }
-        let usersInside = 0
-        for (const id in latestUserInside) {
-            if (latestUserInside[id]) usersInside += 1
-        }
+        const bySinceDesc = (a, b) => String(b.since || "").localeCompare(String(a.since || ""))
 
-        // IDs of subjects currently inside — lets the access dialogs allow ingress
-        // only for subjects that are out, and egress only for ones inside.
+        // Present vehicles (currently inside) with their driver and entry gate.
+        const presentVehicles = []
         const insideVehicleIds = []
-        for (const id in latestVehicleInside) {
-            if (latestVehicleInside[id]) insideVehicleIds.push(id)
+        for (const id in latestVehicle) {
+            const entry = latestVehicle[id]
+            if (!entry.inside) continue
+            insideVehicleIds.push(id)
+            const a = entry.access
+            const driverUserId = getStr(a, "driver_user") || getStr(a, "made_by_user")
+            presentVehicles.push({
+                id: id,
+                number: getVehicleNumber(id),
+                driverId: driverUserId || "",
+                driver: getUserLabel(driverUserId) || "",
+                gate: getGateData(getStr(a, "gate")).name,
+                since: getCreatedAt(a),
+            })
         }
-        const insideUserIds = []
-        for (const id in latestUserInside) {
-            if (latestUserInside[id]) insideUserIds.push(id)
-        }
+        presentVehicles.sort(bySinceDesc)
 
-        // "Keys distributed" = keys currently out. The room_key_events hook keeps
-        // rooms.key_collected authoritative (latest event wins), so count that
-        // directly rather than tallying open events.
+        // Present people = people who walked in (user accesses) plus the drivers of
+        // vehicles currently inside, de-duplicated by person.
+        const peopleById = {}
+        const insideUserIds = []
+        for (const id in latestUser) {
+            const entry = latestUser[id]
+            if (!entry.inside) continue
+            insideUserIds.push(id)
+            peopleById[id] = {
+                id: id,
+                name: getUserLabel(id) || "Unknown person",
+                via: "foot",
+                vehicle: "",
+                since: getCreatedAt(entry.access),
+            }
+        }
+        for (const v of presentVehicles) {
+            if (!v.driverId || peopleById[v.driverId]) continue
+            peopleById[v.driverId] = {
+                id: v.driverId,
+                name: v.driver || "Unknown person",
+                via: "vehicle",
+                vehicle: v.number,
+                since: v.since,
+            }
+        }
+        const presentPeople = []
+        for (const k in peopleById) presentPeople.push(peopleById[k])
+        presentPeople.sort(bySinceDesc)
+
+        // Occupancy = everyone physically present, i.e. walked-in people plus the
+        // drivers of vehicles currently inside (presentPeople already unions them).
+        const vehiclesInside = presentVehicles.length
+        const usersInside = presentPeople.length
+
+        // Distributed keys currently out, with holder + room. Query directly:
+        // safeFindRecords' 2nd arg is a SORT, not a filter.
+        const distributedKeys = []
+        try {
+            const openKeyEvents = $app.findRecordsByFilter(
+                "room_key_events",
+                "is_collecting = true && did_return_key = false && enabled = true",
+                "",
+                10000,
+                0,
+            )
+            const total = openKeyEvents ? (openKeyEvents.length || 0) : 0
+            for (let i = 0; i < total; i++) {
+                const ev = openKeyEvents[i]
+                distributedKeys.push({
+                    id: ev.id,
+                    room: getRoomLabel(getStr(ev, "room")),
+                    holder: getUserLabel(getStr(ev, "user")) || "Unknown person",
+                    since: getCreatedAt(ev),
+                })
+            }
+        } catch (err) {
+            console.error("[dashboard summary] failed to read open key events", err)
+        }
+        distributedKeys.sort(bySinceDesc)
+
+        // "Keys distributed" metric = keys currently out. rooms.key_collected is kept
+        // authoritative by the room_key_events hook, so count that directly.
         let keyDistributed = 0
         for (const room of roomsAll) {
             if (getBool(room, "key_collected")) {
@@ -471,6 +547,9 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             },
             insideVehicleIds: insideVehicleIds,
             insideUserIds: insideUserIds,
+            presentVehicles: presentVehicles,
+            presentPeople: presentPeople,
+            distributedKeys: distributedKeys,
             events: events,
         })
     } catch (err) {
@@ -481,6 +560,11 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
                 usersInside: 0,
                 keyDistributed: 0,
             },
+            insideVehicleIds: [],
+            insideUserIds: [],
+            presentVehicles: [],
+            presentPeople: [],
+            distributedKeys: [],
             events: [],
             warning: "dashboard summary fallback payload returned",
         })

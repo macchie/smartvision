@@ -300,6 +300,166 @@
   }
 }
 
+/* ─── Current status section (present vehicles / people / keys) ─── */
+.status-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.status-heading {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--sv-text);
+}
+
+.status-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.status-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.55rem;
+}
+
+.status-ico {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--sv-radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.status-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--sv-text);
+}
+
+.status-count {
+  flex-shrink: 0;
+  min-width: 1.65rem;
+  height: 1.65rem;
+  padding: 0 0.5rem;
+  border-radius: var(--sv-radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+/* Per-panel accents mirror the metric cards. */
+.status-vehicles .status-ico { color: #2563eb; background: #dbeafe; }
+.status-vehicles .status-count { color: #1d4ed8; background: #eff6ff; }
+.status-people .status-ico { color: #0f766e; background: #ccfbf1; }
+.status-people .status-count { color: #0f766e; background: #f0fdfa; }
+.status-keys .status-ico { color: #b45309; background: #ffedd5; }
+.status-keys .status-count { color: #b45309; background: #fff7ed; }
+
+.status-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 16rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.55rem 0.15rem;
+  border-bottom: 1px solid var(--sv-table-border-soft);
+}
+.status-row:last-child { border-bottom: none; }
+
+.status-row-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.status-row-title {
+  font-weight: 700;
+  font-size: 0.84rem;
+  color: var(--sv-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-row-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  font-size: 0.72rem;
+  color: var(--sv-text-muted);
+}
+.status-row-sub i { font-size: 0.68rem; flex-shrink: 0; }
+.status-row-sub span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.status-row-meta {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 9rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: var(--sv-radius-pill);
+  border: 1px solid var(--sv-border-strong);
+  background: var(--sv-muted-surface);
+  color: var(--sv-text-muted);
+  font-size: 0.66rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.status-chip i { font-size: 0.62rem; }
+
+.status-time {
+  flex-shrink: 0;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--sv-text-muted);
+  white-space: nowrap;
+}
+
+.status-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 1.6rem 0;
+  color: var(--sv-text-muted);
+  font-size: 0.8rem;
+}
+.status-empty i { font-size: 1.5rem; opacity: 0.45; }
+
+@media (max-width: 1099px) {
+  .status-grid { grid-template-columns: 1fr; }
+}
+
 /* Dark mode — keep the colour-coded gate cards legible on dark surfaces */
 :host-context(html.dark) {
   .metric-vehicles .title-with-icon i { color: #60a5fa; background: rgba(37, 99, 235, 0.22); }
@@ -342,6 +502,15 @@
     --flash-rgb: 251, 191, 36;
   }
   .gate-card-checkpoint .gate-card-direction-icon i { color: #fbbf24; }
+
+  /* Current-status accents on dark surfaces */
+  .status-vehicles .status-ico { color: #60a5fa; background: rgba(37, 99, 235, 0.22); }
+  .status-vehicles .status-count { color: #93c5fd; background: rgba(37, 99, 235, 0.16); }
+  .status-people .status-ico { color: #2dd4bf; background: rgba(13, 148, 136, 0.22); }
+  .status-people .status-count { color: #5eead4; background: rgba(13, 148, 136, 0.16); }
+  .status-keys .status-ico { color: #fbbf24; background: rgba(245, 158, 11, 0.2); }
+  .status-keys .status-count { color: #fcd34d; background: rgba(245, 158, 11, 0.14); }
+  .status-chip { background: rgba(255, 255, 255, 0.05); }
 }
 
 /* Specific styling for the quick action buttons to fit Apple aesthetics */

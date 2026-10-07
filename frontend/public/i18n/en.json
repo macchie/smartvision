@@ -79,8 +79,8 @@
     "dashboard.table.latestPeople": "Latest People Accesses",
     "dashboard.table.emptyVehicle": "No recent vehicle accesses.",
     "dashboard.table.emptyPeople": "No recent people accesses.",
-    "dashboard.action.addVehicleAccess": "Add Vehicle Access",
-    "dashboard.action.addUserAccess": "Add User Access",
+    "dashboard.action.addVehicleAccess": "Record Vehicle",
+    "dashboard.action.addUserAccess": "Record Person",
     "dashboard.action.distributeKey": "Distribute Key",
     "dashboard.action.collectKey": "Collect Key",
     "dashboard.action.saveAccess": "Save Access",
@@ -252,6 +252,16 @@
     "dashboard.msg.vehicleNotInside": "Only vehicles currently inside can exit through an egress gate.",
 
     "dashboard.msg.userAlreadyInside": "This person is already inside and cannot enter again.",
-    "dashboard.msg.userNotInside": "Only people currently inside can exit through an egress gate."
+    "dashboard.msg.userNotInside": "Only people currently inside can exit through an egress gate.",
+
+    "dashboard.status.vehicles": "Present Vehicles",
+    "dashboard.status.people": "Present People",
+    "dashboard.status.keys": "Distributed Keys",
+    "dashboard.status.emptyVehicles": "No vehicles inside",
+    "dashboard.status.emptyPeople": "No one inside",
+    "dashboard.status.emptyKeys": "No keys distributed",
+    "dashboard.status.viaFoot": "On foot",
+    "dashboard.status.viaVehicle": "By vehicle",
+    "dashboard.status.unknownDriver": "Driver not recorded"
   }
 }

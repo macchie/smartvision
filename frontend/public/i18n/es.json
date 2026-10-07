@@ -252,6 +252,16 @@
     "dashboard.msg.vehicleNotInside": "Solo los vehículos que están dentro pueden salir por una puerta de salida.",
 
     "dashboard.msg.userAlreadyInside": "Esta persona ya está dentro y no puede volver a entrar.",
-    "dashboard.msg.userNotInside": "Solo las personas que están dentro pueden salir por una puerta de salida."
+    "dashboard.msg.userNotInside": "Solo las personas que están dentro pueden salir por una puerta de salida.",
+
+    "dashboard.status.vehicles": "Vehículos presentes",
+    "dashboard.status.people": "Personas presentes",
+    "dashboard.status.keys": "Llaves distribuidas",
+    "dashboard.status.emptyVehicles": "No hay vehículos dentro",
+    "dashboard.status.emptyPeople": "No hay nadie dentro",
+    "dashboard.status.emptyKeys": "No hay llaves distribuidas",
+    "dashboard.status.viaFoot": "A pie",
+    "dashboard.status.viaVehicle": "En vehículo",
+    "dashboard.status.unknownDriver": "Conductor no registrado"
   }
 }

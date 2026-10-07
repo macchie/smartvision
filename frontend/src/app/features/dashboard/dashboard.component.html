@@ -114,6 +114,98 @@
         }
       </div>
 
+      <!-- Current status: who / what is inside right now -->
+      <section class="status-section">
+        <div class="status-grid grid gap-3">
+          <p-card styleClass="dashboard-card glass-surface status-card status-vehicles h-full shadow-sm">
+            <div class="status-head">
+              <span class="status-ico"><i class="pi pi-car"></i></span>
+              <span class="status-title" i18n="@@dashboard.status.vehicles">Present Vehicles</span>
+              <span class="status-count">{{ presentVehicleRows().length }}</span>
+            </div>
+            <div class="status-list">
+              @for (v of presentVehicleRows(); track v.id) {
+                <div class="status-row">
+                  <div class="status-row-main">
+                    <span class="status-row-title">{{ v.number }}</span>
+                    <span class="status-row-sub"><i class="pi pi-user"></i>{{ v.driver || ui.statusUnknownDriver }}</span>
+                  </div>
+                  <div class="status-row-meta">
+                    @if (v.gate) {
+                      <span class="status-chip"><i class="pi pi-map-marker"></i>{{ v.gate }}</span>
+                    }
+                    <span class="status-time">{{ v.sinceLabel }}</span>
+                  </div>
+                </div>
+              } @empty {
+                <div class="status-empty">
+                  <i class="pi pi-car"></i>
+                  <span>{{ ui.statusEmptyVehicles }}</span>
+                </div>
+              }
+            </div>
+          </p-card>
+
+          <p-card styleClass="dashboard-card glass-surface status-card status-people h-full shadow-sm">
+            <div class="status-head">
+              <span class="status-ico"><i class="pi pi-users"></i></span>
+              <span class="status-title" i18n="@@dashboard.status.people">Present People</span>
+              <span class="status-count">{{ presentPeopleRows().length }}</span>
+            </div>
+            <div class="status-list">
+              @for (p of presentPeopleRows(); track p.id) {
+                <div class="status-row">
+                  <div class="status-row-main">
+                    <span class="status-row-title">{{ p.name }}</span>
+                    <span class="status-row-sub">
+                      @if (p.via === 'vehicle') {
+                        <i class="pi pi-car"></i><span>{{ ui.statusViaVehicle }}@if (p.vehicle) { · {{ p.vehicle }} }</span>
+                      } @else {
+                        <i class="pi pi-user"></i><span>{{ ui.statusViaFoot }}</span>
+                      }
+                    </span>
+                  </div>
+                  <div class="status-row-meta">
+                    <span class="status-time">{{ p.sinceLabel }}</span>
+                  </div>
+                </div>
+              } @empty {
+                <div class="status-empty">
+                  <i class="pi pi-users"></i>
+                  <span>{{ ui.statusEmptyPeople }}</span>
+                </div>
+              }
+            </div>
+          </p-card>
+
+          <p-card styleClass="dashboard-card glass-surface status-card status-keys h-full shadow-sm">
+            <div class="status-head">
+              <span class="status-ico"><i class="pi pi-key"></i></span>
+              <span class="status-title" i18n="@@dashboard.status.keys">Distributed Keys</span>
+              <span class="status-count">{{ distributedKeyRows().length }}</span>
+            </div>
+            <div class="status-list">
+              @for (k of distributedKeyRows(); track k.id) {
+                <div class="status-row">
+                  <div class="status-row-main">
+                    <span class="status-row-title">{{ k.room }}</span>
+                    <span class="status-row-sub"><i class="pi pi-user"></i>{{ k.holder }}</span>
+                  </div>
+                  <div class="status-row-meta">
+                    <span class="status-time">{{ k.sinceLabel }}</span>
+                  </div>
+                </div>
+              } @empty {
+                <div class="status-empty">
+                  <i class="pi pi-key"></i>
+                  <span>{{ ui.statusEmptyKeys }}</span>
+                </div>
+              }
+            </div>
+          </p-card>
+        </div>
+      </section>
+
       <div class="grid gap-6 lg:grid-cols-2">
         <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-sm overflow-hidden">
           <ng-template pTemplate="title">
