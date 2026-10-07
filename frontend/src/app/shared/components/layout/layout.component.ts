@@ -7,17 +7,20 @@ import { ButtonModule } from 'primeng/button';
 import { Menu, MenuModule } from 'primeng/menu';
 import { AvatarModule } from 'primeng/avatar';
 import { MenuItem } from 'primeng/api';
+import { LucideAngularModule, Sparkles } from 'lucide-angular';
 import { SettingsDialogComponent } from '../settings-dialog/settings-dialog.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ButtonModule, MenuModule, AvatarModule, SettingsDialogComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ButtonModule, MenuModule, AvatarModule, LucideAngularModule, SettingsDialogComponent],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss']
 })
 export class LayoutComponent {
   @ViewChild('userMenu') private userMenu?: Menu;
+
+  protected readonly Sparkles = Sparkles;
 
   protected readonly settingsVisible = signal(false);
 

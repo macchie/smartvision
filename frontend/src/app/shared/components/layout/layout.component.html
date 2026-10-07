@@ -1,15 +1,12 @@
 <div class="dashboard-shell">
   <header class="dashboard-topbar px-4 py-3 md:px-8 md:py-4">
     <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3 md:gap-4">
-        <a routerLink="/dashboard" class="brand-mark flex h-9 w-9 items-center justify-center bg-gradient-to-br from-slate-700 to-blue-600 text-white shadow-sm shadow-slate-900/20 md:h-10 md:w-10">
-          <i class="pi pi-gate text-sm"></i>
-        </a>
-        <div class="hidden sm:block">
-          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700/90 dark:text-blue-300/90 md:text-xs">SmartVision</p>
-          <a routerLink="/dashboard"><h1 class="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100 md:text-2xl" i18n="@@nav.dashboard">Dashboard</h1></a>
-        </div>
-      </div>
+      <a routerLink="/dashboard" class="flex items-center gap-3 no-underline" aria-label="SmartVision">
+        <span class="brand-mark flex h-9 w-9 items-center justify-center bg-[var(--sv-accent)] text-white shadow-sm md:h-10 md:w-10">
+          <lucide-icon [img]="Sparkles" class="h-5 w-5"></lucide-icon>
+        </span>
+        <span class="text-lg font-bold tracking-tight text-[var(--sv-text)] md:text-xl">SmartVision</span>
+      </a>
 
       <div class="flex items-center gap-2 md:ml-auto md:gap-3">
         <!-- Desktop navigation links -->

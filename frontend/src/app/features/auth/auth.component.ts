@@ -5,7 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { UserConfigService } from '../../core/services/user-config.service';
-import { LucideAngularModule, ScanLine, AlertCircle, Sun, Moon } from 'lucide-angular';
+import { LucideAngularModule, Sparkles, AlertCircle, Sun, Moon } from 'lucide-angular';
 
 @Component({
   selector: 'app-auth',
@@ -14,7 +14,7 @@ import { LucideAngularModule, ScanLine, AlertCircle, Sun, Moon } from 'lucide-an
   templateUrl: './auth.component.html',
 })
 export class AuthComponent {
-  readonly ScanLine = ScanLine;
+  readonly Sparkles = Sparkles;
   readonly AlertCircle = AlertCircle;
   readonly Sun = Sun;
   readonly Moon = Moon;

@@ -110,10 +110,14 @@ onRecordAfterCreateSuccess((e) => {
     // the keys-distributed metric and the open-distribution lookups.
     if (!isCollecting) {
         try {
+            // NOTE: room_key_events has no system `created` field (the collection
+            // uses manual created_at/updated_at), so sorting by "-created" throws
+            // and silently leaves the distribution open — inflating the keys metric
+            // forever. A room has at most one open distribution, so sort is unneeded.
             const open = $app.findRecordsByFilter(
                 "room_key_events",
                 "room = {:room} && is_collecting = true && did_return_key = false && enabled = true",
-                "-created",
+                "",
                 1,
                 0,
                 { room: roomId },
@@ -471,6 +475,17 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
         const vehiclesInside = presentVehicles.length
         const usersInside = presentPeople.length
 
+        // Rooms whose key is currently out — the authoritative source kept in sync
+        // by the room_key_events hook. Used to filter the open-distribution list so a
+        // stale/un-closed distribution (e.g. left open by an earlier bug) can't keep a
+        // returned key on the dashboard.
+        const keyOutRoomIds = {}
+        for (const room of roomsAll) {
+            if (getBool(room, "key_collected")) {
+                keyOutRoomIds[room.id] = true
+            }
+        }
+
         // Distributed keys currently out, with holder + room. Query directly:
         // safeFindRecords' 2nd arg is a SORT, not a filter.
         const distributedKeys = []
@@ -485,9 +500,14 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             const total = openKeyEvents ? (openKeyEvents.length || 0) : 0
             for (let i = 0; i < total; i++) {
                 const ev = openKeyEvents[i]
+                const roomId = getStr(ev, "room")
+                // Skip distributions whose room no longer has its key out.
+                if (!keyOutRoomIds[roomId]) {
+                    continue
+                }
                 distributedKeys.push({
                     id: ev.id,
-                    room: getRoomLabel(getStr(ev, "room")),
+                    room: getRoomLabel(roomId),
                     holder: getUserLabel(getStr(ev, "user")) || "Unknown person",
                     since: getCreatedAt(ev),
                 })
@@ -498,13 +518,8 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
         distributedKeys.sort(bySinceDesc)
 
         // "Keys distributed" metric = keys currently out. rooms.key_collected is kept
-        // authoritative by the room_key_events hook, so count that directly.
-        let keyDistributed = 0
-        for (const room of roomsAll) {
-            if (getBool(room, "key_collected")) {
-                keyDistributed += 1
-            }
-        }
+        // authoritative by the room_key_events hook (see keyOutRoomIds above).
+        const keyDistributed = Object.keys(keyOutRoomIds).length
 
         const events = []
         for (const access of accesses) {
