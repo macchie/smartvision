@@ -697,3 +697,14 @@ html.dark .border-slate-200\/90 { border-color: var(--sv-border-strong); }
 html.dark .border-indigo-100 { border-color: rgba(129, 140, 248, 0.3); }
 html.dark .border-emerald-100 { border-color: rgba(16, 185, 129, 0.3); }
 html.dark .border-red-100 { border-color: rgba(248, 113, 113, 0.3); }
+
+/* Gate (camera) select button inside the quick-action dialogs: full width,
+   wrap when there are several gates, and let each option share the row. */
+.sv-gate-select.p-selectbutton {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.sv-gate-select.p-selectbutton .p-togglebutton {
+  flex: 1 1 auto;
+}

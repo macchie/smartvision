@@ -409,11 +409,15 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             if (latestUserInside[id]) usersInside += 1
         }
 
-        // IDs of vehicles currently inside — lets the vehicle-access dialog allow
-        // ingress only for vehicles that are out, and egress only for ones inside.
+        // IDs of subjects currently inside — lets the access dialogs allow ingress
+        // only for subjects that are out, and egress only for ones inside.
         const insideVehicleIds = []
         for (const id in latestVehicleInside) {
             if (latestVehicleInside[id]) insideVehicleIds.push(id)
+        }
+        const insideUserIds = []
+        for (const id in latestUserInside) {
+            if (latestUserInside[id]) insideUserIds.push(id)
         }
 
         // "Keys distributed" = keys currently out. The room_key_events hook keeps
@@ -466,6 +470,7 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
                 keyDistributed: keyDistributed,
             },
             insideVehicleIds: insideVehicleIds,
+            insideUserIds: insideUserIds,
             events: events,
         })
     } catch (err) {

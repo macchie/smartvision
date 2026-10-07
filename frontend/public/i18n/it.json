@@ -249,6 +249,9 @@
     "key.notDistributed": "La chiave di questa stanza non è attualmente distribuita.",
 
     "dashboard.msg.vehicleAlreadyInside": "Questo veicolo è già all'interno e non può entrare di nuovo.",
-    "dashboard.msg.vehicleNotInside": "Solo i veicoli attualmente all'interno possono uscire da un varco di uscita."
+    "dashboard.msg.vehicleNotInside": "Solo i veicoli attualmente all'interno possono uscire da un varco di uscita.",
+
+    "dashboard.msg.userAlreadyInside": "Questa persona è già all'interno e non può entrare di nuovo.",
+    "dashboard.msg.userNotInside": "Solo le persone attualmente all'interno possono uscire da un varco di uscita."
   }
 }

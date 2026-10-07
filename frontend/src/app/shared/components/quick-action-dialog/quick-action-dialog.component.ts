@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TextareaModule } from 'primeng/textarea';
 
 export type QuickActionDialogOption = {
@@ -14,7 +15,7 @@ export type QuickActionDialogOption = {
 @Component({
   selector: 'app-quick-action-dialog',
   standalone: true,
-  imports: [FormsModule, DialogModule, AutoCompleteModule, TextareaModule, ButtonModule],
+  imports: [FormsModule, DialogModule, AutoCompleteModule, SelectButtonModule, TextareaModule, ButtonModule],
   template: `
     <p-dialog
       [header]="title()"
@@ -28,24 +29,36 @@ export type QuickActionDialogOption = {
       <div class="mt-2 flex flex-col gap-4">
         <div class="flex flex-col gap-2">
           <label [for]="primaryId()" class="text-sm font-semibold">{{ primaryLabel() }}</label>
-          <p-autoComplete
-            [inputId]="primaryId()"
-            [ngModel]="primaryValue()"
-            (ngModelChange)="primaryValue.set($event)"
-            [suggestions]="primarySuggestions()"
-            (completeMethod)="handlePrimarySearch($event)"
-            field="displayName"
-            optionLabel="displayName"
-            dataKey="id"
-            [placeholder]="primaryPlaceholder()"
-            [dropdown]="true"
-            [completeOnFocus]="primaryCompleteOnFocus()"
-            appendTo="body"
-            styleClass="w-full"
-            [fluid]="true"
-          >
-            <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
-          </p-autoComplete>
+          @if (primaryVariant() === 'selectButton') {
+            <p-selectButton
+              [options]="primarySuggestions()"
+              [ngModel]="primaryValue()"
+              (ngModelChange)="primaryValue.set($event)"
+              optionLabel="displayName"
+              dataKey="id"
+              [allowEmpty]="false"
+              styleClass="sv-gate-select"
+            />
+          } @else {
+            <p-autoComplete
+              [inputId]="primaryId()"
+              [ngModel]="primaryValue()"
+              (ngModelChange)="primaryValue.set($event)"
+              [suggestions]="primarySuggestions()"
+              (completeMethod)="handlePrimarySearch($event)"
+              field="displayName"
+              optionLabel="displayName"
+              dataKey="id"
+              [placeholder]="primaryPlaceholder()"
+              [dropdown]="true"
+              [completeOnFocus]="primaryCompleteOnFocus()"
+              appendTo="body"
+              styleClass="w-full"
+              [fluid]="true"
+            >
+              <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+            </p-autoComplete>
+          }
         </div>
 
         <div class="flex flex-col gap-2">
@@ -97,6 +110,8 @@ export class QuickActionDialogComponent {
 
   readonly primaryId = input.required<string>();
   readonly primaryLabel = input.required<string>();
+  /** 'autocomplete' (searchable typeahead) or 'selectButton' (inline button group). */
+  readonly primaryVariant = input<'autocomplete' | 'selectButton'>('autocomplete');
   readonly primaryPlaceholder = input($localize`:@@common.search:Search...`);
   readonly primarySuggestions = input<QuickActionDialogOption[]>([]);
   readonly primaryCompleteOnFocus = input(true);

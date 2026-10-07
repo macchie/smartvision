@@ -249,6 +249,9 @@
     "key.notDistributed": "La llave de esta habitación no está distribuida actualmente.",
 
     "dashboard.msg.vehicleAlreadyInside": "Este vehículo ya está dentro y no puede volver a entrar.",
-    "dashboard.msg.vehicleNotInside": "Solo los vehículos que están dentro pueden salir por una puerta de salida."
+    "dashboard.msg.vehicleNotInside": "Solo los vehículos que están dentro pueden salir por una puerta de salida.",
+
+    "dashboard.msg.userAlreadyInside": "Esta persona ya está dentro y no puede volver a entrar.",
+    "dashboard.msg.userNotInside": "Solo las personas que están dentro pueden salir por una puerta de salida."
   }
 }
