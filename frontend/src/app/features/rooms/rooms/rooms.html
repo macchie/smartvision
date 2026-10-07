@@ -74,9 +74,9 @@
               </button>
             </th>
             <th class="px-4 py-3 text-left">
-              <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('notes')">
-                <span i18n="@@common.notes">Notes</span>
-                <i class="pi text-[11px]" [ngClass]="getSortIcon('notes')"></i>
+              <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('holder')">
+                <span i18n="@@rooms.col.keyHolder">Key Holder</span>
+                <i class="pi text-[11px]" [ngClass]="getSortIcon('holder')"></i>
               </button>
             </th>
             <th class="px-4 py-3 text-left table-actions-col" style="width: 132px" i18n="@@common.actions">Actions</th>
@@ -104,7 +104,7 @@
                 <span class="text-slate-400">-</span>
               </td>
               <td class="px-4 py-3">
-                <span class="text-sm text-slate-500 line-clamp-1 truncate max-w-[320px]">{{ group.notes || '-' }}</span>
+                <span class="text-slate-400">-</span>
               </td>
               <td class="px-4 py-3 table-actions-col">
                 <div class="flex gap-2">
@@ -152,7 +152,11 @@
                 <p-tag [value]="room.key_collected ? t.collected : t.available" [severity]="room.key_collected ? 'warn' : 'success'"></p-tag>
               </td>
               <td class="px-4 py-3">
-                <span class="text-sm text-slate-500 line-clamp-1 truncate max-w-[320px]">{{ room.notes || room.description || '-' }}</span>
+                <span *ngIf="room.keyHolder" class="inline-flex items-center gap-1.5 text-sm text-slate-700">
+                  <i class="pi pi-user text-[11px] text-slate-400"></i>
+                  <span class="truncate max-w-[220px]">{{ room.keyHolder }}</span>
+                </span>
+                <span *ngIf="!room.keyHolder" class="text-slate-400">-</span>
               </td>
               <td class="px-4 py-3 table-actions-col">
                 <div class="flex gap-2">

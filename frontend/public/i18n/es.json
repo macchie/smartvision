@@ -204,6 +204,7 @@
     "rooms.editRoom": "Editar habitación",
     "rooms.search": "Busca habitaciones y grupos libremente...",
     "rooms.col.key": "Llave",
+    "rooms.col.keyHolder": "Poseedor de la llave",
     "rooms.tag.group": "Grupo",
     "rooms.tag.room": "Habitación",
     "rooms.key.collected": "Recogida",

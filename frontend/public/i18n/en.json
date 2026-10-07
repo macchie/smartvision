@@ -204,6 +204,7 @@
     "rooms.editRoom": "Edit Room",
     "rooms.search": "Search rooms and groups freely...",
     "rooms.col.key": "Key",
+    "rooms.col.keyHolder": "Key Holder",
     "rooms.tag.group": "Group",
     "rooms.tag.room": "Room",
     "rooms.key.collected": "Collected",

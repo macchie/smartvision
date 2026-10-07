@@ -56,7 +56,7 @@ export class Vehicles implements OnInit {
   protected readonly saving = signal(false);
   protected readonly suggestedOwners = signal<Array<{ id: string; displayName: string }>>([]);
   protected readonly searchQuery = signal('');
-  protected readonly sortField = signal<'number' | 'country' | 'owner' | 'enabled' | 'notes'>('number');
+  protected readonly sortField = signal<'number' | 'country' | 'owner' | 'enabled'>('number');
   protected readonly sortDirection = signal<'asc' | 'desc'>('asc');
   protected readonly filteredVehicles = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
@@ -96,9 +96,6 @@ export class Vehicles implements OnInit {
           break;
         case 'enabled':
           result = compareBoolean(!!a.enabled, !!b.enabled);
-          break;
-        case 'notes':
-          result = compareText(a.notes || a.note || '', b.notes || b.note || '');
           break;
         case 'number':
         default:
@@ -306,13 +303,13 @@ export class Vehicles implements OnInit {
     });
   }
 
-  protected toggleSort(field: 'number' | 'country' | 'owner' | 'enabled' | 'notes'): void {
+  protected toggleSort(field: 'number' | 'country' | 'owner' | 'enabled'): void {
     const nextSort = toggleSortState(this.sortField(), this.sortDirection(), field);
     this.sortField.set(nextSort.field);
     this.sortDirection.set(nextSort.direction);
   }
 
-  protected getSortIcon(field: 'number' | 'country' | 'owner' | 'enabled' | 'notes'): string {
+  protected getSortIcon(field: 'number' | 'country' | 'owner' | 'enabled'): string {
     return getSortIcon(this.sortField(), this.sortDirection(), field);
   }
 

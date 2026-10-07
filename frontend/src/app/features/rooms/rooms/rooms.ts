@@ -35,6 +35,7 @@ interface Room {
   group_id?: string;
   enabled?: boolean;
   key_collected?: boolean;
+  keyHolder?: string;
   expand?: {
     room_group?: RoomGroup;
     group_id?: RoomGroup;
@@ -86,7 +87,7 @@ export class Rooms implements OnInit {
   protected readonly savingRoom = signal(false);
   protected readonly roomKeyDialogVisible = signal(false);
   protected readonly searchQuery = signal('');
-  protected readonly sortField = signal<'name' | 'type' | 'key' | 'enabled' | 'notes' | 'rooms'>('name');
+  protected readonly sortField = signal<'name' | 'type' | 'key' | 'enabled' | 'holder' | 'rooms'>('name');
   protected readonly sortDirection = signal<'asc' | 'desc'>('asc');
   protected readonly filteredGroupRows = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
@@ -107,8 +108,8 @@ export class Rooms implements OnInit {
         case 'enabled':
           result = Number(!!a.enabled) - Number(!!b.enabled);
           break;
-        case 'notes':
-          result = (a.notes || a.description || '').localeCompare(b.notes || b.description || '');
+        case 'holder':
+          result = (a.keyHolder || '').localeCompare(b.keyHolder || '');
           break;
         case 'rooms':
           result = (a.number || '').localeCompare(b.number || '');
@@ -189,8 +190,8 @@ export class Rooms implements OnInit {
             const enabledRooms = group.rooms.filter(room => !!room.enabled).length;
             return enabledRooms / totalRooms;
           }
-          case 'notes':
-            return group.notes || '';
+          case 'holder':
+            return '';
           case 'rooms':
             return group.rooms.length;
           case 'name':
@@ -323,22 +324,31 @@ export class Rooms implements OnInit {
   protected async loadData() {
     this.loading.set(true);
     try {
-      const [roomsResult, groupsResult] = await Promise.allSettled([
+      const [roomsResult, groupsResult, keyEventsResult] = await Promise.allSettled([
         this.pb.pb.collection('rooms').getFullList<Room>({
           sort: '-id',
           expand: 'room_group'
         }),
         this.pb.pb.collection('room_groups').getFullList<RoomGroup>({
           sort: 'name',
+        }),
+        // Open distributions — the user who currently holds each room's key.
+        this.pb.pb.collection('room_key_events').getFullList<any>({
+          filter: 'is_collecting = true && did_return_key = false && enabled = true',
+          expand: 'user',
         })
       ]);
 
       const groups = groupsResult.status === 'fulfilled' ? groupsResult.value : [];
       this.roomGroups.set(groups);
 
+      const keyHoldersByRoom = keyEventsResult.status === 'fulfilled'
+        ? this.buildKeyHoldersByRoom(keyEventsResult.value)
+        : new Map<string, string>();
+
       const groupsById: RoomGroupMap = new Map(groups.map(group => [group.id, group]));
       const normalizedRooms = roomsResult.status === 'fulfilled'
-        ? roomsResult.value.map(room => this.normalizeRoom(room, groupsById))
+        ? roomsResult.value.map(room => this.normalizeRoom(room, groupsById, keyHoldersByRoom))
         : [];
       this.groupRows.set(this.buildGroupRows(groups, normalizedRooms));
 
@@ -599,17 +609,25 @@ export class Rooms implements OnInit {
     }
   }
 
-  /** Builds a user autocomplete option that surfaces the user's type alongside their name. */
-  private toUserOption(record: any): { id: string; displayName: string } {
+  /** Plain user name (no email/type decoration), used for compact table display. */
+  private toUserName(record: any): string {
     const first = (record['first_name'] || '').trim();
     const last = (record['last_name'] || '').trim();
     const email = (record['email'] || '').trim();
     const company = (record['name'] || '').trim();
     const type = record['user_type'];
 
-    const base = type === 'company'
+    return type === 'company'
       ? (company || email || this.t.unknownEmployee)
       : (`${first} ${last}`.trim() || email || this.t.unknownEmployee);
+  }
+
+  /** Builds a user autocomplete option that surfaces the user's type alongside their name. */
+  private toUserOption(record: any): { id: string; displayName: string } {
+    const email = (record['email'] || '').trim();
+    const type = record['user_type'];
+
+    const base = this.toUserName(record);
     const withEmail = type !== 'company' && email && base !== email ? `${base} (${email})` : base;
 
     return { id: record.id, displayName: `${withEmail} · ${this.userTypeLabel(type)}` };
@@ -728,13 +746,13 @@ export class Rooms implements OnInit {
     return `${count} ${count === 1 ? this.t.unitRoom : this.t.unitRooms}`;
   }
 
-  protected toggleSort(field: 'name' | 'type' | 'key' | 'enabled' | 'notes' | 'rooms'): void {
+  protected toggleSort(field: 'name' | 'type' | 'key' | 'enabled' | 'holder' | 'rooms'): void {
     const nextSort = toggleSortState(this.sortField(), this.sortDirection(), field);
     this.sortField.set(nextSort.field);
     this.sortDirection.set(nextSort.direction);
   }
 
-  protected getSortIcon(field: 'name' | 'type' | 'key' | 'enabled' | 'notes' | 'rooms'): string {
+  protected getSortIcon(field: 'name' | 'type' | 'key' | 'enabled' | 'holder' | 'rooms'): string {
     return getSortIcon(this.sortField(), this.sortDirection(), field);
   }
 
@@ -746,7 +764,20 @@ export class Rooms implements OnInit {
     return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   }
 
-  private normalizeRoom(room: Room, groupsById: RoomGroupMap): Room {
+  /** Maps each room id to the display name of the user currently holding its key. */
+  private buildKeyHoldersByRoom(events: any[]): Map<string, string> {
+    const holders = new Map<string, string>();
+    for (const event of events) {
+      const roomId = event?.room;
+      const holder = event?.expand?.user;
+      if (roomId && holder && !holders.has(roomId)) {
+        holders.set(roomId, this.toUserName(holder));
+      }
+    }
+    return holders;
+  }
+
+  private normalizeRoom(room: Room, groupsById: RoomGroupMap, keyHoldersByRoom: Map<string, string>): Room {
     const normalizedGroupId = room.room_group ?? room.group_id ?? '';
     const expandedGroup = room.expand?.room_group
       || room.expand?.group_id
@@ -759,6 +790,7 @@ export class Rooms implements OnInit {
       room_group: normalizedGroupId,
       roomGroupRecord: expandedGroup ? { id: expandedGroup.id, displayName: expandedGroup.name } : null,
       notes: room.notes ?? room.description ?? '',
+      keyHolder: room.key_collected ? (keyHoldersByRoom.get(room.id) || '') : '',
       expand: {
         room_group: expandedGroup,
         group_id: room.expand?.group_id,

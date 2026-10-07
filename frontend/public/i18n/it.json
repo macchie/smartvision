@@ -204,6 +204,7 @@
     "rooms.editRoom": "Modifica stanza",
     "rooms.search": "Cerca liberamente tra stanze e gruppi...",
     "rooms.col.key": "Chiave",
+    "rooms.col.keyHolder": "Detentore chiave",
     "rooms.tag.group": "Gruppo",
     "rooms.tag.room": "Stanza",
     "rooms.key.collected": "Ritirata",
