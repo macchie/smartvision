@@ -243,6 +243,12 @@
     "rooms.room.delete.header": "Elimina stanza",
     "rooms.room.delete.message": "Sei sicuro di voler eliminare questa stanza?",
     "rooms.msg.roomDeleted": "Stanza eliminata.",
-    "rooms.msg.roomDeleteFailed": "Impossibile eliminare la stanza."
+    "rooms.msg.roomDeleteFailed": "Impossibile eliminare la stanza.",
+
+    "key.alreadyDistributed": "La chiave di questa stanza è già distribuita.",
+    "key.notDistributed": "La chiave di questa stanza non è attualmente distribuita.",
+
+    "dashboard.msg.vehicleAlreadyInside": "Questo veicolo è già all'interno e non può entrare di nuovo.",
+    "dashboard.msg.vehicleNotInside": "Solo i veicoli attualmente all'interno possono uscire da un varco di uscita."
   }
 }

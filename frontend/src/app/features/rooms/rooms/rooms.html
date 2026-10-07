@@ -258,6 +258,30 @@
 >
   <div class="flex flex-col gap-4 py-4">
     <div class="flex flex-col gap-2">
+      <label for="rk-room" class="text-sm font-semibold text-slate-700" i18n="@@field.room">Room</label>
+      <p-autoComplete
+        id="rk-room"
+        [ngModel]="roomKeyFormState().room"
+        (ngModelChange)="onRoomKeyRoomChange($event)"
+        [suggestions]="suggestedRooms()"
+        (completeMethod)="searchRooms($event)"
+        field="displayName"
+        optionLabel="displayName"
+        dataKey="id"
+        placeholder="Search room..."
+        i18n-placeholder="@@dashboard.ph.searchRoom"
+        [dropdown]="true"
+        [completeOnFocus]="true"
+        appendTo="body"
+        styleClass="w-full"
+        [fluid]="true"
+        [forceSelection]="true"
+      >
+        <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+      </p-autoComplete>
+    </div>
+
+    <div class="flex flex-col gap-2">
       <label for="rk-user" class="text-sm font-semibold text-slate-700">
         {{ roomKeyDialogMode === 'distribute' ? t.user : t.confirmReturn }}
       </label>
@@ -272,30 +296,6 @@
         dataKey="id"
         placeholder="Search employee..."
         i18n-placeholder="@@rooms.ph.searchEmployee"
-        [dropdown]="true"
-        [completeOnFocus]="true"
-        appendTo="body"
-        styleClass="w-full"
-        [fluid]="true"
-        [forceSelection]="true"
-      >
-        <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
-      </p-autoComplete>
-    </div>
-
-    <div class="flex flex-col gap-2">
-      <label for="rk-room" class="text-sm font-semibold text-slate-700" i18n="@@field.room">Room</label>
-      <p-autoComplete
-        id="rk-room"
-        [ngModel]="roomKeyFormState().room"
-        (ngModelChange)="updateRoomKeyForm({ room: $event })"
-        [suggestions]="suggestedRooms()"
-        (completeMethod)="searchRooms($event)"
-        field="displayName"
-        optionLabel="displayName"
-        dataKey="id"
-        placeholder="Search room..."
-        i18n-placeholder="@@dashboard.ph.searchRoom"
         [dropdown]="true"
         [completeOnFocus]="true"
         appendTo="body"

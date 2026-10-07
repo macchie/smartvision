@@ -241,7 +241,7 @@ migrate((app) => {
     roomControl.set("number", "OP-201")
     roomControl.set("name", "Main Control Room")
     roomControl.set("room_group", operationsWingGroup.id)
-    roomControl.set("key_collected", true)
+    roomControl.set("key_collected", false)
     roomControl.set("enabled", true)
     roomControl.set("notes", tag)
     app.save(roomControl)

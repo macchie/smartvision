@@ -243,6 +243,12 @@
     "rooms.room.delete.header": "Eliminar habitación",
     "rooms.room.delete.message": "¿Seguro que quieres eliminar esta habitación?",
     "rooms.msg.roomDeleted": "Habitación eliminada.",
-    "rooms.msg.roomDeleteFailed": "No se pudo eliminar la habitación."
+    "rooms.msg.roomDeleteFailed": "No se pudo eliminar la habitación.",
+
+    "key.alreadyDistributed": "La llave de esta habitación ya está distribuida.",
+    "key.notDistributed": "La llave de esta habitación no está distribuida actualmente.",
+
+    "dashboard.msg.vehicleAlreadyInside": "Este vehículo ya está dentro y no puede volver a entrar.",
+    "dashboard.msg.vehicleNotInside": "Solo los vehículos que están dentro pueden salir por una puerta de salida."
   }
 }

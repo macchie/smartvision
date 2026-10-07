@@ -275,6 +275,11 @@ export class Rooms implements OnInit {
     user: $localize`:@@field.user:User`,
     confirmReturn: $localize`:@@dashboard.dlg.confirmReturnByUser:Confirm Return by User`,
     unknownEmployee: $localize`:@@common.unknownEmployee:Unknown employee`,
+    person: $localize`:@@field.person:Person`,
+    employee: $localize`:@@userType.employee:Employee`,
+    company: $localize`:@@userType.company:Company`,
+    alreadyDistributed: $localize`:@@key.alreadyDistributed:This room's key is already distributed.`,
+    notDistributed: $localize`:@@key.notDistributed:This room's key is not currently distributed.`,
     // Toasts & confirms
     loadFailed: $localize`:@@rooms.msg.loadFailed:Failed to load rooms.`,
     partialTitle: $localize`:@@rooms.msg.partialTitle:Partial data loaded`,
@@ -553,6 +558,11 @@ export class Rooms implements OnInit {
     this.suggestedRooms.set([selectedRoom]);
     this.suggestedUsers.set([]);
     this.roomKeyDialogVisible.set(true);
+
+    // When gathering, prefill the user who currently holds the key.
+    if (this.roomKeyDialogMode === 'collect') {
+      this.prefillKeyHolder(room.id);
+    }
   }
 
   protected hideRoomKeyDialog(): void {
@@ -578,30 +588,74 @@ export class Rooms implements OnInit {
     try {
       const query = (event.query || '').trim();
       const escapedQuery = this.escapeFilterValue(query);
-      const filterStr = `user_type = "employee"${escapedQuery ? ` && (first_name ~ "${escapedQuery}" || last_name ~ "${escapedQuery}" || email ~ "${escapedQuery}" || name ~ "${escapedQuery}")` : ''}`;
+      // A key may be handed to any user except admin accounts.
+      const filterStr = `role != "admin"${escapedQuery ? ` && (first_name ~ "${escapedQuery}" || last_name ~ "${escapedQuery}" || email ~ "${escapedQuery}" || name ~ "${escapedQuery}")` : ''}`;
       const options = { filter: filterStr };
 
       const records = await this.pb.pb.collection('users').getList(1, 10, options);
-      this.suggestedUsers.set(records.items.map(record => {
-        const first = (record['first_name'] || '').trim();
-        const last = (record['last_name'] || '').trim();
-        const email = (record['email'] || '').trim();
-        const fullName = `${first} ${last}`.trim();
-        
-        return {
-          id: record.id,
-          displayName: `${fullName || email || this.t.unknownEmployee}${fullName && email ? ` (${email})` : ''}`
-        };
-      }));
+      this.suggestedUsers.set(records.items.map(record => this.toUserOption(record)));
     } catch (e) {
       console.error(e);
     }
   }
 
+  /** Builds a user autocomplete option that surfaces the user's type alongside their name. */
+  private toUserOption(record: any): { id: string; displayName: string } {
+    const first = (record['first_name'] || '').trim();
+    const last = (record['last_name'] || '').trim();
+    const email = (record['email'] || '').trim();
+    const company = (record['name'] || '').trim();
+    const type = record['user_type'];
+
+    const base = type === 'company'
+      ? (company || email || this.t.unknownEmployee)
+      : (`${first} ${last}`.trim() || email || this.t.unknownEmployee);
+    const withEmail = type !== 'company' && email && base !== email ? `${base} (${email})` : base;
+
+    return { id: record.id, displayName: `${withEmail} · ${this.userTypeLabel(type)}` };
+  }
+
+  private userTypeLabel(type: unknown): string {
+    if (type === 'company') return this.t.company;
+    if (type === 'employee') return this.t.employee;
+    return this.t.person;
+  }
+
+  /** Finds the open distribution (key currently out) for a room and prefills its holder. */
+  private async prefillKeyHolder(roomId: string): Promise<void> {
+    try {
+      const records = await this.pb.pb.collection('room_key_events').getList(1, 1, {
+        filter: `room = "${this.escapeFilterValue(roomId)}" && is_collecting = true && did_return_key = false && enabled = true`,
+        sort: '-created',
+        expand: 'user',
+      });
+      const holder = (records.items[0] as any)?.expand?.user;
+      if (holder) {
+        const option = this.toUserOption(holder);
+        this.suggestedUsers.set([option]);
+        this.updateRoomKeyForm({ user: option });
+      }
+    } catch (e) {
+      console.error('Failed to prefill key holder', e);
+    }
+  }
+
+  /** Room autocomplete change in the key dialog — reset the user and, when gathering, prefill the holder. */
+  protected onRoomKeyRoomChange(room: { id: string; displayName: string } | null): void {
+    this.updateRoomKeyForm({ room, user: null });
+    this.suggestedUsers.set([]);
+    if (room && this.roomKeyDialogMode === 'collect') {
+      this.prefillKeyHolder(room.id);
+    }
+  }
+
   protected async searchRooms(event: AutoCompleteCompleteEvent) {
     const query = (event.query || '').trim().toLowerCase();
+    // Distribute only offers rooms whose key is available; gather only offers rooms whose key is out.
+    const wantDistributed = this.roomKeyDialogMode === 'collect';
     const rooms = this.groupRows()
       .flatMap(group => group.rooms)
+      .filter(room => !!room.key_collected === wantDistributed)
       .filter(room => {
         if (!query) {
           return true;
@@ -628,6 +682,20 @@ export class Rooms implements OnInit {
       }
 
       const isDistribute = this.roomKeyDialogMode === 'distribute';
+
+      // Guard against distributing an already-out key, or gathering an available one.
+      const roomRow = this.groupRows().flatMap(group => group.rooms).find(room => room.id === state.room!.id);
+      if (roomRow) {
+        if (isDistribute && roomRow.key_collected) {
+          this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.alreadyDistributed });
+          return;
+        }
+        if (!isDistribute && !roomRow.key_collected) {
+          this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.notDistributed });
+          return;
+        }
+      }
+
       await this.pb.pb.collection('room_key_events').create({
         room: state.room.id,
         user: state.user.id,

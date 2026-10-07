@@ -243,6 +243,12 @@
     "rooms.room.delete.header": "Delete Room",
     "rooms.room.delete.message": "Are you sure you want to delete this room?",
     "rooms.msg.roomDeleted": "Room deleted.",
-    "rooms.msg.roomDeleteFailed": "Failed to delete room."
+    "rooms.msg.roomDeleteFailed": "Failed to delete room.",
+
+    "key.alreadyDistributed": "This room's key is already distributed.",
+    "key.notDistributed": "This room's key is not currently distributed.",
+
+    "dashboard.msg.vehicleAlreadyInside": "This vehicle is already inside and cannot enter again.",
+    "dashboard.msg.vehicleNotInside": "Only vehicles currently inside can exit through an egress gate."
   }
 }

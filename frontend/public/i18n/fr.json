@@ -243,6 +243,12 @@
     "rooms.room.delete.header": "Supprimer la chambre",
     "rooms.room.delete.message": "Voulez-vous vraiment supprimer cette chambre ?",
     "rooms.msg.roomDeleted": "Chambre supprimée.",
-    "rooms.msg.roomDeleteFailed": "Échec de la suppression de la chambre."
+    "rooms.msg.roomDeleteFailed": "Échec de la suppression de la chambre.",
+
+    "key.alreadyDistributed": "La clé de cette chambre est déjà distribuée.",
+    "key.notDistributed": "La clé de cette chambre n'est pas distribuée actuellement.",
+
+    "dashboard.msg.vehicleAlreadyInside": "Ce véhicule est déjà à l'intérieur et ne peut pas entrer à nouveau.",
+    "dashboard.msg.vehicleNotInside": "Seuls les véhicules actuellement à l'intérieur peuvent sortir par un portail de sortie."
   }
 }

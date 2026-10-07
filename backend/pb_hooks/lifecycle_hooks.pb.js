@@ -104,6 +104,30 @@ onRecordAfterCreateSuccess((e) => {
     } catch (err) {
         console.error("[room_key_events hook] failed to update room:", err)
     }
+
+    // When a key is returned (is_collecting=false), close the matching open
+    // distribution event. Otherwise it stays "out" forever and keeps inflating
+    // the keys-distributed metric and the open-distribution lookups.
+    if (!isCollecting) {
+        try {
+            const open = $app.findRecordsByFilter(
+                "room_key_events",
+                "room = {:room} && is_collecting = true && did_return_key = false && enabled = true",
+                "-created",
+                1,
+                0,
+                { room: roomId },
+            )
+            if (open.length > 0) {
+                const distribution = open[0]
+                distribution.set("did_return_key", true)
+                distribution.set("return_key_event", e.record.id)
+                $app.save(distribution)
+            }
+        } catch (err) {
+            console.error("[room_key_events hook] failed to close distribution:", err)
+        }
+    }
 }, "room_key_events")
 
 // ---------------------------------------------------------------------------
@@ -199,7 +223,7 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
 
         const accessesAll = safeFindRecords("accesses", "", 10000)
         const accessesRaw = safeFindRecords("accesses", "", 10000)
-        const roomKeyEvents = safeFindRecords("room_key_events", "", 10000)
+        const roomsAll = safeFindRecords("rooms", "", 10000)
 
         const parseTime = (record) => {
             const created = String(getCreatedAt(record) || "")
@@ -336,31 +360,68 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             }
         }
 
-        let vehiclesInside = 0
-        let usersInside = 0
+        // A subject is "inside" when its most recent ingress/egress event was an
+        // ingress. Each ingress event enters and each egress event leaves; checkpoint
+        // events never change the inside/outside status. We therefore track the latest
+        // in/out event per vehicle and per user rather than counting raw events.
+        const latestVehicleInside = {}
+        const latestVehicleTs = {}
+        const latestUserInside = {}
+        const latestUserTs = {}
+
         for (const access of accessesAll) {
             if (!isEnabledAccess(access) || isLegacyRecoveredAccess(access)) {
                 continue
             }
+
+            const direction = getCameraData(getStr(access, "camera")).direction
+            if (direction === "checkpoint") {
+                continue
+            }
+
+            const ts = parseTime(access)
+            const inside = direction !== "out"
             const accessType = getStr(access, "access_type")
-            const didLeave = getBool(access, "did_leave")
-            const cameraId = getStr(access, "camera")
-            const camera = getCameraData(cameraId)
-            
-            if (!didLeave && camera.direction !== "checkpoint") {
-                if (accessType === "vehicle") {
-                    vehiclesInside += 1
-                } else if (accessType === "user") {
-                    usersInside += 1
+
+            if (accessType === "vehicle") {
+                const vehicleId = getStr(access, "vehicle")
+                if (!vehicleId) continue
+                if (latestVehicleTs[vehicleId] === undefined || ts >= latestVehicleTs[vehicleId]) {
+                    latestVehicleTs[vehicleId] = ts
+                    latestVehicleInside[vehicleId] = inside
+                }
+            } else if (accessType === "user") {
+                const userId = getStr(access, "user")
+                if (!userId) continue
+                if (latestUserTs[userId] === undefined || ts >= latestUserTs[userId]) {
+                    latestUserTs[userId] = ts
+                    latestUserInside[userId] = inside
                 }
             }
         }
 
+        let vehiclesInside = 0
+        for (const id in latestVehicleInside) {
+            if (latestVehicleInside[id]) vehiclesInside += 1
+        }
+        let usersInside = 0
+        for (const id in latestUserInside) {
+            if (latestUserInside[id]) usersInside += 1
+        }
+
+        // IDs of vehicles currently inside — lets the vehicle-access dialog allow
+        // ingress only for vehicles that are out, and egress only for ones inside.
+        const insideVehicleIds = []
+        for (const id in latestVehicleInside) {
+            if (latestVehicleInside[id]) insideVehicleIds.push(id)
+        }
+
+        // "Keys distributed" = keys currently out. The room_key_events hook keeps
+        // rooms.key_collected authoritative (latest event wins), so count that
+        // directly rather than tallying open events.
         let keyDistributed = 0
-        for (const keyEvent of roomKeyEvents) {
-            const isCollecting = getBool(keyEvent, "is_collecting")
-            const didReturnKey = getBool(keyEvent, "did_return_key")
-            if (isCollecting && !didReturnKey) {
+        for (const room of roomsAll) {
+            if (getBool(room, "key_collected")) {
                 keyDistributed += 1
             }
         }
@@ -404,6 +465,7 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
                 usersInside: usersInside,
                 keyDistributed: keyDistributed,
             },
+            insideVehicleIds: insideVehicleIds,
             events: events,
         })
     } catch (err) {
@@ -426,20 +488,20 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
 // ---------------------------------------------------------------------------
 // IMPORTANT: PocketBase executes each handler in an isolated context.
 // Keep cron callback self-contained and load helpers with require() inside.
-cronAdd("demo-access-scheduler", "*/1 * * * *", () => {
-    try {
-        const scheduler = require(`${__hooks}/lib/demo_scheduler.js`)
-        scheduler.runDemoSchedulerTick()
-    } catch (err) {
-        console.error("[demo scheduler] cron tick failed before execution:", err)
-    }
-})
+// cronAdd("demo-access-scheduler", "*/1 * * * *", () => {
+//     try {
+//         const scheduler = require(`${__hooks}/lib/demo_scheduler.js`)
+//         scheduler.runDemoSchedulerTick()
+//     } catch (err) {
+//         console.error("[demo scheduler] cron tick failed before execution:", err)
+//     }
+// })
 
-console.log(
-    "[demo scheduler] cron registered",
-    JSON.stringify({
-        expression: "*/1 * * * *",
-        demoDataRaw: $os.getenv("DEMO_DATA") || "",
-        note: "handler requires are loaded per tick for scope isolation safety",
-    }),
-)
+// console.log(
+//     "[demo scheduler] cron registered",
+//     JSON.stringify({
+//         expression: "*/1 * * * *",
+//         demoDataRaw: $os.getenv("DEMO_DATA") || "",
+//         note: "handler requires are loaded per tick for scope isolation safety",
+//     }),
+// )

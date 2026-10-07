@@ -41,6 +41,7 @@ type DashboardSummaryResponse = {
     usersInside: number;
     keyDistributed: number;
   };
+  insideVehicleIds?: string[];
   events: Array<{
     id: string;
     accessType: AccessType;
@@ -136,6 +137,7 @@ type RoomSearchRecord = {
   id: string;
   number?: string;
   name?: string;
+  key_collected?: boolean;
 };
 
 @Component({
@@ -165,6 +167,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     success: $localize`:@@common.success:Success`,
     vehicleCameraRequired: $localize`:@@dashboard.msg.vehicleCameraRequired:Vehicle and Camera are required.`,
     driverRequired: $localize`:@@dashboard.msg.driverRequired:Authenticated driver is required to record vehicle access.`,
+    vehicleAlreadyInside: $localize`:@@dashboard.msg.vehicleAlreadyInside:This vehicle is already inside and cannot enter again.`,
+    vehicleNotInside: $localize`:@@dashboard.msg.vehicleNotInside:Only vehicles currently inside can exit through an egress gate.`,
     vehicleRecorded: $localize`:@@dashboard.msg.vehicleRecorded:Vehicle access recorded.`,
     accessFailed: $localize`:@@dashboard.msg.accessFailed:Failed to record access.`,
     userCameraRequired: $localize`:@@dashboard.msg.userCameraRequired:User and Camera are required.`,
@@ -174,6 +178,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     keyDistributeFailed: $localize`:@@dashboard.msg.keyDistributeFailed:Failed to distribute key.`,
     keyCollected: $localize`:@@dashboard.msg.keyCollected:Key collected.`,
     keyCollectFailed: $localize`:@@dashboard.msg.keyCollectFailed:Failed to collect key.`,
+    keyAlreadyDistributed: $localize`:@@key.alreadyDistributed:This room's key is already distributed.`,
     realtimePaused: $localize`:@@dashboard.err.realtimePaused:Realtime paused because the current session is not authenticated.`,
     sessionExpired: $localize`:@@dashboard.err.sessionExpired:Session expired. Please sign in again.`,
     realtimePartial: $localize`:@@dashboard.err.realtimePartial:Realtime is partially connected. Recovering connection...`,
@@ -211,7 +216,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     collect: $localize`:@@dashboard.action.collect:Collect`,
   };
 
+  /** Localized user-type labels surfaced in the key dialogs' user dropdown. */
+  private readonly keyUserType = {
+    person: $localize`:@@field.person:Person`,
+    employee: $localize`:@@userType.employee:Employee`,
+    company: $localize`:@@userType.company:Company`,
+  };
+
   protected readonly latestCameraEvents = signal<AccessRow[]>([]);
+  /** IDs of vehicles currently inside, used to gate ingress/egress in the vehicle dialog. */
+  protected readonly insideVehicleIds = signal<Set<string>>(new Set());
   protected readonly vehiclesInside = signal(0);
   protected readonly usersInside = signal(0);
   protected readonly keyDistributed = signal(0);
@@ -656,32 +670,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Used by the key distribute/gather dialogs: a key may be handed to any user except admins.
   protected async searchEmployees(query: string): Promise<void> {
     try {
       const normalizedQuery = query.trim();
       const escapedQuery = this.escapeFilterValue(normalizedQuery);
-      const filter = `user_type = "employee"${escapedQuery ? ` && (first_name ~ "${escapedQuery}" || last_name ~ "${escapedQuery}" || email ~ "${escapedQuery}" || name ~ "${escapedQuery}")` : ''}`;
+      const filter = `role != "admin"${escapedQuery ? ` && (first_name ~ "${escapedQuery}" || last_name ~ "${escapedQuery}" || email ~ "${escapedQuery}" || name ~ "${escapedQuery}")` : ''}`;
       const options = { filter };
 
       const records = await this.pb.collection('users').getList<UserSearchRecord>(1, 10, options);
-      this.suggestedUsers.set(records.items.map((record) => {
-        const email = (record.email || '').trim();
-        const firstName = (record.first_name || '').trim();
-        const lastName = (record.last_name || '').trim();
-        const fullName = `${firstName} ${lastName}`.trim();
-
-        const displayName = `${fullName || email || 'Unknown employee'}${fullName && email ? ` (${email})` : ''}`;
-
-        return {
-          id: record.id,
-          displayName,
-          email,
-          user_type: record.user_type,
-        };
-      }));
+      this.suggestedUsers.set(records.items.map((record) => this.buildKeyUserOption(record)));
     } catch (error) {
       console.error(error);
     }
+  }
+
+  /** Builds a key-dialog user option, surfacing the user's type alongside their name. */
+  private buildKeyUserOption(record: UserSearchRecord): UserOption {
+    const email = (record.email || '').trim();
+    const firstName = (record.first_name || '').trim();
+    const lastName = (record.last_name || '').trim();
+    const companyName = (record.name || '').trim();
+    const type = record.user_type;
+
+    const base = type === 'company'
+      ? (companyName || email || 'Unknown user')
+      : (`${firstName} ${lastName}`.trim() || email || 'Unknown user');
+    const withEmail = type !== 'company' && email && base !== email ? `${base} (${email})` : base;
+
+    return {
+      id: record.id,
+      displayName: `${withEmail} · ${this.keyUserTypeLabel(type)}`,
+      email,
+      user_type: type,
+    };
+  }
+
+  private keyUserTypeLabel(type?: string): string {
+    if (type === 'company') return this.keyUserType.company;
+    if (type === 'employee') return this.keyUserType.employee;
+    return this.keyUserType.person;
   }
 
   protected async searchVehicles(query: string): Promise<void> {
@@ -701,18 +729,49 @@ export class DashboardComponent implements OnInit, OnDestroy {
         options['filter'] = filter;
       }
 
-      const records = await this.pb.collection('vehicles').getList<VehicleSearchRecord>(1, 10, options);
-      this.suggestedVehicles.set(records.items.map((record) => {
+      // Over-fetch, then keep only vehicles eligible for the chosen gate:
+      // ingress → vehicles currently out, egress → vehicles currently inside,
+      // checkpoint (or no camera yet) → no inside/outside constraint.
+      const direction = this.cameraDirectionKind(this.quickActionForm().camera);
+      const inside = this.insideVehicleIds();
+      const records = await this.pb.collection('vehicles').getList<VehicleSearchRecord>(1, 30, options);
+      const eligible = records.items.filter((record) => {
+        if (direction === 'out') {
+          return inside.has(record.id);
+        }
+        if (direction === 'in') {
+          return !inside.has(record.id);
+        }
+        return true;
+      });
+
+      this.suggestedVehicles.set(eligible.slice(0, 10).map((record) => {
         const base = `${record.number || ''}${record.country ? ` - ${record.country}` : ''}`.trim() || 'Unknown vehicle';
         const ownerName = this.getUserDisplayName(record.expand?.owner);
         return {
           id: record.id,
           displayName: ownerName ? `${base} · ${ownerName}` : base,
+          owner: record.owner || '',
         };
       }));
     } catch (error) {
       console.error(error);
     }
+  }
+
+  /** Normalizes a camera option's direction to the ingress/egress/checkpoint kind. */
+  private cameraDirectionKind(camera: CameraOption | null): 'in' | 'out' | 'checkpoint' | '' {
+    const direction = String(camera?.direction || '').toLowerCase();
+    if (!direction) return '';
+    if (direction === 'out' || direction === 'egress') return 'out';
+    if (direction === 'checkpoint') return 'checkpoint';
+    return 'in';
+  }
+
+  /** Vehicle-access dialog: camera drives eligibility, so changing it clears the vehicle. */
+  protected onVehicleAccessCameraChange(option: QuickActionDialogOption | null): void {
+    this.patchQuickActionFormState({ camera: option as CameraOption | null, vehicle: null });
+    this.suggestedVehicles.set([]);
   }
 
   protected async searchCameras(query: string): Promise<void> {
@@ -733,20 +792,77 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected async searchRooms(query: string): Promise<void> {
+  // Distribute only offers rooms whose key is available; gather only offers rooms whose key is out.
+  protected searchDistributableRooms(query: string): Promise<void> {
+    return this.searchRoomsByKeyState(query, false);
+  }
+
+  protected searchDistributedRooms(query: string): Promise<void> {
+    return this.searchRoomsByKeyState(query, true);
+  }
+
+  private async searchRoomsByKeyState(query: string, distributed: boolean): Promise<void> {
     try {
       const normalizedQuery = query.trim();
       const escapedQuery = this.escapeFilterValue(normalizedQuery);
-      const filter = escapedQuery ? `number ~ "${escapedQuery}" || name ~ "${escapedQuery}"` : '';
-      const options = filter ? { filter } : {};
+      const base = `key_collected = ${distributed ? 'true' : 'false'}`;
+      const filter = escapedQuery
+        ? `${base} && (number ~ "${escapedQuery}" || name ~ "${escapedQuery}")`
+        : base;
 
-      const records = await this.pb.collection('rooms').getList<RoomSearchRecord>(1, 10, options);
+      const records = await this.pb.collection('rooms').getList<RoomSearchRecord>(1, 10, { filter });
       this.suggestedRooms.set(records.items.map((record) => ({
         id: record.id,
         displayName: `${record.number || ''}${record.name ? ` - ${record.name}` : ''}`.trim() || 'Unknown room',
       })));
     } catch (error) {
       console.error(error);
+    }
+  }
+
+  /** Gather dialog: when a room is chosen, prefill the user who currently holds its key. */
+  protected onCollectRoomSelected(option: QuickActionDialogOption | null): void {
+    this.patchQuickActionFormState({ room: option as RoomOption | null, user: null });
+    this.suggestedUsers.set([]);
+    if (option) {
+      this.prefillKeyHolder(option.id);
+    }
+  }
+
+  private roomKeyHolderFilter(roomId: string): string {
+    return `room = "${this.escapeFilterValue(roomId)}" && is_collecting = true && did_return_key = false && enabled = true`;
+  }
+
+  private async prefillKeyHolder(roomId: string): Promise<void> {
+    try {
+      const records = await this.pb.collection('room_key_events').getList(1, 1, {
+        filter: this.roomKeyHolderFilter(roomId),
+        sort: '-created',
+        expand: 'user',
+        requestKey: null,
+      });
+      const holder = (records.items[0] as any)?.expand?.user;
+      if (holder) {
+        const option = this.buildKeyUserOption(holder);
+        this.suggestedUsers.set([option]);
+        this.patchQuickActionFormState({ user: option });
+      }
+    } catch (error) {
+      console.error('Failed to prefill key holder', error);
+    }
+  }
+
+  /** Authoritative check of whether a room's key is currently out. */
+  private async isRoomKeyOut(roomId: string): Promise<boolean> {
+    try {
+      const room = await this.pb.collection('rooms').getOne<{ key_collected?: boolean }>(roomId, {
+        fields: 'id,key_collected',
+        requestKey: null,
+      });
+      return room.key_collected === true;
+    } catch (error) {
+      console.error('Failed to check room key state', error);
+      return false;
     }
   }
 
@@ -766,10 +882,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // Enforce the gate rules: a vehicle inside can't enter again, and only a
+      // vehicle inside can exit. Checkpoints don't change status, so they're exempt.
+      const direction = this.cameraDirectionKind(formState.camera);
+      const vehicleInside = this.insideVehicleIds().has(formState.vehicle.id);
+      if (direction === 'in' && vehicleInside) {
+        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.vehicleAlreadyInside });
+        return;
+      }
+      if (direction === 'out' && !vehicleInside) {
+        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.vehicleNotInside });
+        return;
+      }
+
+      // The driver is the vehicle's owner; the signed-in operator is recorded
+      // separately as who made the entry.
+      const driverUserId = (formState.vehicle['owner'] as string | undefined) || '';
+
       await this.pb.collection('accesses').create({
         access_type: 'vehicle',
         vehicle: formState.vehicle.id,
-        driver_user: currentUser.id,
+        driver_user: driverUserId,
         camera: formState.camera.id,
         did_leave: false,
         reason: formState.reason,
@@ -824,6 +957,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.userRoomRequired });
         return;
       }
+
+      // Only allow distribution when the room's key is not already out.
+      if (await this.isRoomKeyOut(formState.room.id)) {
+        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.keyAlreadyDistributed });
+        return;
+      }
+
       await this.pb.collection('room_key_events').create({
         room: formState.room.id,
         user: formState.user.id,
@@ -1035,12 +1175,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.flashCameraCard(mapped.direction);
     }
 
-    if (mapped.accessType === 'vehicle' && !mapped.didLeave && mapped.direction !== 'checkpoint') {
-      this.vehiclesInside.update((count) => count + 1);
-    }
-
-    if (mapped.accessType === 'user' && !mapped.didLeave && mapped.direction !== 'checkpoint') {
-      this.usersInside.update((count) => count + 1);
+    // Optimistic nudge: ingress enters, egress leaves, checkpoints don't change the
+    // count. The server reconcile below corrects any drift (e.g. repeated passes).
+    if (mapped.direction !== 'checkpoint') {
+      const delta = mapped.direction === 'out' ? -1 : 1;
+      if (mapped.accessType === 'vehicle') {
+        this.vehiclesInside.update((count) => Math.max(0, count + delta));
+      } else if (mapped.accessType === 'user') {
+        this.usersInside.update((count) => Math.max(0, count + delta));
+      }
     }
 
     this.lastUpdatedAt.set(new Date().toLocaleString());
@@ -1123,6 +1266,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.latestCameraEvents.set(latestEvents);
         this.vehiclesInside.set(summary.metrics.vehiclesInside);
         this.usersInside.set(summary.metrics.usersInside);
+        this.insideVehicleIds.set(new Set(summary.insideVehicleIds ?? []));
       } catch (summaryError) {
         console.warn('Dashboard summary unavailable, falling back to direct accesses query.', summaryError);
 
@@ -1133,13 +1277,40 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
         const enabledRecords = records.filter((record) => record.enabled !== false);
 
-        const vehiclesInside = enabledRecords.reduce((count, record) => {
-          return count + (record.access_type === 'vehicle' && !record.did_leave && record.expand?.camera?.direction !== 'checkpoint' ? 1 : 0);
-        }, 0);
-
-        const usersInside = enabledRecords.reduce((count, record) => {
-          return count + (record.access_type === 'user' && !record.did_leave && record.expand?.camera?.direction !== 'checkpoint' ? 1 : 0);
-        }, 0);
+        // A subject is inside when its most recent ingress/egress event was an ingress;
+        // checkpoints don't change status. Records are sorted newest-first, so the first
+        // in/out event seen per vehicle/user is its current state.
+        const seenVehicle = new Set<string>();
+        const seenUser = new Set<string>();
+        const insideVehicles = new Set<string>();
+        let vehiclesInside = 0;
+        let usersInside = 0;
+        for (const record of enabledRecords) {
+          const direction = this.normalizeDirection(record.expand?.camera?.direction, !!record.did_leave);
+          if (direction === 'checkpoint') {
+            continue;
+          }
+          if (record.access_type === 'vehicle') {
+            const id = record.vehicle;
+            if (!id || seenVehicle.has(id)) {
+              continue;
+            }
+            seenVehicle.add(id);
+            if (direction === 'in') {
+              vehiclesInside += 1;
+              insideVehicles.add(id);
+            }
+          } else if (record.access_type === 'user') {
+            const id = record.user;
+            if (!id || seenUser.has(id)) {
+              continue;
+            }
+            seenUser.add(id);
+            if (direction === 'in') {
+              usersInside += 1;
+            }
+          }
+        }
 
         const latestEvents = enabledRecords
           .slice()
@@ -1150,6 +1321,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.latestCameraEvents.set(latestEvents);
         this.vehiclesInside.set(vehiclesInside);
         this.usersInside.set(usersInside);
+        this.insideVehicleIds.set(insideVehicles);
       }
 
       this.lastUpdatedAt.set(new Date().toLocaleString());
@@ -1174,18 +1346,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const summary = await this.fetchDashboardSummary();
         this.keyDistributed.set(summary.metrics.keyDistributed);
       } catch (summaryError) {
-        console.warn('Dashboard summary unavailable, falling back to direct room_key_events query.', summaryError);
+        console.warn('Dashboard summary unavailable, falling back to direct rooms query.', summaryError);
 
-        const keyEvents = await this.pb.collection('room_key_events').getFullList<RoomKeyEventRecord>({
-          sort: '-created',
+        // "Keys distributed" = rooms whose key is currently out. rooms.key_collected
+        // is kept authoritative by the room_key_events backend hook.
+        const rooms = await this.pb.collection('rooms').getFullList<{ key_collected?: boolean }>({
+          fields: 'id,key_collected',
         });
 
-        const pendingKeys = keyEvents.reduce((count, event) => {
-          if (event.enabled === false) {
-            return count;
-          }
-          return count + (event.is_collecting && !event.did_return_key ? 1 : 0);
-        }, 0);
+        const pendingKeys = rooms.reduce((count, room) => count + (room.key_collected ? 1 : 0), 0);
 
         this.keyDistributed.set(pendingKeys);
       }
