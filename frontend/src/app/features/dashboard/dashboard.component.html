@@ -48,32 +48,6 @@
         </div>
       </p-card>
     } @else {
-      <div class="stats-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <p-card styleClass="dashboard-card glass-surface metric-card metric-vehicles h-full shadow-sm card-enter">
-          <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-car"></i><span class="sm:hidden" i18n="@@field.vehicles">Vehicles</span><span class="hidden sm:inline" i18n="@@dashboard.metric.vehiclesInside">Vehicles Inside</span></span>
-          </ng-template>
-          <p class="text-2xl font-black leading-tight text-blue-700 sm:text-4xl">{{ vehiclesInside() }}</p>
-          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block" i18n="@@dashboard.metric.vehiclesHint">Active vehicles that have not exited yet.</p>
-        </p-card>
-
-        <p-card styleClass="dashboard-card glass-surface metric-card metric-people h-full shadow-sm card-enter">
-          <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-users"></i><span class="sm:hidden" i18n="@@field.people">People</span><span class="hidden sm:inline" i18n="@@dashboard.metric.peopleInside">People Inside</span></span>
-          </ng-template>
-          <p class="text-2xl font-black leading-tight text-teal-700 sm:text-4xl">{{ usersInside() }}</p>
-          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block" i18n="@@dashboard.metric.peopleHint">Individuals currently marked as inside.</p>
-        </p-card>
-
-        <p-card styleClass="dashboard-card glass-surface metric-card metric-keys h-full shadow-sm card-enter">
-          <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-key"></i><span class="sm:hidden" i18n="@@field.keys">Keys</span><span class="hidden sm:inline" i18n="@@dashboard.metric.keysDistributed">Keys Distributed</span></span>
-          </ng-template>
-          <p class="text-2xl font-black leading-tight text-slate-700 sm:text-4xl">{{ keyDistributed() }}</p>
-          <p class="mt-1 hidden text-xs text-slate-500 sm:mt-2 sm:block" i18n="@@dashboard.metric.keysHint">Collected keys still pending return.</p>
-        </p-card>
-      </div>
-
       <div class="gate-cards-grid grid gap-3">
         @for (directionCard of lastDirectionGateCards(); track directionCard.direction) {
           <p-card [styleClass]="'dashboard-card glass-surface gate-card h-full shadow-sm card-enter ' + cardThemeClass(directionCard.direction) + (gateFlash()[directionCard.direction] ? ' is-flashing' : '')">

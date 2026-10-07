@@ -264,9 +264,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly insideVehicleIds = signal<Set<string>>(new Set());
   /** IDs of people currently inside, used to gate ingress/egress in the user dialog. */
   protected readonly insideUserIds = signal<Set<string>>(new Set());
-  protected readonly vehiclesInside = signal(0);
-  protected readonly usersInside = signal(0);
-  protected readonly keyDistributed = signal(0);
   protected readonly lastUpdatedAt = signal('');
 
   // Current-status lists (who/what is inside right now) fed by the summary endpoint.
@@ -391,8 +388,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private accessLoadInFlight = false;
   private pendingAccessRefresh = false;
   private accessReconcileTimer: ReturnType<typeof window.setTimeout> | null = null;
-  private keyLoadInFlight = false;
-  private pendingKeyRefresh = false;
   private periodicConsistencyTimer: ReturnType<typeof window.setInterval> | null = null;
   private readonly periodicConsistencyMs = 30000;
   private readonly gateFlashTimers: Record<GateDirection, ReturnType<typeof window.setTimeout> | null> = {
@@ -419,14 +414,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.authStoreUnsubscribe = this.pb.authStore.onChange(() => {
       this.setupRealtimeSubscriptions();
       this.triggerAccessRefresh();
-      this.triggerKeyRefresh();
     });
 
     // Re-attempt realtime subscription when network connectivity returns.
     this.onlineListener = () => {
       this.setupRealtimeSubscriptions();
       this.triggerAccessRefresh();
-      this.triggerKeyRefresh();
     };
     window.addEventListener('online', this.onlineListener);
 
@@ -438,7 +431,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       this.setupRealtimeSubscriptions();
       this.triggerAccessRefresh();
-      this.triggerKeyRefresh();
     };
     document.addEventListener('visibilitychange', this.visibilityListener);
   }
@@ -587,7 +579,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
 
       this.triggerAccessRefresh();
-      this.triggerKeyRefresh();
     }, this.periodicConsistencyMs);
   }
 
@@ -1065,7 +1056,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.keyDistributed });
       this.keyDistributeDialog.set(false);
       this.resetQuickActionFormState();
-      this.triggerKeyRefresh();
+      this.triggerAccessRefresh();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e.message || this.msg.keyDistributeFailed });
     }
@@ -1091,7 +1082,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.keyCollected });
       this.keyCollectDialog.set(false);
       this.resetQuickActionFormState();
-      this.triggerKeyRefresh();
+      this.triggerAccessRefresh();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e.message || this.msg.keyCollectFailed });
     }
@@ -1171,7 +1162,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           || event.action === 'PB_CONNECT'
         ) {
           this.ngZone.run(() => {
-            this.triggerKeyRefresh();
+            this.triggerAccessRefresh();
           });
         }
       };
@@ -1265,22 +1256,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.flashGateCard(mapped.direction);
     }
 
-    // Optimistic nudge: ingress enters, egress leaves, checkpoints don't change the
-    // count. A vehicle also carries its driver, so it nudges the people count too.
-    // The server reconcile below corrects any drift (repeated passes, dedupe, etc.).
-    if (mapped.direction !== 'checkpoint') {
-      const delta = mapped.direction === 'out' ? -1 : 1;
-      if (mapped.accessType === 'vehicle') {
-        this.vehiclesInside.update((count) => Math.max(0, count + delta));
-        this.usersInside.update((count) => Math.max(0, count + delta));
-      } else if (mapped.accessType === 'user') {
-        this.usersInside.update((count) => Math.max(0, count + delta));
-      }
-    }
-
     this.lastUpdatedAt.set(new Date().toLocaleString());
 
-    // Reconcile with server-side aggregates in case hooks apply additional logic.
+    // Pull the authoritative status lists (present vehicles/people/keys) from the
+    // server shortly after the event lands.
     this.scheduleAccessReconcile();
   }
 
@@ -1301,33 +1280,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private triggerKeyRefresh(): void {
-    if (this.keyLoadInFlight) {
-      this.pendingKeyRefresh = true;
-      return;
-    }
-
-    this.keyLoadInFlight = true;
-    this.loadKeyMetric(false)
-      .finally(() => {
-        this.keyLoadInFlight = false;
-        if (this.pendingKeyRefresh) {
-          this.pendingKeyRefresh = false;
-          this.triggerKeyRefresh();
-        }
-      });
-  }
-
   private async loadDashboard(initialLoad: boolean): Promise<void> {
     if (initialLoad) {
       this.loading.set(true);
     }
 
     try {
-      await Promise.all([
-        this.loadAccessData(initialLoad),
-        this.loadKeyMetric(initialLoad),
-      ]);
+      await this.loadAccessData(initialLoad);
       this.lastUpdatedAt.set(new Date().toLocaleString());
       this.loadError.set('');
     } catch (error) {
@@ -1356,8 +1315,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }));
 
         this.latestGateEvents.set(latestEvents);
-        this.vehiclesInside.set(summary.metrics.vehiclesInside);
-        this.usersInside.set(summary.metrics.usersInside);
         this.insideVehicleIds.set(new Set(summary.insideVehicleIds ?? []));
         this.insideUserIds.set(new Set(summary.insideUserIds ?? []));
         this.presentVehicles.set(summary.presentVehicles ?? []);
@@ -1442,15 +1399,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
           .map((record) => this.mapAccessRecord(record));
 
         this.latestGateEvents.set(latestEvents);
-        this.vehiclesInside.set(presentVehicles.length);
-        // Occupancy includes vehicle drivers, matching presentPeople.
-        this.usersInside.set(presentPeople.length);
         this.insideVehicleIds.set(insideVehicles);
         this.insideUserIds.set(insideUsers);
         this.presentVehicles.set(presentVehicles);
         this.presentPeople.set(presentPeople);
-        // Distributed-key holders need a room_key_events lookup; the summary endpoint
-        // provides them. On this degraded fallback the metric card still shows the count.
+        // Distributed-key holders need a room_key_events lookup that only the summary
+        // endpoint performs; on this degraded fallback the keys list stays empty.
         this.distributedKeys.set([]);
       }
 
@@ -1459,41 +1413,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Dashboard access data load failed', error);
       this.loadError.set(this.msg.loadEventsFailed);
-    } finally {
-      if (!initialLoad) {
-        this.refreshing.set(false);
-      }
-    }
-  }
-
-  private async loadKeyMetric(initialLoad: boolean): Promise<void> {
-    if (!initialLoad) {
-      this.refreshing.set(true);
-    }
-
-    try {
-      try {
-        const summary = await this.fetchDashboardSummary();
-        this.keyDistributed.set(summary.metrics.keyDistributed);
-      } catch (summaryError) {
-        console.warn('Dashboard summary unavailable, falling back to direct rooms query.', summaryError);
-
-        // "Keys distributed" = rooms whose key is currently out. rooms.key_collected
-        // is kept authoritative by the room_key_events backend hook.
-        const rooms = await this.pb.collection('rooms').getFullList<{ key_collected?: boolean }>({
-          fields: 'id,key_collected',
-        });
-
-        const pendingKeys = rooms.reduce((count, room) => count + (room.key_collected ? 1 : 0), 0);
-
-        this.keyDistributed.set(pendingKeys);
-      }
-
-      this.lastUpdatedAt.set(new Date().toLocaleString());
-      this.loadError.set('');
-    } catch (error) {
-      console.error('Dashboard key metric load failed', error);
-      this.loadError.set(this.msg.loadKeyFailed);
     } finally {
       if (!initialLoad) {
         this.refreshing.set(false);
