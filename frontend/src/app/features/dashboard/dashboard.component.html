@@ -74,40 +74,40 @@
         </p-card>
       </div>
 
-      <div class="camera-cards-grid grid gap-3">
-        @for (directionCard of lastDirectionCameraCards(); track directionCard.direction) {
-          <p-card [styleClass]="'dashboard-card glass-surface camera-card h-full shadow-sm card-enter ' + cardThemeClass(directionCard.direction) + (cameraFlash()[directionCard.direction] ? ' is-flashing' : '')">
+      <div class="gate-cards-grid grid gap-3">
+        @for (directionCard of lastDirectionGateCards(); track directionCard.direction) {
+          <p-card [styleClass]="'dashboard-card glass-surface gate-card h-full shadow-sm card-enter ' + cardThemeClass(directionCard.direction) + (gateFlash()[directionCard.direction] ? ' is-flashing' : '')">
             <ng-template pTemplate="title">
-              <div class="camera-card-header">
-                <div class="camera-card-title-stack">
-                  <p class="camera-card-eyebrow" i18n="@@dashboard.lastCamera">Last Camera</p>
-                  <p class="camera-card-title-text">{{ directionCard.title }}</p>
+              <div class="gate-card-header">
+                <div class="gate-card-title-stack">
+                  <p class="gate-card-eyebrow" i18n="@@dashboard.lastGate">Last Gate</p>
+                  <p class="gate-card-title-text">{{ directionCard.title }}</p>
                 </div>
-                <span class="camera-card-direction-icon" aria-hidden="true">
+                <span class="gate-card-direction-icon" aria-hidden="true">
                   <i class="pi" [ngClass]="directionIcon(directionCard.direction)"></i>
                 </span>
               </div>
             </ng-template>
-            <div class="camera-card-body text-slate-600">
-              <div class="camera-card-content text-[12px]">
-                <div class="camera-primary-row">
-                  <p class="camera-name">{{ directionCard.event?.camera || ui.noCameraEvent }}</p>
-                  <p class="camera-time">{{ directionCard.event?.eventTime || ui.noRecentEvent }}</p>
+            <div class="gate-card-body text-slate-600">
+              <div class="gate-card-content text-[12px]">
+                <div class="gate-primary-row">
+                  <p class="gate-name">{{ directionCard.event?.gate || ui.noGateEvent }}</p>
+                  <p class="gate-time">{{ directionCard.event?.eventTime || ui.noRecentEvent }}</p>
                 </div>
 
-                <div class="camera-detail-grid">
-                  <div class="camera-detail-chip">
+                <div class="gate-detail-grid">
+                  <div class="gate-detail-chip">
                     <i class="pi pi-car"></i>
                     <span class="truncate">{{ directionCard.event?.subject || ui.vehicleNotAvailable }}</span>
                   </div>
 
-                  <div class="camera-detail-chip">
+                  <div class="gate-detail-chip">
                     <i class="pi pi-user"></i>
                     <span class="truncate">{{ directionCard.event?.actor || ui.driverNotAvailable }}</span>
                   </div>
                 </div>
 
-                <p class="camera-reason">{{ directionCard.event?.reason || directionCard.placeholderReason }}</p>
+                <p class="gate-reason">{{ directionCard.event?.reason || directionCard.placeholderReason }}</p>
               </div>
             </div>
           </p-card>
@@ -124,7 +124,7 @@
               <tr>
                 <th i18n="@@field.vehicle">Vehicle</th>
                 <th i18n="@@field.driver">Driver</th>
-                <th i18n="@@field.camera">Camera</th>
+                <th i18n="@@field.gate">Gate</th>
                 <th i18n="@@field.direction">Direction</th>
                 <th i18n="@@field.when">When</th>
               </tr>
@@ -133,7 +133,7 @@
               <tr>
                 <td><span class="font-semibold text-slate-900">{{ row.subject }}</span></td>
                 <td>{{ row.actor }}</td>
-                <td>{{ row.camera }}</td>
+                <td>{{ row.gate }}</td>
                 <td>
                   <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
                 </td>
@@ -156,7 +156,7 @@
             <ng-template pTemplate="header">
               <tr>
                 <th i18n="@@field.person">Person</th>
-                <th i18n="@@field.camera">Camera</th>
+                <th i18n="@@field.gate">Gate</th>
                 <th i18n="@@field.direction">Direction</th>
                 <th i18n="@@field.when">When</th>
               </tr>
@@ -164,7 +164,7 @@
             <ng-template pTemplate="body" let-row>
               <tr>
                 <td><span class="font-semibold text-slate-900">{{ row.subject }}</span></td>
-                <td>{{ row.camera }}</td>
+                <td>{{ row.gate }}</td>
                 <td>
                   <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
                 </td>
@@ -187,12 +187,12 @@
   [title]="ui.dlgVehicleAccess"
   [visible]="vehicleAccessDialog()"
   (visibleChange)="onDialogVisibilityChange('vehicle_access', $event)"
-  [primaryId]="'va-camera'"
-  [primaryLabel]="ui.fieldCamera"
+  [primaryId]="'va-gate'"
+  [primaryLabel]="ui.fieldGate"
   [primaryVariant]="'selectButton'"
-  [primarySuggestions]="suggestedCameras()"
-  [primaryValue]="quickActionForm().camera"
-  (primaryValueChange)="onVehicleAccessCameraChange($event)"
+  [primarySuggestions]="suggestedGates()"
+  [primaryValue]="quickActionForm().gate"
+  (primaryValueChange)="onVehicleAccessGateChange($event)"
   [secondaryId]="'va-vehicle'"
   [secondaryLabel]="ui.fieldVehicle"
   [secondaryPlaceholder]="ui.searchPlate"
@@ -212,12 +212,12 @@
   [title]="ui.dlgUserAccess"
   [visible]="userAccessDialog()"
   (visibleChange)="onDialogVisibilityChange('user_access', $event)"
-  [primaryId]="'ua-camera'"
-  [primaryLabel]="ui.fieldCamera"
+  [primaryId]="'ua-gate'"
+  [primaryLabel]="ui.fieldGate"
   [primaryVariant]="'selectButton'"
-  [primarySuggestions]="suggestedCameras()"
-  [primaryValue]="quickActionForm().camera"
-  (primaryValueChange)="onUserAccessCameraChange($event)"
+  [primarySuggestions]="suggestedGates()"
+  [primaryValue]="quickActionForm().gate"
+  (primaryValueChange)="onUserAccessGateChange($event)"
   [secondaryId]="'ua-user'"
   [secondaryLabel]="ui.fieldUser"
   [secondaryPlaceholder]="ui.searchUser"

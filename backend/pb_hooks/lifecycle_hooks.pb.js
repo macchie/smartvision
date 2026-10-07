@@ -28,7 +28,7 @@
 // defined" and fails the whole request with a 400. Every handler must be
 // fully self-contained (only globals like Date and the `e` argument).
 // ---------------------------------------------------------------------------
-const AUDITED_COLLECTIONS = ["users", "cameras", "room_groups", "rooms", "vehicles", "accesses", "room_key_events", "users_config"]
+const AUDITED_COLLECTIONS = ["users", "gates", "room_groups", "rooms", "vehicles", "accesses", "room_key_events", "users_config"]
 for (const collectionName of AUDITED_COLLECTIONS) {
     onRecordCreateRequest((e) => {
         const now = new Date().toISOString().replace("T", " ")
@@ -146,7 +146,7 @@ onRecordViewRequest((e) => {
 }, "reports")
 
 // ---------------------------------------------------------------------------
-// 5. Accesses: emit a realtime "camera:live:event" on SSE channel
+// 5. Accesses: emit a realtime "gate:live:event" on SSE channel
 //    Clients subscribed to the "accesses" collection receive this
 //    automatically via PocketBase realtime. This hook sends an extra
 //    broadcast on a custom topic for legacy compatibility.
@@ -270,8 +270,8 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             const reason = getStr(access, "reason")
             const userId = getStr(access, "user")
             const vehicleId = getStr(access, "vehicle")
-            const cameraId = getStr(access, "camera")
-            return reason === "Recovered legacy access" && !userId && !vehicleId && !cameraId
+            const gateId = getStr(access, "gate")
+            return reason === "Recovered legacy access" && !userId && !vehicleId && !gateId
         }
 
         const isEnabledAccess = (access) => {
@@ -292,7 +292,7 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             .slice(0, eventsLimit)
 
         const usersCache = {}
-        const camerasCache = {}
+        const gatesCache = {}
         const vehiclesCache = {}
 
         const getUserLabel = (userId) => {
@@ -326,21 +326,21 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             return "in"
         }
 
-        const getCameraData = (cameraId) => {
-            if (!cameraId) return { name: "Unknown camera", direction: "in" }
-            if (camerasCache[cameraId]) return camerasCache[cameraId]
+        const getGateData = (gateId) => {
+            if (!gateId) return { name: "Unknown gate", direction: "in" }
+            if (gatesCache[gateId]) return gatesCache[gateId]
 
             try {
-                const camera = $app.findRecordById("cameras", cameraId)
+                const gate = $app.findRecordById("gates", gateId)
                 const data = {
-                    name: camera.getString("name") || cameraId,
-                    direction: normalizeDirection(camera.getString("direction")),
+                    name: gate.getString("name") || gateId,
+                    direction: normalizeDirection(gate.getString("direction")),
                 }
-                camerasCache[cameraId] = data
+                gatesCache[gateId] = data
                 return data
             } catch (_) {
-                const fallback = { name: cameraId, direction: "in" }
-                camerasCache[cameraId] = fallback
+                const fallback = { name: gateId, direction: "in" }
+                gatesCache[gateId] = fallback
                 return fallback
             }
         }
@@ -374,7 +374,7 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
                 continue
             }
 
-            const direction = getCameraData(getStr(access, "camera")).direction
+            const direction = getGateData(getStr(access, "gate")).direction
             if (direction === "checkpoint") {
                 continue
             }
@@ -434,8 +434,8 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
         for (const access of accesses) {
             const accessType = getStr(access, "access_type") === "vehicle" ? "vehicle" : "user"
             const didLeave = getBool(access, "did_leave")
-            const cameraId = getStr(access, "camera")
-            const camera = getCameraData(cameraId)
+            const gateId = getStr(access, "gate")
+            const gate = getGateData(gateId)
 
             const userId = getStr(access, "user")
             const vehicleId = getStr(access, "vehicle")
@@ -455,8 +455,8 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
                 accessType: accessType,
                 subject: subject,
                 actor: actor,
-                camera: camera.name,
-                direction: camera.direction,
+                gate: gate.name,
+                direction: gate.direction,
                 didLeave: didLeave,
                 reason: getStr(access, "reason") || "-",
                 createdAt: getCreatedAt(access),

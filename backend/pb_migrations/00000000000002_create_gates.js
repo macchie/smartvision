@@ -2,7 +2,7 @@
 
 migrate((app) => {
   const collection = new Collection({
-    name: "cameras",
+    name: "gates",
     type: "base",
   })
 
@@ -16,16 +16,16 @@ migrate((app) => {
       max: null,
       pattern: "",
     }),
-    // External ID sent in the FTP filename / camera-event payload
+    // External ID sent in the FTP filename / gate-event payload
     new Field({
-      name: "camera_id",
+      name: "gate_id",
       type: "text",
       required: true,
       min: null,
       max: null,
       pattern: "",
     }),
-    // "in" = entry camera, "out" = exit camera, "checkpoint" = tracking point
+    // "in" = entry gate, "out" = exit gate, "checkpoint" = tracking point
     new Field({
       name: "direction",
       type: "select",
@@ -33,7 +33,7 @@ migrate((app) => {
       maxSelect: 1,
       values: ["in", "out", "checkpoint"],
     }),
-    // Arbitrary camera metadata (IP, location, model …)
+    // Arbitrary gate metadata (IP, location, model …)
     new Field({
       name: "metadata",
       type: "json",
@@ -61,8 +61,8 @@ migrate((app) => {
   ]
 
   collection.indexes = [
-    // camera_id is the lookup key during plate-recognition events
-    "CREATE UNIQUE INDEX idx_cameras_camera_id ON cameras (camera_id)",
+    // gate_id is the lookup key during plate-recognition events
+    "CREATE UNIQUE INDEX idx_gates_gate_id ON gates (gate_id)",
   ]
 
   collection.listRule = "@request.auth.id != ''"
@@ -73,6 +73,6 @@ migrate((app) => {
 
   return app.save(collection)
 }, (app) => {
-  const collection = app.findCollectionByNameOrId("cameras")
+  const collection = app.findCollectionByNameOrId("gates")
   return app.delete(collection)
 })

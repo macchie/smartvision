@@ -66,17 +66,17 @@
   background: #f1f5f9;
 }
 
-.camera-card-in .title-with-icon i {
+.gate-card-in .title-with-icon i {
   color: #15803d;
   background: #dcfce7;
 }
 
-.camera-card-out .title-with-icon i {
+.gate-card-out .title-with-icon i {
   color: #b91c1c;
   background: #fee2e2;
 }
 
-.camera-card-checkpoint .title-with-icon i {
+.gate-card-checkpoint .title-with-icon i {
   color: #b45309;
   background: #ffedd5;
 }
@@ -95,7 +95,7 @@
   align-items: stretch;
 }
 
-.camera-cards-grid {
+.gate-cards-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -104,24 +104,24 @@
   display: none;
 }
 
-.camera-card {
+.gate-card {
   border-width: 1px;
   border-style: solid;
   --flash-rgb: 20, 128, 61;
 }
 
-.camera-card-header {
+.gate-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.7rem;
 }
 
-.camera-card-title-stack {
+.gate-card-title-stack {
   min-width: 0;
 }
 
-.camera-card-eyebrow {
+.gate-card-eyebrow {
   margin: 0;
   font-size: 0.66rem;
   font-weight: 700;
@@ -130,7 +130,7 @@
   color: #64748b;
 }
 
-.camera-card-title-text {
+.gate-card-title-text {
   margin: 0.06rem 0 0;
   font-size: 1.65rem;
   line-height: 1;
@@ -138,7 +138,7 @@
   color: #0f172a;
 }
 
-.camera-card-direction-icon {
+.gate-card-direction-icon {
   width: 2rem;
   height: 2rem;
   border-radius: var(--sv-radius-pill);
@@ -150,21 +150,21 @@
   flex-shrink: 0;
 }
 
-.camera-card-direction-icon i {
+.gate-card-direction-icon i {
   font-size: 0.94rem;
 }
 
-.camera-card-body {
+.gate-card-body {
   position: relative;
 }
 
-.camera-card-content {
+.gate-card-content {
   display: flex;
   flex-direction: column;
   gap: 0.58rem;
 }
 
-.camera-primary-row {
+.gate-primary-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -175,7 +175,7 @@
   background: rgba(255, 255, 255, 0.84);
 }
 
-.camera-name {
+.gate-name {
   min-width: 0;
   font-weight: 800;
   font-size: 0.83rem;
@@ -185,7 +185,7 @@
   white-space: nowrap;
 }
 
-.camera-time {
+.gate-time {
   flex-shrink: 0;
   font-size: 0.64rem;
   font-weight: 600;
@@ -193,13 +193,13 @@
   letter-spacing: 0.01em;
 }
 
-.camera-detail-grid {
+.gate-detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
-.camera-detail-chip {
+.gate-detail-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -213,12 +213,12 @@
   font-size: 0.78rem;
 }
 
-.camera-detail-chip i {
+.gate-detail-chip i {
   color: #475569;
   font-size: 0.72rem;
 }
 
-.camera-reason {
+.gate-reason {
   margin: 0;
   padding: 0.32rem 0.25rem 0;
   font-size: 0.76rem;
@@ -230,49 +230,49 @@
   overflow: hidden;
 }
 
-.camera-card-in {
+.gate-card-in {
   border-color: #15803d !important;
   background: linear-gradient(180deg, #f7fcf8 0%, #f2fbf5 100%) !important;
 }
 
-.camera-card-in .camera-card-direction-icon i {
+.gate-card-in .gate-card-direction-icon i {
   color: #15803d;
 }
 
-.camera-card-out {
+.gate-card-out {
   border-color: #b91c1c !important;
   background: linear-gradient(180deg, #fff7f7 0%, #fdf1f1 100%) !important;
   --flash-rgb: 185, 28, 28;
 }
 
-.camera-card-out .camera-card-direction-icon i {
+.gate-card-out .gate-card-direction-icon i {
   color: #b91c1c;
 }
 
-.camera-card-checkpoint {
+.gate-card-checkpoint {
   border-color: #f59e0b !important;
   background: linear-gradient(180deg, #fffaf0 0%, #fff4df 100%) !important;
   --flash-rgb: 245, 158, 11;
 }
 
-.camera-card-checkpoint .camera-card-direction-icon i {
+.gate-card-checkpoint .gate-card-direction-icon i {
   color: #b45309;
 }
 
 /* Live event glow: pulsed via .is-flashing when a fresh realtime event lands.
    Accent comes from each direction's --flash-rgb; animates filter/box-shadow
    since the base card box-shadow is !important. */
-.camera-card.is-flashing {
+.gate-card.is-flashing {
   position: relative;
   z-index: 1;
-  animation: camera-card-flash 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: gate-card-flash 1.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.camera-card.is-flashing .camera-card-direction-icon {
-  animation: camera-card-icon-pulse 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+.gate-card.is-flashing .gate-card-direction-icon {
+  animation: gate-card-icon-pulse 1.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes camera-card-flash {
+@keyframes gate-card-flash {
   0%, 100% {
     filter: drop-shadow(0 0 0 rgba(var(--flash-rgb), 0));
     transform: translateY(0) scale(1);
@@ -283,7 +283,7 @@
   }
 }
 
-@keyframes camera-card-icon-pulse {
+@keyframes gate-card-icon-pulse {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(var(--flash-rgb), 0);
     transform: scale(1);
@@ -295,53 +295,53 @@
 }
 
 @media (max-width: 1099px) {
-  .camera-cards-grid {
+  .gate-cards-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-/* Dark mode — keep the colour-coded camera cards legible on dark surfaces */
+/* Dark mode — keep the colour-coded gate cards legible on dark surfaces */
 :host-context(html.dark) {
   .metric-vehicles .title-with-icon i { color: #60a5fa; background: rgba(37, 99, 235, 0.22); }
   .metric-people .title-with-icon i { color: #2dd4bf; background: rgba(13, 148, 136, 0.22); }
   .metric-keys .title-with-icon i { color: #cbd5e1; background: rgba(148, 163, 184, 0.18); }
 
-  .camera-card-eyebrow,
-  .camera-time,
-  .camera-detail-chip i,
-  .camera-reason { color: #94a3b8; }
+  .gate-card-eyebrow,
+  .gate-time,
+  .gate-detail-chip i,
+  .gate-reason { color: #94a3b8; }
 
-  .camera-card-title-text,
-  .camera-name,
-  .camera-detail-chip { color: #f1f5f9; }
+  .gate-card-title-text,
+  .gate-name,
+  .gate-detail-chip { color: #f1f5f9; }
 
-  .camera-card-direction-icon,
-  .camera-primary-row,
-  .camera-detail-chip {
+  .gate-card-direction-icon,
+  .gate-primary-row,
+  .gate-detail-chip {
     border-color: rgba(148, 163, 184, 0.28);
     background: rgba(255, 255, 255, 0.05);
   }
 
-  .camera-card-in {
+  .gate-card-in {
     border-color: #22c55e !important;
     background: linear-gradient(180deg, rgba(34, 197, 94, 0.14), rgba(34, 197, 94, 0.07)) !important;
     --flash-rgb: 34, 197, 94;
   }
-  .camera-card-in .camera-card-direction-icon i { color: #4ade80; }
+  .gate-card-in .gate-card-direction-icon i { color: #4ade80; }
 
-  .camera-card-out {
+  .gate-card-out {
     border-color: #ef4444 !important;
     background: linear-gradient(180deg, rgba(239, 68, 68, 0.14), rgba(239, 68, 68, 0.07)) !important;
     --flash-rgb: 239, 68, 68;
   }
-  .camera-card-out .camera-card-direction-icon i { color: #f87171; }
+  .gate-card-out .gate-card-direction-icon i { color: #f87171; }
 
-  .camera-card-checkpoint {
+  .gate-card-checkpoint {
     border-color: #f59e0b !important;
     background: linear-gradient(180deg, rgba(245, 158, 11, 0.14), rgba(245, 158, 11, 0.07)) !important;
     --flash-rgb: 251, 191, 36;
   }
-  .camera-card-checkpoint .camera-card-direction-icon i { color: #fbbf24; }
+  .gate-card-checkpoint .gate-card-direction-icon i { color: #fbbf24; }
 }
 
 /* Specific styling for the quick action buttons to fit Apple aesthetics */
@@ -383,37 +383,37 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .camera-cards-grid {
+  .gate-cards-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .camera-detail-grid {
+  .gate-detail-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .camera-card-title-text {
+  .gate-card-title-text {
     font-size: 1.4rem;
   }
 
   :host ::ng-deep .stats-grid .p-card,
-  :host ::ng-deep .camera-cards-grid .p-card {
+  :host ::ng-deep .gate-cards-grid .p-card {
     height: 100%;
   }
 
   :host ::ng-deep .stats-grid .p-card .p-card-content,
-  :host ::ng-deep .camera-cards-grid .p-card .p-card-content {
+  :host ::ng-deep .gate-cards-grid .p-card .p-card-content {
     padding-top: 0.45rem;
     padding-bottom: 0.45rem;
   }
 
   :host ::ng-deep .stats-grid .p-card .p-card-title,
-  :host ::ng-deep .camera-cards-grid .p-card .p-card-title {
+  :host ::ng-deep .gate-cards-grid .p-card .p-card-title {
     font-size: 0.74rem;
     line-height: 1rem;
   }
 
   :host ::ng-deep .stats-grid .p-card .p-card-body,
-  :host ::ng-deep .camera-cards-grid .p-card .p-card-body {
+  :host ::ng-deep .gate-cards-grid .p-card .p-card-body {
     padding: 0.62rem;
   }
 

@@ -17,7 +17,7 @@ type AccessRow = {
   accessType: AccessType;
   subject: string;
   actor: string;
-  camera: string;
+  gate: string;
   direction: 'in' | 'out' | 'checkpoint';
   didLeave: boolean;
   reason: string;
@@ -25,10 +25,10 @@ type AccessRow = {
   createdAt: string;
 };
 
-type CameraDirection = AccessRow['direction'];
+type GateDirection = AccessRow['direction'];
 
-type LastDirectionCameraCard = {
-  direction: CameraDirection;
+type LastDirectionGateCard = {
+  direction: GateDirection;
   title: string;
   placeholderReason: string;
   event: AccessRow | null;
@@ -47,7 +47,7 @@ type DashboardSummaryResponse = {
     accessType: AccessType;
     subject: string;
     actor: string;
-    camera: string;
+    gate: string;
     direction: 'in' | 'out' | 'checkpoint';
     didLeave: boolean;
     reason: string;
@@ -62,7 +62,7 @@ type AccessRecord = {
   vehicle?: string;
   driver_user?: string;
   made_by_user?: string;
-  camera?: string;
+  gate?: string;
   did_leave?: boolean;
   enabled?: boolean;
   reason?: string;
@@ -75,7 +75,7 @@ type AccessRecord = {
     vehicle?: any;
     driver_user?: any;
     made_by_user?: any;
-    camera?: any;
+    gate?: any;
   };
 };
 
@@ -95,7 +95,7 @@ type QuickActionDialogType = 'vehicle_access' | 'user_access' | 'key_distribute'
 
 type UserOption = QuickActionDialogOption;
 type VehicleOption = QuickActionDialogOption;
-type CameraOption = QuickActionDialogOption & {
+type GateOption = QuickActionDialogOption & {
   direction?: string;
 };
 type RoomOption = QuickActionDialogOption;
@@ -103,7 +103,7 @@ type RoomOption = QuickActionDialogOption;
 type QuickActionFormState = {
   user: UserOption | null;
   vehicle: VehicleOption | null;
-  camera: CameraOption | null;
+  gate: GateOption | null;
   room: RoomOption | null;
   reason: string;
 };
@@ -127,7 +127,7 @@ type VehicleSearchRecord = {
   };
 };
 
-type CameraSearchRecord = {
+type GateSearchRecord = {
   id: string;
   name?: string;
   direction?: string;
@@ -163,13 +163,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly msg = {
     error: $localize`:@@common.error:Error`,
     success: $localize`:@@common.success:Success`,
-    vehicleCameraRequired: $localize`:@@dashboard.msg.vehicleCameraRequired:Vehicle and Camera are required.`,
+    vehicleGateRequired: $localize`:@@dashboard.msg.vehicleGateRequired:Vehicle and Gate are required.`,
     driverRequired: $localize`:@@dashboard.msg.driverRequired:Authenticated driver is required to record vehicle access.`,
     vehicleAlreadyInside: $localize`:@@dashboard.msg.vehicleAlreadyInside:This vehicle is already inside and cannot enter again.`,
     vehicleNotInside: $localize`:@@dashboard.msg.vehicleNotInside:Only vehicles currently inside can exit through an egress gate.`,
     vehicleRecorded: $localize`:@@dashboard.msg.vehicleRecorded:Vehicle access recorded.`,
     accessFailed: $localize`:@@dashboard.msg.accessFailed:Failed to record access.`,
-    userCameraRequired: $localize`:@@dashboard.msg.userCameraRequired:User and Camera are required.`,
+    userGateRequired: $localize`:@@dashboard.msg.userGateRequired:User and Gate are required.`,
     userAlreadyInside: $localize`:@@dashboard.msg.userAlreadyInside:This person is already inside and cannot enter again.`,
     userNotInside: $localize`:@@dashboard.msg.userNotInside:Only people currently inside can exit through an egress gate.`,
     userRecorded: $localize`:@@dashboard.msg.userRecorded:User access recorded.`,
@@ -195,20 +195,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     addUserAccess: $localize`:@@dashboard.action.addUserAccess:Add User Access`,
     distributeKey: $localize`:@@dashboard.action.distributeKey:Distribute Key`,
     collectKey: $localize`:@@dashboard.action.collectKey:Collect Key`,
-    noCameraEvent: $localize`:@@dashboard.camera.noEvent:No camera event yet`,
-    noRecentEvent: $localize`:@@dashboard.camera.noRecent:No recent event`,
-    vehicleNotAvailable: $localize`:@@dashboard.camera.vehicleNA:Vehicle not available`,
-    driverNotAvailable: $localize`:@@dashboard.camera.driverNA:Driver not available`,
+    noGateEvent: $localize`:@@dashboard.gate.noEvent:No gate event yet`,
+    noRecentEvent: $localize`:@@dashboard.gate.noRecent:No recent event`,
+    vehicleNotAvailable: $localize`:@@dashboard.gate.vehicleNA:Vehicle not available`,
+    driverNotAvailable: $localize`:@@dashboard.gate.driverNA:Driver not available`,
     // Quick-action dialog field labels, placeholders and submit buttons.
     dlgVehicleAccess: $localize`:@@dashboard.dlg.vehicleAccess:Vehicle Access`,
     dlgUserAccess: $localize`:@@dashboard.dlg.userAccess:User Access`,
     fieldVehicle: $localize`:@@field.vehicle:Vehicle`,
-    fieldCamera: $localize`:@@field.camera:Camera`,
+    fieldGate: $localize`:@@field.gate:Gate`,
     fieldUser: $localize`:@@field.user:User`,
     fieldRoom: $localize`:@@field.room:Room`,
     confirmReturnByUser: $localize`:@@dashboard.dlg.confirmReturnByUser:Confirm Return by User`,
     searchPlate: $localize`:@@dashboard.ph.searchPlate:Search license plate...`,
-    searchCamera: $localize`:@@dashboard.ph.searchCamera:Search camera...`,
+    searchGate: $localize`:@@dashboard.ph.searchGate:Search gate...`,
     searchUser: $localize`:@@dashboard.ph.searchUser:Search user...`,
     searchRoom: $localize`:@@dashboard.ph.searchRoom:Search room...`,
     saveAccess: $localize`:@@dashboard.action.saveAccess:Save Access`,
@@ -223,7 +223,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     company: $localize`:@@userType.company:Company`,
   };
 
-  protected readonly latestCameraEvents = signal<AccessRow[]>([]);
+  protected readonly latestGateEvents = signal<AccessRow[]>([]);
   /** IDs of vehicles currently inside, used to gate ingress/egress in the vehicle dialog. */
   protected readonly insideVehicleIds = signal<Set<string>>(new Set());
   /** IDs of people currently inside, used to gate ingress/egress in the user dialog. */
@@ -233,15 +233,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly keyDistributed = signal(0);
   protected readonly lastUpdatedAt = signal('');
 
-  /** Per-direction glow trigger, pulsed briefly when a fresh realtime event lands on a camera card. */
-  protected readonly cameraFlash = signal<Record<CameraDirection, boolean>>({
+  /** Per-direction glow trigger, pulsed briefly when a fresh realtime event lands on a gate card. */
+  protected readonly gateFlash = signal<Record<GateDirection, boolean>>({
     in: false,
     checkpoint: false,
     out: false,
   });
 
   protected readonly vehicleRows = computed(() => {
-    return this.latestCameraEvents()
+    return this.latestGateEvents()
       .filter(row => row.accessType === 'vehicle')
       .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt))
       .slice(0, 8)
@@ -252,7 +252,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   });
 
   protected readonly userRows = computed(() => {
-    return this.latestCameraEvents()
+    return this.latestGateEvents()
       .filter(row => row.accessType === 'user')
       .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt))
       .slice(0, 8)
@@ -262,20 +262,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }));
   });
 
-  protected readonly lastDirectionCameraCards = computed<LastDirectionCameraCard[]>(() => {
-    const latestByDirection: Record<CameraDirection, AccessRow | null> = {
+  protected readonly lastDirectionGateCards = computed<LastDirectionGateCard[]>(() => {
+    const latestByDirection: Record<GateDirection, AccessRow | null> = {
       in: null,
       checkpoint: null,
       out: null,
     };
 
-    const latestTimestampByDirection: Record<CameraDirection, number> = {
+    const latestTimestampByDirection: Record<GateDirection, number> = {
       in: 0,
       checkpoint: 0,
       out: 0,
     };
 
-    for (const row of this.latestCameraEvents()) {
+    for (const row of this.latestGateEvents()) {
       if (row.accessType !== 'vehicle') {
         continue;
       }
@@ -295,19 +295,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
       {
         direction: 'in',
         title: $localize`:@@direction.ingress:Ingress`,
-        placeholderReason: $localize`:@@dashboard.camera.waitIngress:Waiting for the first ingress vehicle event.`,
+        placeholderReason: $localize`:@@dashboard.gate.waitIngress:Waiting for the first ingress vehicle event.`,
         event: latestByDirection.in,
       },
       {
         direction: 'checkpoint',
         title: $localize`:@@direction.checkpoint:Checkpoint`,
-        placeholderReason: $localize`:@@dashboard.camera.waitCheckpoint:Waiting for the first checkpoint vehicle event.`,
+        placeholderReason: $localize`:@@dashboard.gate.waitCheckpoint:Waiting for the first checkpoint vehicle event.`,
         event: latestByDirection.checkpoint,
       },
       {
         direction: 'out',
         title: $localize`:@@direction.egress:Egress`,
-        placeholderReason: $localize`:@@dashboard.camera.waitEgress:Waiting for the first egress vehicle event.`,
+        placeholderReason: $localize`:@@dashboard.gate.waitEgress:Waiting for the first egress vehicle event.`,
         event: latestByDirection.out,
       },
     ];
@@ -322,7 +322,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Autocomplete Suggestions
   protected readonly suggestedUsers = signal<UserOption[]>([]);
   protected readonly suggestedVehicles = signal<VehicleOption[]>([]);
-  protected readonly suggestedCameras = signal<CameraOption[]>([]);
+  protected readonly suggestedGates = signal<GateOption[]>([]);
   protected readonly suggestedRooms = signal<RoomOption[]>([]);
 
   // Form Models
@@ -343,13 +343,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private pendingKeyRefresh = false;
   private periodicConsistencyTimer: ReturnType<typeof window.setInterval> | null = null;
   private readonly periodicConsistencyMs = 30000;
-  private readonly cameraFlashTimers: Record<CameraDirection, ReturnType<typeof window.setTimeout> | null> = {
+  private readonly gateFlashTimers: Record<GateDirection, ReturnType<typeof window.setTimeout> | null> = {
     in: null,
     checkpoint: null,
     out: null,
   };
   /** Kept a touch longer than the CSS animation so the class lingers until the glow settles. */
-  private readonly cameraFlashDurationMs = 1600;
+  private readonly gateFlashDurationMs = 1600;
 
   constructor(
     public authService: AuthService,
@@ -414,44 +414,44 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.stopPeriodicConsistencySync();
     this.clearRealtimeRetryTimer();
     this.clearAccessReconcileTimer();
-    this.clearCameraFlashTimers();
+    this.clearGateFlashTimers();
 
     this.clearRealtimeSubscriptions();
   }
 
-  private clearCameraFlashTimers(): void {
-    for (const direction of Object.keys(this.cameraFlashTimers) as CameraDirection[]) {
-      const timer = this.cameraFlashTimers[direction];
+  private clearGateFlashTimers(): void {
+    for (const direction of Object.keys(this.gateFlashTimers) as GateDirection[]) {
+      const timer = this.gateFlashTimers[direction];
       if (timer !== null) {
         window.clearTimeout(timer);
-        this.cameraFlashTimers[direction] = null;
+        this.gateFlashTimers[direction] = null;
       }
     }
   }
 
   /**
-   * Briefly glows the camera card for the given direction. Resets on the current frame and
+   * Briefly glows the gate card for the given direction. Resets on the current frame and
    * re-applies on the next so rapid back-to-back events on the same card restart the animation.
    */
-  private flashCameraCard(direction: CameraDirection): void {
-    const existingTimer = this.cameraFlashTimers[direction];
+  private flashGateCard(direction: GateDirection): void {
+    const existingTimer = this.gateFlashTimers[direction];
     if (existingTimer !== null) {
       window.clearTimeout(existingTimer);
-      this.cameraFlashTimers[direction] = null;
+      this.gateFlashTimers[direction] = null;
     }
 
-    this.cameraFlash.update((state) => ({ ...state, [direction]: false }));
+    this.gateFlash.update((state) => ({ ...state, [direction]: false }));
 
     window.requestAnimationFrame(() => {
       this.ngZone.run(() => {
-        this.cameraFlash.update((state) => ({ ...state, [direction]: true }));
+        this.gateFlash.update((state) => ({ ...state, [direction]: true }));
 
-        this.cameraFlashTimers[direction] = window.setTimeout(() => {
+        this.gateFlashTimers[direction] = window.setTimeout(() => {
           this.ngZone.run(() => {
-            this.cameraFlash.update((state) => ({ ...state, [direction]: false }));
+            this.gateFlash.update((state) => ({ ...state, [direction]: false }));
           });
-          this.cameraFlashTimers[direction] = null;
-        }, this.cameraFlashDurationMs);
+          this.gateFlashTimers[direction] = null;
+        }, this.gateFlashDurationMs);
       });
     });
   }
@@ -570,7 +570,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return {
       user: null,
       vehicle: null,
-      camera: null,
+      gate: null,
       room: null,
       reason: '',
     };
@@ -633,7 +633,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.resetQuickActionFormState();
     this.setDialogVisibility(action, true);
     if (action === 'vehicle_access' || action === 'user_access') {
-      // The gate is picked from a select button, so load all cameras and default
+      // The gate is picked from a select button, so load all gates and default
       // to the first one.
       this.loadAccessGateOptions();
     }
@@ -641,17 +641,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private async loadAccessGateOptions(): Promise<void> {
     try {
-      const records = await this.pb.collection('cameras').getFullList<CameraSearchRecord>({ sort: 'name' });
+      const records = await this.pb.collection('gates').getFullList<GateSearchRecord>({ sort: 'name' });
       const options = records.map((record) => ({
         id: record.id,
-        displayName: record.name || 'Unknown camera',
+        displayName: record.name || 'Unknown gate',
         direction: record.direction,
       }));
-      this.suggestedCameras.set(options);
-      this.patchQuickActionFormState({ camera: options[0] ?? null });
+      this.suggestedGates.set(options);
+      this.patchQuickActionFormState({ gate: options[0] ?? null });
     } catch (error) {
       console.error(error);
-      this.suggestedCameras.set([]);
+      this.suggestedGates.set([]);
     }
   }
 
@@ -667,8 +667,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       // Over-fetch, then keep only people eligible for the chosen gate:
       // ingress → people currently out, egress → people currently inside,
-      // checkpoint (or no camera yet) → no inside/outside constraint.
-      const direction = this.cameraDirectionKind(this.quickActionForm().camera);
+      // checkpoint (or no gate yet) → no inside/outside constraint.
+      const direction = this.gateDirectionKind(this.quickActionForm().gate);
       const inside = this.insideUserIds();
       const records = await this.pb.collection('users').getList<UserSearchRecord>(1, 30, options);
       const eligible = records.items.filter((record) => {
@@ -766,8 +766,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       // Over-fetch, then keep only vehicles eligible for the chosen gate:
       // ingress → vehicles currently out, egress → vehicles currently inside,
-      // checkpoint (or no camera yet) → no inside/outside constraint.
-      const direction = this.cameraDirectionKind(this.quickActionForm().camera);
+      // checkpoint (or no gate yet) → no inside/outside constraint.
+      const direction = this.gateDirectionKind(this.quickActionForm().gate);
       const inside = this.insideVehicleIds();
       const records = await this.pb.collection('vehicles').getList<VehicleSearchRecord>(1, 30, options);
       const eligible = records.items.filter((record) => {
@@ -794,24 +794,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Normalizes a camera option's direction to the ingress/egress/checkpoint kind. */
-  private cameraDirectionKind(camera: CameraOption | null): 'in' | 'out' | 'checkpoint' | '' {
-    const direction = String(camera?.direction || '').toLowerCase();
+  /** Normalizes a gate option's direction to the ingress/egress/checkpoint kind. */
+  private gateDirectionKind(gate: GateOption | null): 'in' | 'out' | 'checkpoint' | '' {
+    const direction = String(gate?.direction || '').toLowerCase();
     if (!direction) return '';
     if (direction === 'out' || direction === 'egress') return 'out';
     if (direction === 'checkpoint') return 'checkpoint';
     return 'in';
   }
 
-  /** Vehicle-access dialog: camera drives eligibility, so changing it clears the vehicle. */
-  protected onVehicleAccessCameraChange(option: QuickActionDialogOption | null): void {
-    this.patchQuickActionFormState({ camera: option as CameraOption | null, vehicle: null });
+  /** Vehicle-access dialog: gate drives eligibility, so changing it clears the vehicle. */
+  protected onVehicleAccessGateChange(option: QuickActionDialogOption | null): void {
+    this.patchQuickActionFormState({ gate: option as GateOption | null, vehicle: null });
     this.suggestedVehicles.set([]);
   }
 
-  /** User-access dialog: camera drives eligibility, so changing it clears the user. */
-  protected onUserAccessCameraChange(option: QuickActionDialogOption | null): void {
-    this.patchQuickActionFormState({ camera: option as CameraOption | null, user: null });
+  /** User-access dialog: gate drives eligibility, so changing it clears the user. */
+  protected onUserAccessGateChange(option: QuickActionDialogOption | null): void {
+    this.patchQuickActionFormState({ gate: option as GateOption | null, user: null });
     this.suggestedUsers.set([]);
   }
 
@@ -896,8 +896,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const formState = this.quickActionForm();
 
     try {
-      if (!formState.vehicle || !formState.camera) {
-        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.vehicleCameraRequired });
+      if (!formState.vehicle || !formState.gate) {
+        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.vehicleGateRequired });
         return;
       }
 
@@ -909,7 +909,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       // Enforce the gate rules: a vehicle inside can't enter again, and only a
       // vehicle inside can exit. Checkpoints don't change status, so they're exempt.
-      const direction = this.cameraDirectionKind(formState.camera);
+      const direction = this.gateDirectionKind(formState.gate);
       const vehicleInside = this.insideVehicleIds().has(formState.vehicle.id);
       if (direction === 'in' && vehicleInside) {
         this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.vehicleAlreadyInside });
@@ -928,7 +928,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         access_type: 'vehicle',
         vehicle: formState.vehicle.id,
         driver_user: driverUserId,
-        camera: formState.camera.id,
+        gate: formState.gate.id,
         did_leave: false,
         reason: formState.reason,
         made_by_user: currentUser.id,
@@ -948,14 +948,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const formState = this.quickActionForm();
 
     try {
-      if (!formState.user || !formState.camera) {
-        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.userCameraRequired });
+      if (!formState.user || !formState.gate) {
+        this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.userGateRequired });
         return;
       }
 
       // Enforce the gate rules: a person inside can't enter again, and only a person
       // inside can exit. Checkpoints don't change status, so they're exempt.
-      const direction = this.cameraDirectionKind(formState.camera);
+      const direction = this.gateDirectionKind(formState.gate);
       const userInside = this.insideUserIds().has(formState.user.id);
       if (direction === 'in' && userInside) {
         this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.userAlreadyInside });
@@ -966,12 +966,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const didLeave = this.isEgressCamera(formState.camera);
+      const didLeave = this.isEgressGate(formState.gate);
 
       await this.pb.collection('accesses').create({
         access_type: 'user',
         user: formState.user.id,
-        camera: formState.camera.id,
+        gate: formState.gate.id,
         did_leave: didLeave,
         reason: formState.reason,
         made_by_user: this.authService.user()?.id,
@@ -1057,8 +1057,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return 'success';
   }
 
-  private isEgressCamera(camera: CameraOption): boolean {
-    const direction = String(camera?.direction || '').toLowerCase();
+  private isEgressGate(gate: GateOption): boolean {
+    const direction = String(gate?.direction || '').toLowerCase();
     return direction === 'out' || direction === 'egress';
   }
 
@@ -1126,10 +1126,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       const targets: Array<Promise<() => void>> = [
         this.pb.collection('accesses').subscribe('*', onAccessEvent, {
-          expand: 'user,vehicle,driver_user,made_by_user,camera',
+          expand: 'user,vehicle,driver_user,made_by_user,gate',
           requestKey: null,
         }),
-        this.pb.collection('cameras').subscribe('*', () => this.ngZone.run(() => this.triggerAccessRefresh())),
+        this.pb.collection('gates').subscribe('*', () => this.ngZone.run(() => this.triggerAccessRefresh())),
         this.pb.collection('users').subscribe('*', () => this.ngZone.run(() => this.triggerAccessRefresh())),
         this.pb.collection('vehicles').subscribe('*', () => this.ngZone.run(() => this.triggerAccessRefresh())),
         this.pb.collection('room_key_events').subscribe('*', onRoomKeyEvent),
@@ -1197,7 +1197,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const mapped = this.mapAccessRecord(record);
 
-    this.latestCameraEvents.update((existingRows) => {
+    this.latestGateEvents.update((existingRows) => {
       const nextRows = [
         mapped,
         ...existingRows.filter((row) => row.id !== mapped.id),
@@ -1208,9 +1208,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return nextRows;
     });
 
-    // Camera cards track vehicle events per direction — glow the matching card as it refreshes.
+    // Gate cards track vehicle events per direction — glow the matching card as it refreshes.
     if (mapped.accessType === 'vehicle') {
-      this.flashCameraCard(mapped.direction);
+      this.flashGateCard(mapped.direction);
     }
 
     // Optimistic nudge: ingress enters, egress leaves, checkpoints don't change the
@@ -1301,7 +1301,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             eventTime: this.formatRelativeTime(event.createdAt),
           }));
 
-        this.latestCameraEvents.set(latestEvents);
+        this.latestGateEvents.set(latestEvents);
         this.vehiclesInside.set(summary.metrics.vehiclesInside);
         this.usersInside.set(summary.metrics.usersInside);
         this.insideVehicleIds.set(new Set(summary.insideVehicleIds ?? []));
@@ -1311,7 +1311,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
         const records = await this.pb.collection('accesses').getFullList<AccessRecord>({
           sort: '-created',
-          expand: 'user,vehicle,driver_user,made_by_user,camera',
+          expand: 'user,vehicle,driver_user,made_by_user,gate',
         });
 
         const enabledRecords = records.filter((record) => record.enabled !== false);
@@ -1326,7 +1326,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         let vehiclesInside = 0;
         let usersInside = 0;
         for (const record of enabledRecords) {
-          const direction = this.normalizeDirection(record.expand?.camera?.direction, !!record.did_leave);
+          const direction = this.normalizeDirection(record.expand?.gate?.direction, !!record.did_leave);
           if (direction === 'checkpoint') {
             continue;
           }
@@ -1359,7 +1359,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           .slice(0, 50)
           .map((record) => this.mapAccessRecord(record));
 
-        this.latestCameraEvents.set(latestEvents);
+        this.latestGateEvents.set(latestEvents);
         this.vehiclesInside.set(vehiclesInside);
         this.usersInside.set(usersInside);
         this.insideVehicleIds.set(insideVehicles);
@@ -1435,7 +1435,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const expandedVehicle = record.expand?.vehicle;
     const expandedDriver = record.expand?.driver_user;
     const expandedActor = record.expand?.made_by_user;
-    const expandedCamera = record.expand?.camera;
+    const expandedGate = record.expand?.gate;
 
     const subject = accessType === 'vehicle'
       ? (expandedVehicle?.number || record.vehicle || 'Unknown vehicle')
@@ -1447,15 +1447,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const createdAt = this.getRecordCreatedAt(record);
 
-    const cameraDirection = this.normalizeDirection(expandedCamera?.direction, didLeave);
+    const gateDirection = this.normalizeDirection(expandedGate?.direction, didLeave);
 
     return {
       id: record.id,
       accessType,
       subject: subject || (accessType === 'vehicle' ? 'Unknown vehicle' : 'Unknown person'),
       actor: actor || 'System',
-      camera: expandedCamera?.name || record.camera || 'Unknown camera',
-      direction: cameraDirection,
+      gate: expandedGate?.name || record.gate || 'Unknown gate',
+      direction: gateDirection,
       didLeave,
       reason: record.reason || '-',
       eventTime: this.formatRelativeTime(createdAt),
@@ -1545,16 +1545,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return 'pi-sign-in';
   }
 
-  protected cardThemeClass(direction: CameraDirection): string {
+  protected cardThemeClass(direction: GateDirection): string {
     if (direction === 'out') {
-      return 'camera-card-out';
+      return 'gate-card-out';
     }
 
     if (direction === 'checkpoint') {
-      return 'camera-card-checkpoint';
+      return 'gate-card-checkpoint';
     }
 
-    return 'camera-card-in';
+    return 'gate-card-in';
   }
 
   private normalizeDirection(rawDirection: unknown, didLeaveFallback = false): AccessRow['direction'] {

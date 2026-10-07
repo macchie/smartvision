@@ -15,14 +15,14 @@ Think of the Dashboard as your "Quick Glance" screen. It tells you exactly what�
 - **People Inside**: How many individuals are currently checked in.
 - **Keys Distributed**: How many room keys are currently "out" with employees.
 
-### 🎥 Live Camera Feed Cards
-These boxes show you the **last event** recorded by your cameras.
+### 🚪 Live Gate Feed Cards
+These boxes show you the **last event** recorded by your gates.
 - **Ingress**: The last vehicle that entered.
 - **Checkpoint**: The last vehicle that passed an internal checkpoint.
 - **Egress**: The last vehicle that left.
 
 ### ⚡ Quick Actions (The Magic Buttons)
-Use these buttons to record events manually if the cameras miss something:
+Use these buttons to record events manually if the gates miss something:
 - **Add Vehicle Access**: Record a car coming in.
 - **Add User Access**: Record a person walking in or out.
 - **Distribute Key**: Give a room key to an employee.

@@ -90,7 +90,7 @@ function buildCsv(entity, records) {
     if (records.length === 0) return "no data"
 
     const columnsByEntity = {
-        accesses:         ["id", "access_type", "user", "vehicle", "driver_user", "camera", "did_leave", "deletable", "made_by_user", "reason", "created"],
+        accesses:         ["id", "access_type", "user", "vehicle", "driver_user", "gate", "did_leave", "deletable", "made_by_user", "reason", "created"],
         room_key_events:  ["id", "room", "user", "is_collecting", "did_return_key", "reason", "created"],
     }
 

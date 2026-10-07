@@ -130,10 +130,10 @@ function notifyCollectionUpdate(collectionName, recordId) {
 function createDemoAccessEvent() {
     try {
         const startedAt = new Date().toISOString()
-        const inCameras = $app.findRecordsByFilter("cameras", "enabled = true && direction = 'in'", "", 1000, 0)
-        const outCameras = $app.findRecordsByFilter("cameras", "enabled = true && direction = 'out'", "", 1000, 0)
-        const checkpointCameras = $app.findRecordsByFilter("cameras", "enabled = true && direction = 'checkpoint'", "", 1000, 0)
-        const allCameras = $app.findRecordsByFilter("cameras", "enabled = true", "", 1000, 0)
+        const inGates = $app.findRecordsByFilter("gates", "enabled = true && direction = 'in'", "", 1000, 0)
+        const outGates = $app.findRecordsByFilter("gates", "enabled = true && direction = 'out'", "", 1000, 0)
+        const checkpointGates = $app.findRecordsByFilter("gates", "enabled = true && direction = 'checkpoint'", "", 1000, 0)
+        const allGates = $app.findRecordsByFilter("gates", "enabled = true", "", 1000, 0)
         const enabledUsers = $app.findRecordsByFilter("users", "enabled = true", "", 1000, 0)
         const enabledEmployees = $app.findRecordsByFilter("users", "enabled = true && user_type = 'employee'", "", 1000, 0)
         const enabledVehicles = $app.findRecordsByFilter("vehicles", "enabled = true", "", 1000, 0)
@@ -144,10 +144,10 @@ function createDemoAccessEvent() {
             JSON.stringify({
                 at: startedAt,
                 counts: {
-                    inCameras: inCameras.length,
-                    outCameras: outCameras.length,
-                    checkpointCameras: checkpointCameras.length,
-                    allCameras: allCameras.length,
+                    inGates: inGates.length,
+                    outGates: outGates.length,
+                    checkpointGates: checkpointGates.length,
+                    allGates: allGates.length,
                     enabledUsers: enabledUsers.length,
                     enabledEmployees: enabledEmployees.length,
                     enabledVehicles: enabledVehicles.length,
@@ -202,12 +202,12 @@ function createDemoAccessEvent() {
         }
 
         // 15% chance to generate a checkpoint event for a vehicle already inside
-        if (roll >= 0.2 && roll < 0.35 && checkpointCameras.length > 0 && enabledVehicles.length > 0) {
+        if (roll >= 0.2 && roll < 0.35 && checkpointGates.length > 0 && enabledVehicles.length > 0) {
             const vehiclesInside = enabledVehicles.filter(v => !!getOpenAccessForSubject("vehicle", "vehicle", v.id))
             if (vehiclesInside.length > 0) {
                 const vehicle = pickRandom(vehiclesInside)
-                const camera = pickRandom(checkpointCameras)
-                if (vehicle && camera) {
+                const gate = pickRandom(checkpointGates)
+                if (vehicle && gate) {
                     const accessesCollection = $app.findCollectionByNameOrId("accesses")
                     const accessRecord = new Record(accessesCollection)
                     
@@ -217,7 +217,7 @@ function createDemoAccessEvent() {
                     if (ownerId) {
                         accessRecord.set("driver_user", ownerId)
                     }
-                    accessRecord.set("camera", camera.id)
+                    accessRecord.set("gate", gate.id)
                     accessRecord.set("did_leave", false)
                     accessRecord.set("deletable", true)
                     if (actorId) {
@@ -234,7 +234,7 @@ function createDemoAccessEvent() {
                     console.log("[demo scheduler] created checkpoint event", JSON.stringify({
                         id: accessRecord.id,
                         vehicle: vehicle.getString("number"),
-                        camera: camera.getString("name")
+                        gate: gate.getString("name")
                     }))
                     return accessRecord.id
                 }
@@ -242,8 +242,8 @@ function createDemoAccessEvent() {
         }
 
         // Existing access event logic (slightly adapted for variety)
-        if (allCameras.length === 0) {
-            console.log("[demo scheduler] skipped: no enabled cameras")
+        if (allGates.length === 0) {
+            console.log("[demo scheduler] skipped: no enabled gates")
             return null
         }
 
@@ -265,9 +265,9 @@ function createDemoAccessEvent() {
             const openAccesses = getAllOpenAccessesForSubject("vehicle", "vehicle", vehicle.id)
             const openAccess = getOpenAccessForSubject("vehicle", "vehicle", vehicle.id)
             const shouldLeave = openAccesses.length > 0
-            const preferredCameras = shouldLeave ? outCameras : inCameras
-            const camera = pickRandom(preferredCameras)
-            if (!camera) return null
+            const preferredGates = shouldLeave ? outGates : inGates
+            const gate = pickRandom(preferredGates)
+            if (!gate) return null
 
             accessRecord.set("access_type", "vehicle")
             accessRecord.set("vehicle", vehicle.id)
@@ -275,7 +275,7 @@ function createDemoAccessEvent() {
             if (ownerId) {
                 accessRecord.set("driver_user", ownerId)
             }
-            accessRecord.set("camera", camera.id)
+            accessRecord.set("gate", gate.id)
             accessRecord.set("did_leave", shouldLeave)
             accessRecord.set("deletable", true)
             if (actorId) {
@@ -303,13 +303,13 @@ function createDemoAccessEvent() {
             const openAccesses = getAllOpenAccessesForSubject("user", "user", user.id)
             const openAccess = getOpenAccessForSubject("user", "user", user.id)
             const shouldLeave = openAccesses.length > 0
-            const preferredCameras = shouldLeave ? outCameras : inCameras
-            const camera = pickRandom(preferredCameras)
-            if (!camera) return null
+            const preferredGates = shouldLeave ? outGates : inGates
+            const gate = pickRandom(preferredGates)
+            if (!gate) return null
 
             accessRecord.set("access_type", "user")
             accessRecord.set("user", user.id)
-            accessRecord.set("camera", camera.id)
+            accessRecord.set("gate", gate.id)
             accessRecord.set("did_leave", shouldLeave)
             accessRecord.set("deletable", true)
             if (actorId) {

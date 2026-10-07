@@ -20,7 +20,7 @@ type AccessLogRow = {
   accessType: 'vehicle' | 'user';
   subject: string;
   actor: string;
-  camera: string;
+  gate: string;
   direction: 'in' | 'out' | 'checkpoint';
   didLeave: boolean;
   reason: string;
@@ -34,7 +34,7 @@ type DashboardSummaryEvent = {
   access_type?: 'vehicle' | 'user';
   subject?: string;
   actor?: string;
-  camera?: string;
+  gate?: string;
   direction?: 'in' | 'out' | 'checkpoint';
   didLeave?: boolean;
   did_leave?: boolean;
@@ -45,7 +45,7 @@ type DashboardSummaryEvent = {
   updated_at?: string;
 };
 
-type SortField = 'when' | 'accessType' | 'subject' | 'actor' | 'camera' | 'direction' | 'status' | 'reason';
+type SortField = 'when' | 'accessType' | 'subject' | 'actor' | 'gate' | 'direction' | 'status' | 'reason';
 
 @Component({
   selector: 'app-access-logs',
@@ -119,7 +119,7 @@ export class AccessLogs implements OnInit {
         const haystack = [
           row.subject,
           row.actor,
-          row.camera,
+          row.gate,
           row.reason,
           row.accessType,
           row.direction,
@@ -150,8 +150,8 @@ export class AccessLogs implements OnInit {
         case 'actor':
           result = compareText(a.actor, b.actor);
           break;
-        case 'camera':
-          result = compareText(a.camera, b.camera);
+        case 'gate':
+          result = compareText(a.gate, b.gate);
           break;
         case 'direction':
           result = compareText(a.direction, b.direction);
@@ -204,7 +204,7 @@ export class AccessLogs implements OnInit {
       try {
         records = await this.pb.collection('accesses').getFullList<any>({
           sort: '-created',
-          expand: 'user,vehicle,driver_user,made_by_user,camera',
+          expand: 'user,vehicle,driver_user,made_by_user,gate',
         });
       } catch {
         records = await this.pb.collection('accesses').getFullList<any>({
@@ -283,13 +283,13 @@ export class AccessLogs implements OnInit {
 
   private mapAccessRecord(record: any): AccessLogRow {
     const accessType = record.access_type === 'vehicle' ? 'vehicle' : 'user';
-    const direction = this.normalizeDirection(record.expand?.camera?.direction, !!record.did_leave);
+    const direction = this.normalizeDirection(record.expand?.gate?.direction, !!record.did_leave);
 
     const expandedUser = record.expand?.user;
     const expandedVehicle = record.expand?.vehicle;
     const expandedDriver = record.expand?.driver_user;
     const expandedActor = record.expand?.made_by_user;
-    const expandedCamera = record.expand?.camera;
+    const expandedGate = record.expand?.gate;
 
     const subject = accessType === 'vehicle'
       ? (expandedVehicle?.number || record.vehicle || 'Unknown vehicle')
@@ -307,7 +307,7 @@ export class AccessLogs implements OnInit {
       accessType,
       subject,
       actor: actor || 'System',
-      camera: expandedCamera?.name || record.camera || 'Unknown camera',
+      gate: expandedGate?.name || record.gate || 'Unknown gate',
       direction,
       didLeave: !!record.did_leave,
       reason: record.reason || '-',
@@ -323,11 +323,11 @@ export class AccessLogs implements OnInit {
     const updatedAt = event.updatedAt || event.updated_at || createdAt;
 
     return {
-      id: event.id || `summary-${createdAt}-${event.subject || 'subject'}-${event.camera || 'camera'}`,
+      id: event.id || `summary-${createdAt}-${event.subject || 'subject'}-${event.gate || 'gate'}`,
       accessType,
       subject: event.subject || (accessType === 'vehicle' ? 'Unknown vehicle' : 'Unknown person'),
       actor: event.actor || 'System',
-      camera: event.camera || 'Unknown camera',
+      gate: event.gate || 'Unknown gate',
       direction: this.normalizeDirection(event.direction, didLeave),
       didLeave,
       reason: event.reason || '-',

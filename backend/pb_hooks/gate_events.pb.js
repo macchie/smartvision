@@ -1,44 +1,44 @@
 /// <reference path="../pb_data/types.d.ts" />
 
 /**
- * camera_events.pb.js
+ * gate_events.pb.js
  *
- * Custom route: POST /api/camera-event
+ * Custom route: POST /api/gate-event
  *
  * Replaces the original FTP server mechanism (SmartVisionLoopback/server/boot/ftp.js).
- * Cameras POST a JSON payload here when they detect a license plate.
+ * Gates POST a JSON payload here when they detect a license plate.
  *
  * Request body:
- *   { "camera_id": "cam001", "plate_number": "AB123CD" }
+ *   { "gate_id": "cam001", "plate_number": "AB123CD" }
  *
  * Business logic (mirrors create-from-ftp.js):
- *   1. Look up the camera by camera_id
+ *   1. Look up the gate by gate_id
  *   2. Find or auto-create the vehicle by plate_number
  *   3. Apply min-stay guard (30 s) and direction-alternation check
  *   4. Create a vehicle access record; close the previous one on exit
  *   5. Create a user access record for the vehicle owner (in/out only)
  */
-routerAdd("POST", "/api/camera-event", (e) => {
+routerAdd("POST", "/api/gate-event", (e) => {
   const body        = $apis.requestInfo(e).body
-  const cameraId    = body?.camera_id    || ""
+  const gateId    = body?.gate_id    || ""
   const plateNumber = body?.plate_number || ""
 
-  if (!cameraId || !plateNumber) {
-    return e.badRequestError("camera_id and plate_number are required", null)
+  if (!gateId || !plateNumber) {
+    return e.badRequestError("gate_id and plate_number are required", null)
   }
 
-  // 1. Find camera
-  const cameras = $app.findRecordsByFilter(
-    "cameras",
-    "camera_id = {:cid} && enabled = true",
+  // 1. Find gate
+  const gates = $app.findRecordsByFilter(
+    "gates",
+    "gate_id = {:cid} && enabled = true",
     "-created", 1, 0,
-    { cid: cameraId },
+    { cid: gateId },
   )
-  if (cameras.length === 0) {
-    return e.notFoundError("camera not found", null)
+  if (gates.length === 0) {
+    return e.notFoundError("gate not found", null)
   }
-  const camera    = cameras[0]
-  const direction = normalizeCameraDirection(camera.getString("direction"))
+  const gate    = gates[0]
+  const direction = normalizeGateDirection(gate.getString("direction"))
 
   // 2. Find or auto-create vehicle
   let vehicle
@@ -72,11 +72,11 @@ routerAdd("POST", "/api/camera-event", (e) => {
   if (lastVehicleAccess.length > 0) {
     const last    = lastVehicleAccess[0]
     const elapsed = (Date.now() - new Date(last.getString("created")).getTime()) / 1000
-    const lastDirection = getCameraDirectionById(last.getString("camera"))
+    const lastDirection = getGateDirectionById(last.getString("gate"))
 
     if (direction === "checkpoint") {
-      // Prevent duplicate checkpoint spam from the same camera in short bursts.
-      if (elapsed < MIN_STAY_SEC && last.getString("camera") === camera.id) {
+      // Prevent duplicate checkpoint spam from the same gate in short bursts.
+      if (elapsed < MIN_STAY_SEC && last.getString("gate") === gate.id) {
         shouldCreate = false
       }
     } else if (elapsed < MIN_STAY_SEC || lastDirection === direction) {
@@ -96,7 +96,7 @@ routerAdd("POST", "/api/camera-event", (e) => {
   const vehicleAccess = new Record(accessesCol)
   vehicleAccess.set("access_type", "vehicle")
   vehicleAccess.set("vehicle",     vehicle.id)
-  vehicleAccess.set("camera",      camera.id)
+  vehicleAccess.set("gate",      gate.id)
   vehicleAccess.set("did_leave",   direction === "out")
   vehicleAccess.set("deletable",   false)
   vehicleAccess.set("enabled",     true)
@@ -120,7 +120,7 @@ routerAdd("POST", "/api/camera-event", (e) => {
 
   // 5. User access for vehicle owner
   if (ownerId && direction !== "checkpoint") {
-    createUserAccess(ownerId, camera)
+    createUserAccess(ownerId, gate)
   }
 
   return e.json(200, {
@@ -134,13 +134,13 @@ routerAdd("POST", "/api/camera-event", (e) => {
  * Creates a user access record applying the same business rules as
  * the original create-from-ftp.js:
  *  - Skip if within min-stay window
- *  - Skip if same camera direction as the last access (prevent duplicate in/in or out/out)
+ *  - Skip if same gate direction as the last access (prevent duplicate in/in or out/out)
  *  - First-ever access must be direction "in"
  *  - On exit, mark the previous access as closed
  */
-function createUserAccess(userId, camera) {
+function createUserAccess(userId, gate) {
   const MIN_STAY_SEC = 30
-  const direction = normalizeCameraDirection(camera.getString("direction"))
+  const direction = normalizeGateDirection(gate.getString("direction"))
 
   if (direction === "checkpoint") {
     return
@@ -156,7 +156,7 @@ function createUserAccess(userId, camera) {
   if (lastUserAccess.length > 0) {
     const last    = lastUserAccess[0]
     const elapsed = (Date.now() - new Date(last.getString("created")).getTime()) / 1000
-    const lastDirection = getCameraDirectionById(last.getString("camera"))
+    const lastDirection = getGateDirectionById(last.getString("gate"))
     if (elapsed < MIN_STAY_SEC || lastDirection === direction) {
       return
     }
@@ -168,7 +168,7 @@ function createUserAccess(userId, camera) {
   const rec = new Record(col)
   rec.set("access_type", "user")
   rec.set("user",        userId)
-  rec.set("camera",      camera.id)
+  rec.set("gate",      gate.id)
   rec.set("did_leave",   direction === "out")
   rec.set("deletable",   false)  // system-generated — operators cannot delete
   rec.set("enabled",     true)
@@ -182,21 +182,21 @@ function createUserAccess(userId, camera) {
   }
 }
 
-function getCameraDirectionById(cameraId) {
-  if (!cameraId) return ""
+function getGateDirectionById(gateId) {
+  if (!gateId) return ""
 
   const cams = $app.findRecordsByFilter(
-    "cameras",
+    "gates",
     "id = {:cid}",
     "", 1, 0,
-    { cid: cameraId },
+    { cid: gateId },
   )
 
   if (cams.length === 0) return ""
-  return normalizeCameraDirection(cams[0].getString("direction"))
+  return normalizeGateDirection(cams[0].getString("direction"))
 }
 
-function normalizeCameraDirection(rawDirection) {
+function normalizeGateDirection(rawDirection) {
   if (rawDirection === "out") return "out"
   if (rawDirection === "checkpoint") return "checkpoint"
   return "in"

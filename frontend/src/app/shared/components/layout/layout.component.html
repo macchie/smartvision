@@ -3,7 +3,7 @@
     <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3 md:gap-4">
         <a routerLink="/dashboard" class="brand-mark flex h-9 w-9 items-center justify-center bg-gradient-to-br from-slate-700 to-blue-600 text-white shadow-sm shadow-slate-900/20 md:h-10 md:w-10">
-          <i class="pi pi-camera text-sm"></i>
+          <i class="pi pi-gate text-sm"></i>
         </a>
         <div class="hidden sm:block">
           <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700/90 dark:text-blue-300/90 md:text-xs">SmartVision</p>
@@ -15,7 +15,7 @@
         <!-- Desktop navigation links -->
         <nav class="top-nav hidden md:flex gap-1.5 border border-slate-200/70 bg-white/85 p-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
           <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/dashboard" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.dashboard">Dashboard</a>
-          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/cameras" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.cameras">Cameras</a>
+          <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/gates" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.gates">Gates</a>
           <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/rooms" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.rooms">Rooms</a>
           <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/access-logs" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.accessLogs">Access Logs</a>
           <a class="top-nav-link p-button p-component p-button-text p-button-sm font-semibold rounded-xl no-underline text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white px-3 py-2 transition-colors" routerLink="/vehicles" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}" i18n="@@nav.vehicles">Vehicles</a>
@@ -59,9 +59,9 @@
       <i class="pi pi-home"></i>
       <span i18n="@@nav.home">Home</span>
     </a>
-    <a class="mobile-tab-link" routerLink="/cameras" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
+    <a class="mobile-tab-link" routerLink="/gates" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
       <i class="pi pi-video"></i>
-      <span i18n="@@nav.cameras">Cameras</span>
+      <span i18n="@@nav.gates">Gates</span>
     </a>
     <a class="mobile-tab-link" routerLink="/rooms" routerLinkActive="active-nav" [routerLinkActiveOptions]="{exact: true}">
       <i class="pi pi-building"></i>

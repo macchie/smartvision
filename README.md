@@ -9,7 +9,7 @@
 ![Realtime](https://img.shields.io/badge/Updates-Realtime-success)
 
 SmartVision is a web-based access control platform for operational teams.
-It centralizes people, vehicles, cameras, and room keys in a single dashboard with realtime updates and production-ready CRUD workflows.
+It centralizes people, vehicles, gates, and room keys in a single dashboard with realtime updates and production-ready CRUD workflows.
 
 ## Overview
 
@@ -17,7 +17,7 @@ SmartVision helps teams monitor and manage facility access with:
 
 - live ingress, egress, and checkpoint visibility
 - role-aware authentication and authorization
-- full master-data management (users, vehicles, cameras, rooms)
+- full master-data management (users, vehicles, gates, rooms)
 - realtime dashboard and access logs for fast operational decisions
 
 ## Key Features
@@ -45,7 +45,7 @@ SmartVision helps teams monitor and manage facility access with:
   - Room key state synchronization
 
 - 🛠 CRUD Modules
-  - Cameras, Vehicles, Users, Room Groups, Rooms
+  - Gates, Vehicles, Users, Room Groups, Rooms
   - Consistent UI patterns with PrimeNG + TailwindCSS
   - Fixed top toolbar with safe-area aware spacing across all pages
   - Viewport-safe dialogs and overlays that stay fully visible on desktop/mobile
@@ -179,7 +179,7 @@ translation** mode, so the app is built once and locales are applied on the fly.
    TypeScript) and add the matching keys to every bundle.
 
 > Note: the app chrome, authentication screen and dashboard are fully localized.
-> The feature CRUD screens (users, vehicles, rooms, access logs, cameras, room
+> The feature CRUD screens (users, vehicles, rooms, access logs, gates, room
 > groups) follow the same pattern and can be localized incrementally by marking
 > their strings and extending the JSON bundles.
 

@@ -2,7 +2,7 @@
 
 migrate((app) => {
   const vehiclesCol = app.findCollectionByNameOrId("vehicles")
-  const camerasCol = app.findCollectionByNameOrId("cameras")
+  const gatesCol = app.findCollectionByNameOrId("gates")
   const usersCol   = app.findCollectionByNameOrId("users")
 
   // Step 1: create without the self-referential closed_by_access field.
@@ -47,11 +47,11 @@ migrate((app) => {
       minSelect: null,
       maxSelect: 1,
     }),
-    // The camera that detected the plate
+    // The gate that detected the plate
     new Field({
-      name: "camera",
+      name: "gate",
       type: "relation",
-      collectionId: camerasCol.id,
+      collectionId: gatesCol.id,
       cascadeDelete: false,
       minSelect: null,
       maxSelect: 1,
@@ -108,7 +108,7 @@ migrate((app) => {
     "CREATE INDEX idx_accesses_user_created    ON accesses (user, created_at)",
     "CREATE INDEX idx_accesses_vehicle_created ON accesses (vehicle, created_at)",
     "CREATE INDEX idx_accesses_driver_user     ON accesses (driver_user)",
-    "CREATE INDEX idx_accesses_camera          ON accesses (camera)",
+    "CREATE INDEX idx_accesses_gate          ON accesses (gate)",
   ]
 
   collection.listRule = "@request.auth.role = 'admin' || @request.auth.role = 'operator' || @request.auth.id != ''"

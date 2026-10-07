@@ -20,19 +20,19 @@ migrate((app) => {
   }
 
   const usersCol = app.findCollectionByNameOrId("users")
-  const camerasCol = app.findCollectionByNameOrId("cameras")
+  const gatesCol = app.findCollectionByNameOrId("gates")
   const vehiclesCol = app.findCollectionByNameOrId("vehicles")
   const roomGroupsCol = app.findCollectionByNameOrId("room_groups")
   const roomsCol = app.findCollectionByNameOrId("rooms")
   const accessesCol = app.findCollectionByNameOrId("accesses")
 
-  // Ensure the direction select supports checkpoint before seeding the example camera.
-  const directionField = camerasCol.fields.find((field) => field.name === "direction")
+  // Ensure the direction select supports checkpoint before seeding the example gate.
+  const directionField = gatesCol.fields.find((field) => field.name === "direction")
   if (directionField) {
     const currentValues = Array.isArray(directionField.values) ? directionField.values : []
     if (!currentValues.includes("checkpoint")) {
       directionField.values = ["in", "out", "checkpoint"]
-      app.save(camerasCol)
+      app.save(gatesCol)
     }
   }
 
@@ -151,33 +151,33 @@ migrate((app) => {
     return u
   })()
 
-  let camIn = findBy(app, "cameras", (c) => c.getString("camera_id") === "demo-cam-in")
+  let camIn = findBy(app, "gates", (c) => c.getString("gate_id") === "demo-cam-in")
   if (!camIn) {
-    camIn = new Record(camerasCol)
+    camIn = new Record(gatesCol)
     camIn.set("name", "Demo Gate IN")
-    camIn.set("camera_id", "demo-cam-in")
+    camIn.set("gate_id", "demo-cam-in")
     camIn.set("direction", "in")
     camIn.set("enabled", true)
     camIn.set("notes", tag)
     app.save(camIn)
   }
 
-  let camOut = findBy(app, "cameras", (c) => c.getString("camera_id") === "demo-cam-out")
+  let camOut = findBy(app, "gates", (c) => c.getString("gate_id") === "demo-cam-out")
   if (!camOut) {
-    camOut = new Record(camerasCol)
+    camOut = new Record(gatesCol)
     camOut.set("name", "Demo Gate OUT")
-    camOut.set("camera_id", "demo-cam-out")
+    camOut.set("gate_id", "demo-cam-out")
     camOut.set("direction", "out")
     camOut.set("enabled", true)
     camOut.set("notes", tag)
     app.save(camOut)
   }
 
-  let camCheckpoint = findBy(app, "cameras", (c) => c.getString("camera_id") === "demo-cam-checkpoint-yard")
+  let camCheckpoint = findBy(app, "gates", (c) => c.getString("gate_id") === "demo-cam-checkpoint-yard")
   if (!camCheckpoint) {
-    camCheckpoint = new Record(camerasCol)
+    camCheckpoint = new Record(gatesCol)
     camCheckpoint.set("name", "Demo Yard Checkpoint")
-    camCheckpoint.set("camera_id", "demo-cam-checkpoint-yard")
+    camCheckpoint.set("gate_id", "demo-cam-checkpoint-yard")
     camCheckpoint.set("direction", "checkpoint")
     camCheckpoint.set("enabled", true)
     camCheckpoint.set("notes", tag)

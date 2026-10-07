@@ -17,8 +17,8 @@ export const routes: Routes = [
         loadComponent: () => import('./features/dashboard/dashboard.component').then((module) => module.DashboardComponent),
       },
       {
-        path: 'cameras',
-        loadComponent: () => import('./features/cameras/cameras/cameras').then((module) => module.Cameras),
+        path: 'gates',
+        loadComponent: () => import('./features/gates/gates/gates').then((module) => module.Gates),
       },
       {
         path: 'users',

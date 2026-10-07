@@ -26,7 +26,7 @@
           pInputText
           type="text"
           class="table-search-input"
-          placeholder="Search subject, actor, camera, reason..."
+          placeholder="Search subject, actor, gate, reason..."
           i18n-placeholder="@@accessLogs.search"
           [ngModel]="searchQuery()"
           (ngModelChange)="searchQuery.set($event)"
@@ -101,9 +101,9 @@
             </button>
           </th>
           <th>
-            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('camera')">
-              <span i18n="@@field.camera">Camera</span>
-              <i class="pi text-[11px]" [ngClass]="getSortIcon('camera')"></i>
+            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('gate')">
+              <span i18n="@@field.gate">Gate</span>
+              <i class="pi text-[11px]" [ngClass]="getSortIcon('gate')"></i>
             </button>
           </th>
           <th>
@@ -135,7 +135,7 @@
           </td>
           <td class="font-semibold text-slate-900">{{ row.subject }}</td>
           <td>{{ row.actor }}</td>
-          <td>{{ row.camera }}</td>
+          <td>{{ row.gate }}</td>
           <td>
             <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
           </td>

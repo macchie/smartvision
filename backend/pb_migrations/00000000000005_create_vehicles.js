@@ -9,7 +9,7 @@ migrate((app) => {
   })
 
   collection.fields = [
-    // Vehicle identifier (e.g. license plate) — unique lookup key during camera events
+    // Vehicle identifier (e.g. license plate) — unique lookup key during gate events
     new Field({
       name: "number",
       type: "text",
@@ -26,7 +26,7 @@ migrate((app) => {
       max: 5,
       pattern: "",
     }),
-    // Primary owner / driver — may be empty for unknown vehicles auto-created by cameras
+    // Primary owner / driver — may be empty for unknown vehicles auto-created by gates
     new Field({
       name: "owner",
       type: "relation",
