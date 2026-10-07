@@ -217,6 +217,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly keyDistributed = signal(0);
   protected readonly lastUpdatedAt = signal('');
 
+  /** Per-direction glow trigger, pulsed briefly when a fresh realtime event lands on a camera card. */
+  protected readonly cameraFlash = signal<Record<CameraDirection, boolean>>({
+    in: false,
+    checkpoint: false,
+    out: false,
+  });
+
   protected readonly vehicleRows = computed(() => {
     return this.latestCameraEvents()
       .filter(row => row.accessType === 'vehicle')
@@ -320,6 +327,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private pendingKeyRefresh = false;
   private periodicConsistencyTimer: ReturnType<typeof window.setInterval> | null = null;
   private readonly periodicConsistencyMs = 30000;
+  private readonly cameraFlashTimers: Record<CameraDirection, ReturnType<typeof window.setTimeout> | null> = {
+    in: null,
+    checkpoint: null,
+    out: null,
+  };
+  /** Kept a touch longer than the CSS animation so the class lingers until the glow settles. */
+  private readonly cameraFlashDurationMs = 1600;
 
   constructor(
     public authService: AuthService,
@@ -384,8 +398,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.stopPeriodicConsistencySync();
     this.clearRealtimeRetryTimer();
     this.clearAccessReconcileTimer();
+    this.clearCameraFlashTimers();
 
     this.clearRealtimeSubscriptions();
+  }
+
+  private clearCameraFlashTimers(): void {
+    for (const direction of Object.keys(this.cameraFlashTimers) as CameraDirection[]) {
+      const timer = this.cameraFlashTimers[direction];
+      if (timer !== null) {
+        window.clearTimeout(timer);
+        this.cameraFlashTimers[direction] = null;
+      }
+    }
+  }
+
+  /**
+   * Briefly glows the camera card for the given direction. Resets on the current frame and
+   * re-applies on the next so rapid back-to-back events on the same card restart the animation.
+   */
+  private flashCameraCard(direction: CameraDirection): void {
+    const existingTimer = this.cameraFlashTimers[direction];
+    if (existingTimer !== null) {
+      window.clearTimeout(existingTimer);
+      this.cameraFlashTimers[direction] = null;
+    }
+
+    this.cameraFlash.update((state) => ({ ...state, [direction]: false }));
+
+    window.requestAnimationFrame(() => {
+      this.ngZone.run(() => {
+        this.cameraFlash.update((state) => ({ ...state, [direction]: true }));
+
+        this.cameraFlashTimers[direction] = window.setTimeout(() => {
+          this.ngZone.run(() => {
+            this.cameraFlash.update((state) => ({ ...state, [direction]: false }));
+          });
+          this.cameraFlashTimers[direction] = null;
+        }, this.cameraFlashDurationMs);
+      });
+    });
   }
 
   private clearRealtimeSubscriptions(): void {
@@ -728,6 +780,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.vehicleRecorded });
       this.vehicleAccessDialog.set(false);
       this.resetQuickActionFormState();
+      this.triggerAccessRefresh();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e.message || this.msg.accessFailed });
     }
@@ -757,6 +810,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.userRecorded });
       this.userAccessDialog.set(false);
       this.resetQuickActionFormState();
+      this.triggerAccessRefresh();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e.message || this.msg.accessFailed });
     }
@@ -781,6 +835,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.keyDistributed });
       this.keyDistributeDialog.set(false);
       this.resetQuickActionFormState();
+      this.triggerKeyRefresh();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e.message || this.msg.keyDistributeFailed });
     }
@@ -806,6 +861,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.keyCollected });
       this.keyCollectDialog.set(false);
       this.resetQuickActionFormState();
+      this.triggerKeyRefresh();
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e.message || this.msg.keyCollectFailed });
     }
@@ -973,6 +1029,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       return nextRows;
     });
+
+    // Camera cards track vehicle events per direction — glow the matching card as it refreshes.
+    if (mapped.accessType === 'vehicle') {
+      this.flashCameraCard(mapped.direction);
+    }
 
     if (mapped.accessType === 'vehicle' && !mapped.didLeave && mapped.direction !== 'checkpoint') {
       this.vehiclesInside.update((count) => count + 1);

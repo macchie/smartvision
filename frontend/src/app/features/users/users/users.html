@@ -1,11 +1,12 @@
 <div class="page-shell">
   <div class="page-header">
     <div class="flex items-center gap-3">
-      <h2 class="page-title">Users</h2>
+      <h2 class="page-title" i18n="@@nav.users">Users</h2>
     </div>
     <div class="page-actions">
       <p-button
         label="Refresh"
+        i18n-label="@@common.refresh"
         icon="pi pi-refresh"
         [loading]="loading()"
         styleClass="action-btn"
@@ -16,6 +17,7 @@
       />
       <p-button
         label="Add User"
+        i18n-label="@@users.add"
         icon="pi pi-plus"
         severity="primary"
         size="small"
@@ -33,6 +35,7 @@
           type="text"
           class="table-search-input"
           placeholder="Search users freely..."
+          i18n-placeholder="@@users.search"
           [ngModel]="searchQuery()"
           (ngModelChange)="searchQuery.set($event)"
         />
@@ -54,35 +57,35 @@
         <tr>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('type')">
-              Type
+              <span i18n="@@common.type">Type</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('type')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('username')">
-              Username
+              <span i18n="@@users.col.username">Username</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('username')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('name')">
-              Name
+              <span i18n="@@common.name">Name</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('name')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('company')">
-              Company Name
+              <span i18n="@@users.col.company">Company Name</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('company')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('role')">
-              Role
+              <span i18n="@@users.col.role">Role</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('role')"></i>
             </button>
           </th>
-          <th class="table-actions-col" style="width: 120px">Actions</th>
+          <th class="table-actions-col" style="width: 120px" i18n="@@common.actions">Actions</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-user>
@@ -122,7 +125,7 @@
         <tr>
           <td colspan="6" class="text-center py-8 text-slate-500">
             <i class="pi pi-users text-3xl mb-3 text-slate-300 block"></i>
-            No users found.
+            <span i18n="@@users.empty">No users found.</span>
           </td>
         </tr>
       </ng-template>
@@ -133,7 +136,7 @@
 <!-- Add/Edit Dialog -->
 <p-dialog
   [(visible)]="dialogVisible"
-  [header]="dialogMode === 'create' ? 'Add User' : 'Edit User'"
+  [header]="dialogMode === 'create' ? t.add : t.edit"
   [modal]="true"
   styleClass="sv-dialog sv-dialog-wide"
   appendTo="body"
@@ -143,7 +146,7 @@
 >
   <div class="flex flex-col gap-4 py-4" *ngIf="formState">
     <div class="flex flex-col gap-2">
-      <label for="user_type" class="text-sm font-semibold text-slate-700">User Type</label>
+      <label for="user_type" class="text-sm font-semibold text-slate-700" i18n="@@users.lbl.type">User Type</label>
       <p-select
         id="user_type"
         [options]="userTypeOptions"
@@ -158,31 +161,31 @@
     @if (formState['user_type'] !== 'company') {
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
-        <label for="first_name" class="text-sm font-semibold text-slate-700">First Name <span class="text-red-500">*</span></label>
+        <label for="first_name" class="text-sm font-semibold text-slate-700"><span i18n="@@users.lbl.firstName">First Name</span> <span class="text-red-500">*</span></label>
         <input id="first_name" type="text" pInputText [(ngModel)]="formState.first_name" placeholder="John" />
       </div>
       <div class="flex flex-col gap-2">
-        <label for="last_name" class="text-sm font-semibold text-slate-700">Last Name</label>
+        <label for="last_name" class="text-sm font-semibold text-slate-700" i18n="@@users.lbl.lastName">Last Name</label>
         <input id="last_name" type="text" pInputText [(ngModel)]="formState.last_name" placeholder="Doe" />
       </div>
     </div>
     } @else {
       <div class="flex flex-col gap-2">
-        <label for="company_name" class="text-sm font-semibold text-slate-700">Company Name <span class="text-red-500">*</span></label>
+        <label for="company_name" class="text-sm font-semibold text-slate-700"><span i18n="@@users.col.company">Company Name</span> <span class="text-red-500">*</span></label>
         <input id="company_name" type="text" pInputText [(ngModel)]="formState['name']" placeholder="Company Ltd" />
       </div>
     }
 
     <div class="flex flex-col gap-2">
-      <label for="user_notes" class="text-sm font-semibold text-slate-700">Notes</label>
-      <textarea id="user_notes" pTextarea [(ngModel)]="formState['notes']" rows="3" placeholder="Optional notes..."></textarea>
+      <label for="user_notes" class="text-sm font-semibold text-slate-700" i18n="@@common.notes">Notes</label>
+      <textarea id="user_notes" pTextarea [(ngModel)]="formState['notes']" rows="3" placeholder="Optional notes..." i18n-placeholder="@@common.ph.notes"></textarea>
     </div>
   </div>
-  
+
   <ng-template pTemplate="footer">
     <div class="flex justify-end gap-2">
-      <p-button label="Cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideDialog()" />
-      <p-button label="Save" icon="pi pi-check" (onClick)="saveUser()" [loading]="saving()" />
+      <p-button label="Cancel" i18n-label="@@common.cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideDialog()" />
+      <p-button label="Save" i18n-label="@@common.save" icon="pi pi-check" (onClick)="saveUser()" [loading]="saving()" />
     </div>
   </ng-template>
 </p-dialog>

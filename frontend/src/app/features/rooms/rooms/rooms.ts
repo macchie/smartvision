@@ -250,6 +250,61 @@ export class Rooms implements OnInit {
   protected roomDialogMode: 'create' | 'edit' = 'create';
   protected roomFormState: Partial<Room> = { number: '', name: '', notes: '', room_group: '', roomGroupRecord: null };
 
+  /** Localized strings bound in the template or used in toasts/dialogs. */
+  protected readonly t = {
+    error: $localize`:@@common.error:Error`,
+    success: $localize`:@@common.success:Success`,
+    cancel: $localize`:@@common.cancel:Cancel`,
+    deleteLabel: $localize`:@@common.delete:Delete`,
+    unnamed: $localize`:@@rooms.unnamed:Unnamed room`,
+    collected: $localize`:@@rooms.key.collected:Collected`,
+    available: $localize`:@@rooms.key.available:Available`,
+    unitRoom: $localize`:@@rooms.unit.room:room`,
+    unitRooms: $localize`:@@rooms.unit.rooms:rooms`,
+    // Group dialog
+    groupAdd: $localize`:@@rooms.group.add:Add Room Group`,
+    groupEdit: $localize`:@@rooms.group.edit:Edit Room Group`,
+    // Room dialog
+    roomAdd: $localize`:@@rooms.addRoom:Add Room`,
+    roomEdit: $localize`:@@rooms.editRoom:Edit Room`,
+    // Room key dialog
+    distributeKey: $localize`:@@dashboard.action.distributeKey:Distribute Key`,
+    collectKey: $localize`:@@dashboard.action.collectKey:Collect Key`,
+    distribute: $localize`:@@dashboard.action.distribute:Distribute`,
+    collect: $localize`:@@dashboard.action.collect:Collect`,
+    user: $localize`:@@field.user:User`,
+    confirmReturn: $localize`:@@dashboard.dlg.confirmReturnByUser:Confirm Return by User`,
+    unknownEmployee: $localize`:@@common.unknownEmployee:Unknown employee`,
+    // Toasts & confirms
+    loadFailed: $localize`:@@rooms.msg.loadFailed:Failed to load rooms.`,
+    partialTitle: $localize`:@@rooms.msg.partialTitle:Partial data loaded`,
+    partialGroups: $localize`:@@rooms.msg.partialGroups:Rooms loaded, but room groups could not be loaded.`,
+    partialRooms: $localize`:@@rooms.msg.partialRooms:Room groups loaded, but rooms could not be loaded.`,
+    groupNameRequired: $localize`:@@rooms.msg.groupNameRequired:Room group name is required.`,
+    groupCreated: $localize`:@@rooms.msg.groupCreated:Room group created.`,
+    groupUpdated: $localize`:@@rooms.msg.groupUpdated:Room group updated.`,
+    groupSaveFailed: $localize`:@@rooms.msg.groupSaveFailed:Failed to save room group.`,
+    groupDeleteHeader: $localize`:@@rooms.group.delete.header:Delete Room Group`,
+    groupDeleteMessage: $localize`:@@rooms.group.delete.message:Are you sure you want to delete this room group?`,
+    groupDeleted: $localize`:@@rooms.msg.groupDeleted:Room group deleted.`,
+    groupDeleteFailed: $localize`:@@rooms.msg.groupDeleteFailed:Failed to delete room group.`,
+    roomRequired: $localize`:@@rooms.msg.roomRequired:Room number and name are required.`,
+    roomCreated: $localize`:@@rooms.msg.roomCreated:Room created.`,
+    roomUpdated: $localize`:@@rooms.msg.roomUpdated:Room updated.`,
+    roomSaveFailed: $localize`:@@rooms.msg.roomSaveFailed:Failed to save room.`,
+    roomDeleteHeader: $localize`:@@rooms.room.delete.header:Delete Room`,
+    roomDeleteMessage: $localize`:@@rooms.room.delete.message:Are you sure you want to delete this room?`,
+    roomDeleted: $localize`:@@rooms.msg.roomDeleted:Room deleted.`,
+    roomDeleteFailed: $localize`:@@rooms.msg.roomDeleteFailed:Failed to delete room.`,
+    userRoomRequired: $localize`:@@dashboard.msg.userRoomRequired:User and Room are required.`,
+    keyDistributed: $localize`:@@dashboard.msg.keyDistributed:Key distributed.`,
+    keyCollected: $localize`:@@dashboard.msg.keyCollected:Key collected.`,
+    keyDistributeFailed: $localize`:@@dashboard.msg.keyDistributeFailed:Failed to distribute key.`,
+    keyCollectFailed: $localize`:@@dashboard.msg.keyCollectFailed:Failed to collect key.`,
+    ungroupedName: $localize`:@@rooms.ungrouped.name:Ungrouped Rooms`,
+    ungroupedNotes: $localize`:@@rooms.ungrouped.notes:Rooms that are not assigned to any room group.`,
+  };
+
   constructor(
     private pb: PocketBaseService,
     private messageService: MessageService,
@@ -285,20 +340,20 @@ export class Rooms implements OnInit {
       if (groupsResult.status !== 'fulfilled') {
         this.messageService.add({
           severity: 'warn',
-          summary: 'Partial data loaded',
-          detail: 'Rooms loaded, but room groups could not be loaded.',
+          summary: this.t.partialTitle,
+          detail: this.t.partialGroups,
         });
       }
 
       if (roomsResult.status !== 'fulfilled') {
         this.messageService.add({
           severity: 'warn',
-          summary: 'Partial data loaded',
-          detail: 'Room groups loaded, but rooms could not be loaded.',
+          summary: this.t.partialTitle,
+          detail: this.t.partialRooms,
         });
       }
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load rooms.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.loadFailed });
     } finally {
       this.loading.set(false);
     }
@@ -327,7 +382,7 @@ export class Rooms implements OnInit {
 
   protected async saveRoomGroup() {
     if (!this.groupFormState.name?.trim()) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Room group name is required.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.groupNameRequired });
       return;
     }
 
@@ -341,16 +396,16 @@ export class Rooms implements OnInit {
 
       if (this.groupDialogMode === 'create') {
         await this.pb.pb.collection('room_groups').create(payload);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room group created.' });
+        this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.groupCreated });
       } else {
         await this.pb.pb.collection('room_groups').update(this.groupFormState.id!, payload);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room group updated.' });
+        this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.groupUpdated });
       }
 
       this.groupDialogVisible = false;
       this.loadData();
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to save room group.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: e.message || this.t.groupSaveFailed });
     } finally {
       this.savingGroup.set(false);
     }
@@ -358,18 +413,20 @@ export class Rooms implements OnInit {
 
   protected deleteRoomGroupConfirm(group: RoomGroupRow) {
     this.confirmationService.confirm({
-      header: 'Delete Room Group',
-      message: `Are you sure you want to delete room group "${group.name}"?`,
+      header: this.t.groupDeleteHeader,
+      message: this.t.groupDeleteMessage,
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: this.t.deleteLabel,
+      rejectLabel: this.t.cancel,
       rejectButtonStyleClass: 'p-button-text p-button-secondary',
       acceptButtonStyleClass: 'p-button-danger',
       accept: async () => {
         try {
           await this.pb.pb.collection('room_groups').delete(group.id);
-          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room group deleted.' });
+          this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.groupDeleted });
           this.loadData();
         } catch (e: any) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete room group.' });
+          this.messageService.add({ severity: 'error', summary: this.t.error, detail: e.message || this.t.groupDeleteFailed });
         }
       },
     });
@@ -428,7 +485,7 @@ export class Rooms implements OnInit {
 
   protected async saveRoom() {
     if (!this.roomFormState.number?.trim() || !this.roomFormState.name?.trim()) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Room number and name are required.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.roomRequired });
       return;
     }
 
@@ -444,15 +501,15 @@ export class Rooms implements OnInit {
 
       if (this.roomDialogMode === 'create') {
         await this.pb.pb.collection('rooms').create(payload);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room created.' });
+        this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.roomCreated });
       } else {
         await this.pb.pb.collection('rooms').update(this.roomFormState.id!, payload);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room updated.' });
+        this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.roomUpdated });
       }
       this.roomDialogVisible = false;
       this.loadData();
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to save room.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: e.message || this.t.roomSaveFailed });
     } finally {
       this.savingRoom.set(false);
     }
@@ -460,18 +517,20 @@ export class Rooms implements OnInit {
 
   protected deleteRoomConfirm(room: Room) {
     this.confirmationService.confirm({
-      header: 'Delete Room',
-      message: `Are you sure you want to delete room "${room.name}"?`,
+      header: this.t.roomDeleteHeader,
+      message: this.t.roomDeleteMessage,
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: this.t.deleteLabel,
+      rejectLabel: this.t.cancel,
       rejectButtonStyleClass: 'p-button-text p-button-secondary',
       acceptButtonStyleClass: 'p-button-danger',
       accept: async () => {
         try {
           await this.pb.pb.collection('rooms').delete(room.id);
-          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Room deleted.' });
+          this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.roomDeleted });
           this.loadData();
         } catch (e: any) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete room.' });
+          this.messageService.add({ severity: 'error', summary: this.t.error, detail: e.message || this.t.roomDeleteFailed });
         }
       },
     });
@@ -531,7 +590,7 @@ export class Rooms implements OnInit {
         
         return {
           id: record.id,
-          displayName: `${fullName || email || 'Unknown employee'}${fullName && email ? ` (${email})` : ''}`
+          displayName: `${fullName || email || this.t.unknownEmployee}${fullName && email ? ` (${email})` : ''}`
         };
       }));
     } catch (e) {
@@ -564,7 +623,7 @@ export class Rooms implements OnInit {
     try {
       const state = this.roomKeyFormState();
       if (!state.user || !state.room) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'User and Room are required.' });
+        this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.userRoomRequired });
         return;
       }
 
@@ -580,8 +639,8 @@ export class Rooms implements OnInit {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Success',
-        detail: isDistribute ? 'Key distributed.' : 'Key collected.',
+        summary: this.t.success,
+        detail: isDistribute ? this.t.keyDistributed : this.t.keyCollected,
       });
 
       this.hideRoomKeyDialog();
@@ -589,15 +648,15 @@ export class Rooms implements OnInit {
     } catch (e: any) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: e.message || (this.roomKeyDialogMode === 'distribute' ? 'Failed to distribute key.' : 'Failed to collect key.'),
+        summary: this.t.error,
+        detail: e.message || (this.roomKeyDialogMode === 'distribute' ? this.t.keyDistributeFailed : this.t.keyCollectFailed),
       });
     }
   }
 
   protected getGroupRowCountLabel(group: RoomGroupRow): string {
     const count = group.rooms.length;
-    return count === 1 ? '1 room' : `${count} rooms`;
+    return `${count} ${count === 1 ? this.t.unitRoom : this.t.unitRooms}`;
   }
 
   protected toggleSort(field: 'name' | 'type' | 'key' | 'enabled' | 'notes' | 'rooms'): void {
@@ -672,8 +731,8 @@ export class Rooms implements OnInit {
       ungroupedRooms.sort((a, b) => a.number.localeCompare(b.number));
       rows.push({
         id: '__ungrouped__',
-        name: 'Ungrouped Rooms',
-        notes: 'Rooms that are not assigned to any room group.',
+        name: this.t.ungroupedName,
+        notes: this.t.ungroupedNotes,
         enabled: true,
         created: '',
         updated: '',

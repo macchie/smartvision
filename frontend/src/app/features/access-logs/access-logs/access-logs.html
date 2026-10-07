@@ -1,11 +1,12 @@
 <div class="page-shell">
   <div class="page-header">
     <div class="flex items-center gap-3">
-      <h2 class="page-title">Access Logs</h2>
+      <h2 class="page-title" i18n="@@nav.accessLogs">Access Logs</h2>
     </div>
     <div class="page-actions">
       <p-button
         label="Refresh"
+        i18n-label="@@common.refresh"
         icon="pi pi-refresh"
         [loading]="loading()"
         styleClass="action-btn"
@@ -26,6 +27,7 @@
           type="text"
           class="table-search-input"
           placeholder="Search subject, actor, camera, reason..."
+          i18n-placeholder="@@accessLogs.search"
           [ngModel]="searchQuery()"
           (ngModelChange)="searchQuery.set($event)"
         />
@@ -53,6 +55,7 @@
 
       <p-button
         label="Reset"
+        i18n-label="@@common.reset"
         icon="pi pi-filter-slash"
         [outlined]="true"
         severity="secondary"
@@ -75,49 +78,49 @@
         <tr>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('when')">
-              When
+              <span i18n="@@field.when">When</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('when')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('accessType')">
-              Type
+              <span i18n="@@common.type">Type</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('accessType')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('subject')">
-              Subject
+              <span i18n="@@accessLogs.col.subject">Subject</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('subject')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('actor')">
-              Actor
+              <span i18n="@@accessLogs.col.actor">Actor</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('actor')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('camera')">
-              Camera
+              <span i18n="@@field.camera">Camera</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('camera')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('direction')">
-              Direction
+              <span i18n="@@field.direction">Direction</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('direction')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('status')">
-              Status
+              <span i18n="@@accessLogs.col.status">Status</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('status')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('reason')">
-              Reason
+              <span i18n="@@accessLogs.col.reason">Reason</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('reason')"></i>
             </button>
           </th>
@@ -128,7 +131,7 @@
         <tr>
           <td class="whitespace-nowrap text-slate-700">{{ formatDateTime(row.createdAt) }}</td>
           <td>
-            <p-tag [value]="row.accessType === 'vehicle' ? 'Vehicle' : 'Person'" [severity]="accessTypeSeverity(row.accessType)" />
+            <p-tag [value]="row.accessType === 'vehicle' ? t.vehicle : t.person" [severity]="accessTypeSeverity(row.accessType)" />
           </td>
           <td class="font-semibold text-slate-900">{{ row.subject }}</td>
           <td>{{ row.actor }}</td>
@@ -137,7 +140,7 @@
             <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
           </td>
           <td>
-            <p-tag [value]="row.didLeave ? 'Outside' : 'Inside'" [severity]="statusSeverity(row.didLeave)" />
+            <p-tag [value]="row.didLeave ? t.outside : t.inside" [severity]="statusSeverity(row.didLeave)" />
           </td>
           <td>
             <span class="text-sm text-slate-600 line-clamp-1 max-w-[300px]">{{ row.reason }}</span>
@@ -149,7 +152,7 @@
         <tr>
           <td colspan="8" class="text-center py-8 text-slate-500">
             <i class="pi pi-history text-3xl mb-3 text-slate-300 block"></i>
-            No access logs found.
+            <span i18n="@@accessLogs.empty">No access logs found.</span>
           </td>
         </tr>
       </ng-template>

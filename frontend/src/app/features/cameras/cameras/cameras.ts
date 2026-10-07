@@ -118,10 +118,32 @@ export class Cameras implements OnInit {
   protected dialogMode: 'create' | 'edit' = 'create';
   protected formState: Partial<Camera> = { name: '', camera_id: '', direction: 'in', metadataText: '', notes: '' };
   protected readonly directionOptions = [
-    { label: 'Entry (in)', value: 'in' },
-    { label: 'Exit (out)', value: 'out' },
-    { label: 'Checkpoint', value: 'checkpoint' },
+    { label: $localize`:@@cameras.opt.in:Entry (in)`, value: 'in' },
+    { label: $localize`:@@cameras.opt.out:Exit (out)`, value: 'out' },
+    { label: $localize`:@@direction.checkpoint:Checkpoint`, value: 'checkpoint' },
   ];
+
+  /** Localized strings bound in the template or used in toasts/dialogs. */
+  protected readonly t = {
+    error: $localize`:@@common.error:Error`,
+    success: $localize`:@@common.success:Success`,
+    yes: $localize`:@@common.yes:Yes`,
+    no: $localize`:@@common.no:No`,
+    add: $localize`:@@cameras.add:Add Camera`,
+    edit: $localize`:@@cameras.edit:Edit Camera`,
+    loadFailed: $localize`:@@cameras.msg.loadFailed:Failed to load cameras.`,
+    required: $localize`:@@cameras.msg.required:Camera name and Camera ID are required.`,
+    metadataInvalid: $localize`:@@cameras.msg.metadataInvalid:Metadata must be valid JSON.`,
+    created: $localize`:@@cameras.msg.created:Camera created.`,
+    updated: $localize`:@@cameras.msg.updated:Camera updated.`,
+    saveFailed: $localize`:@@cameras.msg.saveFailed:Failed to save camera.`,
+    deleted: $localize`:@@cameras.msg.deleted:Camera deleted.`,
+    deleteFailed: $localize`:@@cameras.msg.deleteFailed:Failed to delete camera.`,
+    deleteHeader: $localize`:@@cameras.delete.header:Delete Camera`,
+    deleteMessage: $localize`:@@cameras.delete.message:Are you sure you want to delete this camera?`,
+    deleteLabel: $localize`:@@common.delete:Delete`,
+    cancel: $localize`:@@common.cancel:Cancel`,
+  };
 
   constructor(
     private pb: PocketBaseService,
@@ -148,7 +170,7 @@ export class Cameras implements OnInit {
         updated: resolveTimestamp(record, 'updated'),
       })));
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load cameras.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.loadFailed });
     } finally {
       this.loading.set(false);
     }
@@ -177,7 +199,7 @@ export class Cameras implements OnInit {
 
   protected async saveCamera() {
     if (!this.formState.name?.trim() || !this.formState.camera_id?.trim()) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Camera name and Camera ID are required.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.required });
       return;
     }
 
@@ -185,7 +207,7 @@ export class Cameras implements OnInit {
     try {
       const metadataPayload = this.parseMetadata(this.formState.metadataText);
       if (metadataPayload === undefined) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Metadata must be valid JSON.' });
+        this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.metadataInvalid });
         return;
       }
 
@@ -200,15 +222,15 @@ export class Cameras implements OnInit {
 
       if (this.dialogMode === 'create') {
         await this.pb.pb.collection('cameras').create(payload);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Camera created.' });
+        this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.created });
       } else {
         await this.pb.pb.collection('cameras').update(this.formState.id!, payload);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Camera updated.' });
+        this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.updated });
       }
       this.dialogVisible = false;
       this.loadCameras();
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to save camera.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: e.message || this.t.saveFailed });
     } finally {
       this.saving.set(false);
     }
@@ -245,18 +267,20 @@ export class Cameras implements OnInit {
 
   protected deleteCameraConfirm(camera: Camera) {
     this.confirmationService.confirm({
-      header: 'Delete Camera',
-      message: `Are you sure you want to delete camera "${camera.name}"?`,
+      header: this.t.deleteHeader,
+      message: this.t.deleteMessage,
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: this.t.deleteLabel,
+      rejectLabel: this.t.cancel,
       rejectButtonStyleClass: 'p-button-text p-button-secondary',
       acceptButtonStyleClass: 'p-button-danger',
       accept: async () => {
         try {
           await this.pb.pb.collection('cameras').delete(camera.id);
-          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Camera deleted.' });
+          this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.deleted });
           this.loadCameras();
         } catch (e: any) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete camera.' });
+          this.messageService.add({ severity: 'error', summary: this.t.error, detail: e.message || this.t.deleteFailed });
         }
       },
     });
@@ -279,12 +303,12 @@ export class Cameras implements OnInit {
   protected directionLabel(direction: Camera['direction']): string {
     switch (direction) {
       case 'out':
-        return 'Out';
+        return $localize`:@@direction.egress:Egress`;
       case 'checkpoint':
-        return 'Checkpoint';
+        return $localize`:@@direction.checkpoint:Checkpoint`;
       case 'in':
       default:
-        return 'In';
+        return $localize`:@@direction.ingress:Ingress`;
     }
   }
 

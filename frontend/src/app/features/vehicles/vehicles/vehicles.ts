@@ -117,6 +117,29 @@ export class Vehicles implements OnInit {
   protected dialogMode: 'create' | 'edit' = 'create';
   protected formState: Partial<Vehicle> = { number: '', country: '', notes: '', ownerRecord: null };
 
+  /** Localized strings bound in the template or used in toasts/dialogs. */
+  protected readonly t = {
+    error: $localize`:@@common.error:Error`,
+    success: $localize`:@@common.success:Success`,
+    yes: $localize`:@@common.yes:Yes`,
+    no: $localize`:@@common.no:No`,
+    add: $localize`:@@vehicles.add:Add Vehicle`,
+    edit: $localize`:@@vehicles.edit:Edit Vehicle`,
+    loadFailed: $localize`:@@vehicles.msg.loadFailed:Failed to load vehicles.`,
+    plateRequired: $localize`:@@vehicles.msg.plateRequired:Plate number is required.`,
+    created: $localize`:@@vehicles.msg.created:Vehicle created.`,
+    updated: $localize`:@@vehicles.msg.updated:Vehicle updated.`,
+    saveFailed: $localize`:@@vehicles.msg.saveFailed:Failed to save vehicle.`,
+    deleted: $localize`:@@vehicles.msg.deleted:Vehicle deleted.`,
+    deleteFailed: $localize`:@@vehicles.msg.deleteFailed:Failed to delete vehicle.`,
+    deleteHeader: $localize`:@@vehicles.delete.header:Delete Vehicle`,
+    deleteMessage: $localize`:@@vehicles.delete.message:Are you sure you want to delete this vehicle?`,
+    deleteLabel: $localize`:@@common.delete:Delete`,
+    cancel: $localize`:@@common.cancel:Cancel`,
+    company: $localize`:@@userType.company:Company`,
+    person: $localize`:@@field.person:Person`,
+  };
+
   constructor(
     private pb: PocketBaseService,
     private messageService: MessageService,
@@ -161,7 +184,7 @@ export class Vehicles implements OnInit {
         };
       }));
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load vehicles.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.loadFailed });
     } finally {
       this.loading.set(false);
     }
@@ -218,7 +241,7 @@ export class Vehicles implements OnInit {
 
   protected async saveVehicle() {
     if (!this.formState.number?.trim()) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Plate number is required.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.plateRequired });
       return;
     }
 
@@ -235,15 +258,15 @@ export class Vehicles implements OnInit {
 
       if (this.dialogMode === 'create') {
         await this.pb.pb.collection('vehicles').create(payload);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vehicle created.' });
+        this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.created });
       } else {
         await this.pb.pb.collection('vehicles').update(this.formState.id!, payload);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vehicle updated.' });
+        this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.updated });
       }
       this.dialogVisible = false;
       this.loadVehicles();
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to save vehicle.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: e.message || this.t.saveFailed });
     } finally {
       this.saving.set(false);
     }
@@ -255,27 +278,29 @@ export class Vehicles implements OnInit {
     }
 
     if (user.user_type === 'company') {
-      return user.name?.trim() || user.email || 'Company';
+      return user.name?.trim() || user.email || this.t.company;
     }
 
     const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-    return fullName || user.name?.trim() || user.email || 'Person';
+    return fullName || user.name?.trim() || user.email || this.t.person;
   }
 
   protected deleteVehicleConfirm(vehicle: Vehicle) {
     this.confirmationService.confirm({
-      header: 'Delete Vehicle',
-      message: `Are you sure you want to delete vehicle "${vehicle.number}"?`,
+      header: this.t.deleteHeader,
+      message: this.t.deleteMessage,
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: this.t.deleteLabel,
+      rejectLabel: this.t.cancel,
       rejectButtonStyleClass: 'p-button-text p-button-secondary',
       acceptButtonStyleClass: 'p-button-danger',
       accept: async () => {
         try {
           await this.pb.pb.collection('vehicles').delete(vehicle.id);
-          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Vehicle deleted.' });
+          this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.deleted });
           this.loadVehicles();
         } catch (e: any) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete vehicle.' });
+          this.messageService.add({ severity: 'error', summary: this.t.error, detail: e.message || this.t.deleteFailed });
         }
       },
     });

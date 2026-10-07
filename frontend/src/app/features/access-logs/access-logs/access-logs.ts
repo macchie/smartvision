@@ -74,17 +74,27 @@ export class AccessLogs implements OnInit {
   protected readonly sortDirection = signal<'asc' | 'desc'>('desc');
 
   protected readonly accessTypeOptions = [
-    { label: 'All Access Types', value: 'all' as const },
-    { label: 'Vehicle', value: 'vehicle' as const },
-    { label: 'Person', value: 'user' as const },
+    { label: $localize`:@@accessLogs.filter.allTypes:All Access Types`, value: 'all' as const },
+    { label: $localize`:@@field.vehicle:Vehicle`, value: 'vehicle' as const },
+    { label: $localize`:@@field.person:Person`, value: 'user' as const },
   ];
 
   protected readonly directionOptions = [
-    { label: 'All Directions', value: 'all' as const },
-    { label: 'Ingress', value: 'in' as const },
-    { label: 'Egress', value: 'out' as const },
-    { label: 'Checkpoint', value: 'checkpoint' as const },
+    { label: $localize`:@@accessLogs.filter.allDirections:All Directions`, value: 'all' as const },
+    { label: $localize`:@@direction.ingress:Ingress`, value: 'in' as const },
+    { label: $localize`:@@direction.egress:Egress`, value: 'out' as const },
+    { label: $localize`:@@direction.checkpoint:Checkpoint`, value: 'checkpoint' as const },
   ];
+
+  /** Localized strings bound in the template or used in toasts. */
+  protected readonly t = {
+    error: $localize`:@@common.error:Error`,
+    vehicle: $localize`:@@field.vehicle:Vehicle`,
+    person: $localize`:@@field.person:Person`,
+    inside: $localize`:@@accessLogs.status.inside:Inside`,
+    outside: $localize`:@@accessLogs.status.outside:Outside`,
+    loadFailed: $localize`:@@accessLogs.msg.loadFailed:Failed to load access logs.`,
+  };
 
   protected readonly filteredLogs = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
@@ -207,8 +217,8 @@ export class AccessLogs implements OnInit {
     } catch (error: any) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: error?.message || 'Failed to load access logs.',
+        summary: this.t.error,
+        detail: error?.message || this.t.loadFailed,
       });
     } finally {
       this.loading.set(false);
@@ -329,14 +339,14 @@ export class AccessLogs implements OnInit {
 
   protected directionLabel(direction: AccessLogRow['direction']): string {
     if (direction === 'out') {
-      return 'Egress';
+      return $localize`:@@direction.egress:Egress`;
     }
 
     if (direction === 'checkpoint') {
-      return 'Checkpoint';
+      return $localize`:@@direction.checkpoint:Checkpoint`;
     }
 
-    return 'Ingress';
+    return $localize`:@@direction.ingress:Ingress`;
   }
 
   private normalizeDirection(rawDirection: unknown, didLeaveFallback = false): AccessLogRow['direction'] {

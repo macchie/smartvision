@@ -120,10 +120,33 @@ export class Users implements OnInit {
   protected formState: UserFormState = {};
 
   protected userTypeOptions = [
-    { label: 'Person', value: 'person' },
-    { label: 'Employee', value: 'employee' },
-    { label: 'Company', value: 'company' },
+    { label: $localize`:@@field.person:Person`, value: 'person' },
+    { label: $localize`:@@userType.employee:Employee`, value: 'employee' },
+    { label: $localize`:@@userType.company:Company`, value: 'company' },
   ];
+
+  /** Localized strings bound in the template or used in toasts/dialogs. */
+  protected readonly t = {
+    error: $localize`:@@common.error:Error`,
+    success: $localize`:@@common.success:Success`,
+    add: $localize`:@@users.add:Add User`,
+    edit: $localize`:@@users.edit:Edit User`,
+    loadFailed: $localize`:@@users.msg.loadFailed:Failed to load users.`,
+    firstNameRequired: $localize`:@@users.msg.firstNameRequired:First name is required.`,
+    companyRequired: $localize`:@@users.msg.companyRequired:Company Name is required for company users.`,
+    created: $localize`:@@users.msg.created:User created.`,
+    updated: $localize`:@@users.msg.updated:User updated.`,
+    saveFailed: $localize`:@@users.msg.saveFailed:Failed to save user.`,
+    deleted: $localize`:@@users.msg.deleted:User deleted.`,
+    deleteFailed: $localize`:@@users.msg.deleteFailed:Failed to delete user.`,
+    deleteHeader: $localize`:@@users.delete.header:Delete User`,
+    deleteMessage: $localize`:@@users.delete.message:Are you sure you want to delete this user?`,
+    deleteLabel: $localize`:@@common.delete:Delete`,
+    cancel: $localize`:@@common.cancel:Cancel`,
+    person: $localize`:@@field.person:Person`,
+    employee: $localize`:@@userType.employee:Employee`,
+    company: $localize`:@@userType.company:Company`,
+  };
 
   // Access control
   protected readonly isAdmin = computed(() => this.authService.user()?.role === 'admin');
@@ -153,7 +176,7 @@ export class Users implements OnInit {
         updated: resolveTimestamp(record as User & { updated?: unknown; updated_at?: unknown; updatedAt?: unknown }, 'updated'),
       })));
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load users.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.loadFailed });
     } finally {
       this.loading.set(false);
     }
@@ -215,12 +238,12 @@ export class Users implements OnInit {
     const userType = this.normalizeUserType(this.formState['user_type']);
 
     if ((userType === 'person' || userType === 'employee') && !this.formState.first_name?.trim()) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: `First Name is required for ${userType} users.` });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.firstNameRequired });
       return;
     }
 
     if (userType === 'company' && !String(this.formState['name'] || '').trim()) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Company Name is required for company users.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.companyRequired });
       return;
     }
 
@@ -239,15 +262,15 @@ export class Users implements OnInit {
       if (this.dialogMode === 'create') {
         // Backend lifecycle hook auto-generates auth credentials when absent.
         await this.pb.pb.collection('users').create(payload);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User created.' });
+        this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.created });
       } else {
         await this.pb.pb.collection('users').update(this.formState.id!, payload);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User updated.' });
+        this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.updated });
       }
       this.dialogVisible = false;
       this.loadUsers();
     } catch (e: any) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to save user.' });
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: e.message || this.t.saveFailed });
     } finally {
       this.saving.set(false);
     }
@@ -255,18 +278,20 @@ export class Users implements OnInit {
 
   protected deleteUserConfirm(user: User) {
     this.confirmationService.confirm({
-      header: 'Delete User',
-      message: `Are you sure you want to delete user "${this.getDisplayName(user)}"?`,
+      header: this.t.deleteHeader,
+      message: this.t.deleteMessage,
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: this.t.deleteLabel,
+      rejectLabel: this.t.cancel,
       rejectButtonStyleClass: 'p-button-text p-button-secondary',
       acceptButtonStyleClass: 'p-button-danger',
       accept: async () => {
         try {
           await this.pb.pb.collection('users').delete(user.id);
-          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'User deleted.' });
+          this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.deleted });
           this.loadUsers();
         } catch (e: any) {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: e.message || 'Failed to delete user.' });
+          this.messageService.add({ severity: 'error', summary: this.t.error, detail: e.message || this.t.deleteFailed });
         }
       },
     });
@@ -283,14 +308,14 @@ export class Users implements OnInit {
   protected getUserTypeLabel(user: User): string {
     const type = this.normalizeUserType(user['user_type']);
     if (type === 'company') {
-      return 'Company';
+      return this.t.company;
     }
 
     if (type === 'employee') {
-      return 'Employee';
+      return this.t.employee;
     }
 
-    return 'Person';
+    return this.t.person;
   }
 
   protected getDisplayName(user: User): string {

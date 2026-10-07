@@ -1,11 +1,12 @@
 <div class="page-shell">
   <div class="page-header">
     <div class="flex items-center gap-3">
-      <h2 class="page-title">Rooms</h2>
+      <h2 class="page-title" i18n="@@nav.rooms">Rooms</h2>
     </div>
     <div class="page-actions">
       <p-button
         label="Refresh"
+        i18n-label="@@common.refresh"
         icon="pi pi-refresh"
         [loading]="loading()"
         styleClass="action-btn"
@@ -16,6 +17,7 @@
       />
       <p-button
         label="Add Group"
+        i18n-label="@@rooms.addGroup"
         icon="pi pi-folder-plus"
         [outlined]="true"
         severity="secondary"
@@ -24,6 +26,7 @@
       />
       <p-button
         label="Add Room"
+        i18n-label="@@rooms.addRoom"
         icon="pi pi-plus"
         severity="primary"
         size="small"
@@ -41,6 +44,7 @@
           type="text"
           class="table-search-input"
           placeholder="Search rooms and groups freely..."
+          i18n-placeholder="@@rooms.search"
           [ngModel]="searchQuery()"
           (ngModelChange)="searchQuery.set($event)"
         />
@@ -53,29 +57,29 @@
           <tr>
             <th class="px-4 py-3 text-left">
               <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('name')">
-                Name
+                <span i18n="@@common.name">Name</span>
                 <i class="pi text-[11px]" [ngClass]="getSortIcon('name')"></i>
               </button>
             </th>
             <th class="px-4 py-3 text-left" style="width: 110px">
               <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('type')">
-                Type
+                <span i18n="@@common.type">Type</span>
                 <i class="pi text-[11px]" [ngClass]="getSortIcon('type')"></i>
               </button>
             </th>
             <th class="px-4 py-3 text-left" style="width: 110px">
               <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('key')">
-                Key
+                <span i18n="@@rooms.col.key">Key</span>
                 <i class="pi text-[11px]" [ngClass]="getSortIcon('key')"></i>
               </button>
             </th>
             <th class="px-4 py-3 text-left">
               <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('notes')">
-                Notes
+                <span i18n="@@common.notes">Notes</span>
                 <i class="pi text-[11px]" [ngClass]="getSortIcon('notes')"></i>
               </button>
             </th>
-            <th class="px-4 py-3 text-left table-actions-col" style="width: 132px">Actions</th>
+            <th class="px-4 py-3 text-left table-actions-col" style="width: 132px" i18n="@@common.actions">Actions</th>
           </tr>
         </thead>
         <tbody *ngIf="!loading()">
@@ -94,7 +98,7 @@
                 </div>
               </td>
               <td class="px-4 py-3">
-                <span class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md text-xs font-semibold border border-indigo-100">Group</span>
+                <span class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md text-xs font-semibold border border-indigo-100" i18n="@@rooms.tag.group">Group</span>
               </td>
               <td class="px-4 py-3">
                 <span class="text-slate-400">-</span>
@@ -138,14 +142,14 @@
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2 pl-6">
                   <i class="pi pi-angle-right text-slate-400"></i>
-                  <span class="font-medium text-slate-800">{{ room.number || '-' }} · {{ room.name || 'Unnamed room' }}</span>
+                  <span class="font-medium text-slate-800">{{ room.number || '-' }} · {{ room.name || t.unnamed }}</span>
                 </div>
               </td>
               <td class="px-4 py-3">
-                <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-md text-xs font-semibold border border-emerald-100">Room</span>
+                <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-md text-xs font-semibold border border-emerald-100" i18n="@@rooms.tag.room">Room</span>
               </td>
               <td class="px-4 py-3">
-                <p-tag [value]="room.key_collected ? 'Collected' : 'Available'" [severity]="room.key_collected ? 'warn' : 'success'"></p-tag>
+                <p-tag [value]="room.key_collected ? t.collected : t.available" [severity]="room.key_collected ? 'warn' : 'success'"></p-tag>
               </td>
               <td class="px-4 py-3">
                 <span class="text-sm text-slate-500 line-clamp-1 truncate max-w-[320px]">{{ room.notes || room.description || '-' }}</span>
@@ -181,7 +185,7 @@
             </tr>
 
             <tr *ngIf="group.rooms.length === 0" class="bg-slate-50/60">
-              <td colspan="5" class="px-4 py-3 pl-16 text-sm text-slate-500 italic">
+              <td colspan="5" class="px-4 py-3 pl-16 text-sm text-slate-500 italic" i18n="@@rooms.emptyGroup">
                 No rooms in this group yet.
               </td>
             </tr>
@@ -190,7 +194,7 @@
           <tr *ngIf="filteredGroupRows().length === 0">
             <td colspan="5" class="text-center py-8 text-slate-500">
               <i class="pi pi-th-large text-3xl mb-3 text-slate-300 block"></i>
-              No matching groups or rooms found.
+              <span i18n="@@rooms.emptyAll">No matching groups or rooms found.</span>
             </td>
           </tr>
         </tbody>
@@ -199,7 +203,7 @@
 
     <div *ngIf="loading()" class="px-4 py-8 text-center text-slate-500">
       <i class="pi pi-spinner pi-spin mr-2"></i>
-      Loading rooms and groups...
+      <span i18n="@@rooms.loading">Loading rooms and groups...</span>
     </div>
   </p-card>
 </div>
@@ -207,7 +211,7 @@
 <!-- Add/Edit Room Group Dialog -->
 <p-dialog
   [(visible)]="groupDialogVisible"
-  [header]="groupDialogMode === 'create' ? 'Add Room Group' : 'Edit Room Group'"
+  [header]="groupDialogMode === 'create' ? t.groupAdd : t.groupEdit"
   [modal]="true"
   styleClass="sv-dialog"
   appendTo="body"
@@ -217,25 +221,25 @@
 >
   <div class="flex flex-col gap-4 py-4" *ngIf="groupFormState">
     <div class="flex flex-col gap-2">
-      <label for="group_name" class="text-sm font-semibold text-slate-700">Group Name <span class="text-red-500">*</span></label>
+      <label for="group_name" class="text-sm font-semibold text-slate-700"><span i18n="@@rooms.group.name">Group Name</span> <span class="text-red-500">*</span></label>
       <input id="group_name" type="text" pInputText [(ngModel)]="groupFormState.name" placeholder="e.g. North Wing" />
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="group_notes" class="text-sm font-semibold text-slate-700">Notes</label>
-      <textarea id="group_notes" pTextarea [(ngModel)]="groupFormState.notes" rows="3" placeholder="Optional notes..."></textarea>
+      <label for="group_notes" class="text-sm font-semibold text-slate-700" i18n="@@common.notes">Notes</label>
+      <textarea id="group_notes" pTextarea [(ngModel)]="groupFormState.notes" rows="3" placeholder="Optional notes..." i18n-placeholder="@@common.ph.notes"></textarea>
     </div>
 
     <div class="flex items-center gap-2 mt-1">
       <input type="checkbox" id="room_group_enabled" [(ngModel)]="groupFormState['enabled']" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
-      <label for="room_group_enabled" class="text-sm font-semibold text-slate-700">Enabled</label>
+      <label for="room_group_enabled" class="text-sm font-semibold text-slate-700" i18n="@@common.enabled">Enabled</label>
     </div>
   </div>
-  
+
   <ng-template pTemplate="footer">
     <div class="flex justify-end gap-2">
-      <p-button label="Cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideRoomGroupDialog()" />
-      <p-button label="Save" icon="pi pi-check" (onClick)="saveRoomGroup()" [loading]="savingGroup()" />
+      <p-button label="Cancel" i18n-label="@@common.cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideRoomGroupDialog()" />
+      <p-button label="Save" i18n-label="@@common.save" icon="pi pi-check" (onClick)="saveRoomGroup()" [loading]="savingGroup()" />
     </div>
   </ng-template>
 </p-dialog>
@@ -244,7 +248,7 @@
 <p-dialog
   [visible]="roomKeyDialogVisible()"
   (visibleChange)="roomKeyDialogVisible.set($event)"
-  [header]="roomKeyDialogMode === 'distribute' ? 'Distribute Key' : 'Collect Key'"
+  [header]="roomKeyDialogMode === 'distribute' ? t.distributeKey : t.collectKey"
   [modal]="true"
   styleClass="sv-dialog"
   appendTo="body"
@@ -255,7 +259,7 @@
   <div class="flex flex-col gap-4 py-4">
     <div class="flex flex-col gap-2">
       <label for="rk-user" class="text-sm font-semibold text-slate-700">
-        {{ roomKeyDialogMode === 'distribute' ? 'User' : 'Confirm Return by User' }}
+        {{ roomKeyDialogMode === 'distribute' ? t.user : t.confirmReturn }}
       </label>
       <p-autoComplete
         id="rk-user"
@@ -267,6 +271,7 @@
         optionLabel="displayName"
         dataKey="id"
         placeholder="Search employee..."
+        i18n-placeholder="@@rooms.ph.searchEmployee"
         [dropdown]="true"
         [completeOnFocus]="true"
         appendTo="body"
@@ -279,7 +284,7 @@
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="rk-room" class="text-sm font-semibold text-slate-700">Room</label>
+      <label for="rk-room" class="text-sm font-semibold text-slate-700" i18n="@@field.room">Room</label>
       <p-autoComplete
         id="rk-room"
         [ngModel]="roomKeyFormState().room"
@@ -290,6 +295,7 @@
         optionLabel="displayName"
         dataKey="id"
         placeholder="Search room..."
+        i18n-placeholder="@@dashboard.ph.searchRoom"
         [dropdown]="true"
         [completeOnFocus]="true"
         appendTo="body"
@@ -302,7 +308,7 @@
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="rk-reason" class="text-sm font-semibold text-slate-700">Reason / Notes</label>
+      <label for="rk-reason" class="text-sm font-semibold text-slate-700" i18n="@@common.reasonNotes">Reason / Notes</label>
       <textarea
         id="rk-reason"
         pTextarea
@@ -310,15 +316,16 @@
         (ngModelChange)="updateRoomKeyForm({ reason: $event })"
         rows="3"
         placeholder="Enter optional notes..."
+        i18n-placeholder="@@common.optionalNotes"
       ></textarea>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
     <div class="flex justify-end gap-2">
-      <p-button label="Cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideRoomKeyDialog()" />
+      <p-button label="Cancel" i18n-label="@@common.cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideRoomKeyDialog()" />
       <p-button
-        [label]="roomKeyDialogMode === 'distribute' ? 'Distribute' : 'Collect'"
+        [label]="roomKeyDialogMode === 'distribute' ? t.distribute : t.collect"
         [icon]="roomKeyDialogMode === 'distribute' ? 'pi pi-key' : 'pi pi-check-circle'"
         (onClick)="submitRoomKeyAction()"
       />
@@ -329,7 +336,7 @@
 <!-- Add/Edit Room Dialog -->
 <p-dialog
   [(visible)]="roomDialogVisible"
-  [header]="roomDialogMode === 'create' ? 'Add Room' : 'Edit Room'"
+  [header]="roomDialogMode === 'create' ? t.roomAdd : t.roomEdit"
   [modal]="true"
   styleClass="sv-dialog sv-dialog-wide"
   appendTo="body"
@@ -340,18 +347,18 @@
   <div class="flex flex-col gap-4 py-4" *ngIf="roomFormState">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div class="flex flex-col gap-2">
-        <label for="number" class="text-sm font-semibold text-slate-700">Room Number <span class="text-red-500">*</span></label>
+        <label for="number" class="text-sm font-semibold text-slate-700"><span i18n="@@rooms.lbl.number">Room Number</span> <span class="text-red-500">*</span></label>
         <input id="number" type="text" pInputText [(ngModel)]="roomFormState.number" placeholder="e.g. 101" />
       </div>
 
       <div class="flex flex-col gap-2">
-        <label for="name" class="text-sm font-semibold text-slate-700">Room Name <span class="text-red-500">*</span></label>
+        <label for="name" class="text-sm font-semibold text-slate-700"><span i18n="@@rooms.lbl.name">Room Name</span> <span class="text-red-500">*</span></label>
         <input id="name" type="text" pInputText [(ngModel)]="roomFormState.name" placeholder="e.g. Room A" />
       </div>
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="room_group" class="text-sm font-semibold text-slate-700">Room Group</label>
+      <label for="room_group" class="text-sm font-semibold text-slate-700" i18n="@@rooms.lbl.group">Room Group</label>
       <p-autoComplete
         id="room_group"
         [(ngModel)]="roomFormState.roomGroupRecord"
@@ -361,6 +368,7 @@
         optionLabel="displayName"
         dataKey="id"
         placeholder="Search room groups..."
+        i18n-placeholder="@@rooms.ph.searchGroups"
         [dropdown]="true"
         [completeOnFocus]="true"
         appendTo="body"
@@ -372,20 +380,20 @@
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="room_notes" class="text-sm font-semibold text-slate-700">Notes</label>
-      <textarea id="room_notes" pTextarea [(ngModel)]="roomFormState.notes" rows="3" placeholder="Optional notes..."></textarea>
+      <label for="room_notes" class="text-sm font-semibold text-slate-700" i18n="@@common.notes">Notes</label>
+      <textarea id="room_notes" pTextarea [(ngModel)]="roomFormState.notes" rows="3" placeholder="Optional notes..." i18n-placeholder="@@common.ph.notes"></textarea>
     </div>
 
     <div class="flex items-center gap-2 mt-1">
       <input type="checkbox" id="room_enabled" [(ngModel)]="roomFormState['enabled']" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
-      <label for="room_enabled" class="text-sm font-semibold text-slate-700">Enabled</label>
+      <label for="room_enabled" class="text-sm font-semibold text-slate-700" i18n="@@common.enabled">Enabled</label>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
     <div class="flex justify-end gap-2">
-      <p-button label="Cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideRoomDialog()" />
-      <p-button label="Save" icon="pi pi-check" (onClick)="saveRoom()" [loading]="savingRoom()" />
+      <p-button label="Cancel" i18n-label="@@common.cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideRoomDialog()" />
+      <p-button label="Save" i18n-label="@@common.save" icon="pi pi-check" (onClick)="saveRoom()" [loading]="savingRoom()" />
     </div>
   </ng-template>
 </p-dialog>

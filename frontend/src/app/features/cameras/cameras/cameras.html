@@ -1,11 +1,12 @@
 <div class="page-shell">
   <div class="page-header">
     <div class="flex items-center gap-3">
-      <h2 class="page-title">Cameras</h2>
+      <h2 class="page-title" i18n="@@nav.cameras">Cameras</h2>
     </div>
     <div class="page-actions">
       <p-button
         label="Refresh"
+        i18n-label="@@common.refresh"
         icon="pi pi-refresh"
         [loading]="loading()"
         styleClass="action-btn"
@@ -16,6 +17,7 @@
       />
       <p-button
         label="Add Camera"
+        i18n-label="@@cameras.add"
         icon="pi pi-plus"
         severity="primary"
         size="small"
@@ -33,6 +35,7 @@
           type="text"
           class="table-search-input"
           placeholder="Search cameras freely..."
+          i18n-placeholder="@@cameras.search"
           [ngModel]="searchQuery()"
           (ngModelChange)="searchQuery.set($event)"
         />
@@ -54,23 +57,23 @@
         <tr>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('name')">
-              Name
+              <span i18n="@@common.name">Name</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('name')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('direction')">
-              Direction
+              <span i18n="@@field.direction">Direction</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('direction')"></i>
             </button>
           </th>
           <th>
             <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('enabled')">
-              Enabled
+              <span i18n="@@common.enabled">Enabled</span>
               <i class="pi text-[11px]" [ngClass]="getSortIcon('enabled')"></i>
             </button>
           </th>
-          <th class="table-actions-col" style="width: 120px">Actions</th>
+          <th class="table-actions-col" style="width: 120px" i18n="@@common.actions">Actions</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-camera>
@@ -85,7 +88,7 @@
             </span>
           </td>
           <td>
-            <p-tag [value]="camera.enabled ? 'Yes' : 'No'" [severity]="camera.enabled ? 'success' : 'secondary'"></p-tag>
+            <p-tag [value]="camera.enabled ? t.yes : t.no" [severity]="camera.enabled ? 'success' : 'secondary'"></p-tag>
           </td>
           <td class="table-actions-col">
             <div class="flex gap-2">
@@ -113,7 +116,7 @@
         <tr>
           <td colspan="4" class="text-center py-8 text-slate-500">
             <i class="pi pi-camera text-3xl mb-3 text-slate-300 block"></i>
-            No cameras found. Add one to get started.
+            <span i18n="@@cameras.empty">No cameras found. Add one to get started.</span>
           </td>
         </tr>
       </ng-template>
@@ -124,7 +127,7 @@
 <!-- Add/Edit Dialog -->
 <p-dialog
   [(visible)]="dialogVisible"
-  [header]="dialogMode === 'create' ? 'Add Camera' : 'Edit Camera'"
+  [header]="dialogMode === 'create' ? t.add : t.edit"
   [modal]="true"
   styleClass="sv-dialog"
   appendTo="body"
@@ -135,18 +138,18 @@
   <div class="flex flex-col gap-4 py-4" *ngIf="formState">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div class="flex flex-col gap-2">
-        <label for="name" class="text-sm font-semibold text-slate-700">Camera Name <span class="text-red-500">*</span></label>
-        <input id="name" type="text" pInputText [(ngModel)]="formState.name" placeholder="e.g. Main Gate Entry" />
+        <label for="name" class="text-sm font-semibold text-slate-700"><span i18n="@@cameras.lbl.name">Camera Name</span> <span class="text-red-500">*</span></label>
+        <input id="name" type="text" pInputText [(ngModel)]="formState.name" placeholder="e.g. Main Gate Entry" i18n-placeholder="@@cameras.ph.name" />
       </div>
 
       <div class="flex flex-col gap-2">
-        <label for="camera_id" class="text-sm font-semibold text-slate-700">Camera ID <span class="text-red-500">*</span></label>
+        <label for="camera_id" class="text-sm font-semibold text-slate-700"><span i18n="@@cameras.lbl.id">Camera ID</span> <span class="text-red-500">*</span></label>
         <input id="camera_id" type="text" pInputText [(ngModel)]="formState.camera_id" placeholder="e.g. cam-main-entry" />
       </div>
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="direction" class="text-sm font-semibold text-slate-700">Direction <span class="text-red-500">*</span></label>
+      <label for="direction" class="text-sm font-semibold text-slate-700"><span i18n="@@field.direction">Direction</span> <span class="text-red-500">*</span></label>
       <p-select
         id="direction"
         [options]="directionOptions"
@@ -159,25 +162,25 @@
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="metadata" class="text-sm font-semibold text-slate-700">Metadata (JSON)</label>
+      <label for="metadata" class="text-sm font-semibold text-slate-700" i18n="@@cameras.lbl.metadata">Metadata (JSON)</label>
       <textarea id="metadata" pTextarea [(ngModel)]="formState.metadataText" rows="4" placeholder='{"ip":"10.0.0.1","zone":"north-gate"}'></textarea>
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="notes" class="text-sm font-semibold text-slate-700">Notes</label>
-      <textarea id="notes" pTextarea [(ngModel)]="formState.notes" rows="3" placeholder="Optional details about location or purpose..."></textarea>
+      <label for="notes" class="text-sm font-semibold text-slate-700" i18n="@@common.notes">Notes</label>
+      <textarea id="notes" pTextarea [(ngModel)]="formState.notes" rows="3" placeholder="Optional details about location or purpose..." i18n-placeholder="@@cameras.ph.notes"></textarea>
     </div>
 
     <div class="flex items-center gap-2 mt-1">
       <input type="checkbox" id="camera_enabled" [(ngModel)]="formState['enabled']" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
-      <label for="camera_enabled" class="text-sm font-semibold text-slate-700">Enabled</label>
+      <label for="camera_enabled" class="text-sm font-semibold text-slate-700" i18n="@@common.enabled">Enabled</label>
     </div>
   </div>
-  
+
   <ng-template pTemplate="footer">
     <div class="flex justify-end gap-2">
-      <p-button label="Cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideDialog()" />
-      <p-button label="Save" icon="pi pi-check" (onClick)="saveCamera()" [loading]="saving()" />
+      <p-button label="Cancel" i18n-label="@@common.cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideDialog()" />
+      <p-button label="Save" i18n-label="@@common.save" icon="pi pi-check" (onClick)="saveCamera()" [loading]="saving()" />
     </div>
   </ng-template>
 </p-dialog>

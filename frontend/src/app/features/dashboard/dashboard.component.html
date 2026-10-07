@@ -76,7 +76,7 @@
 
       <div class="camera-cards-grid grid gap-3">
         @for (directionCard of lastDirectionCameraCards(); track directionCard.direction) {
-          <p-card [styleClass]="'dashboard-card glass-surface camera-card h-full shadow-sm card-enter ' + cardThemeClass(directionCard.direction)">
+          <p-card [styleClass]="'dashboard-card glass-surface camera-card h-full shadow-sm card-enter ' + cardThemeClass(directionCard.direction) + (cameraFlash()[directionCard.direction] ? ' is-flashing' : '')">
             <ng-template pTemplate="title">
               <div class="camera-card-header">
                 <div class="camera-card-title-stack">
