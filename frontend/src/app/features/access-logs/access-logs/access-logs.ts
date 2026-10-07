@@ -60,7 +60,6 @@ type SortField = 'when' | 'accessType' | 'subject' | 'actor' | 'camera' | 'direc
     InputTextModule,
     SelectModule,
   ],
-  providers: [MessageService],
   templateUrl: './access-logs.html',
   styleUrls: ['./access-logs.scss'],
 })

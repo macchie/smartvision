@@ -624,9 +624,10 @@ export class Rooms implements OnInit {
   /** Finds the open distribution (key currently out) for a room and prefills its holder. */
   private async prefillKeyHolder(roomId: string): Promise<void> {
     try {
+      // A room has at most one open distribution, so no sort is needed — and this
+      // collection has no `created` field to sort on anyway.
       const records = await this.pb.pb.collection('room_key_events').getList(1, 1, {
         filter: `room = "${this.escapeFilterValue(roomId)}" && is_collecting = true && did_return_key = false && enabled = true`,
-        sort: '-created',
         expand: 'user',
       });
       const holder = (records.items[0] as any)?.expand?.user;

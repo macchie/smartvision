@@ -157,10 +157,14 @@ table.dashboard-table {
   z-index: 3000 !important;
 }
 
-.p-toast,
 .p-confirmdialog,
 .p-confirm-dialog {
   z-index: 4000 !important;
+}
+
+/* Toasts must sit above everything, including dialogs and confirm dialogs. */
+.p-toast {
+  z-index: 9000 !important;
 }
 
 /*
@@ -707,4 +711,49 @@ html.dark .border-red-100 { border-color: rgba(248, 113, 113, 0.3); }
 }
 .sv-gate-select.p-selectbutton .p-togglebutton {
   flex: 1 1 auto;
+}
+
+/*
+  Keep PrimeNG's default select-button look (the segmented control), and only
+  tint the active option with the app accent so it reflects the theme. The idle
+  surfaces come from the preset, which is blue-navy in dark mode.
+*/
+.p-togglebutton.p-togglebutton-checked .p-togglebutton-content {
+  background: var(--sv-accent) !important;
+}
+.p-togglebutton.p-togglebutton-checked .p-togglebutton-label,
+.p-togglebutton.p-togglebutton-checked .p-togglebutton-icon {
+  color: #ffffff !important;
+}
+
+/*
+  User menu (and any popup menu): PrimeNG renders these on its own surface, so
+  re-skin the panel, items and hover to the app palette for correct dark colors.
+*/
+.p-menu {
+  background: var(--sv-surface-strong) !important;
+  color: var(--sv-text) !important;
+  border: 1px solid var(--sv-border-strong) !important;
+  border-radius: var(--sv-radius-md) !important;
+  box-shadow: var(--sv-shadow-card) !important;
+}
+.p-menu .p-menu-item-link {
+  color: var(--sv-text) !important;
+  border-radius: var(--sv-radius-sm) !important;
+}
+.p-menu .p-menu-item-link .p-menu-item-icon,
+.p-menu .p-menu-item-link .p-menu-item-label {
+  color: var(--sv-text) !important;
+}
+.p-menu .p-menu-item-link:hover,
+.p-menu .p-menu-item.p-focus > .p-menu-item-link {
+  background: var(--sv-accent-soft) !important;
+  color: var(--sv-text) !important;
+}
+.p-menu .p-menu-item-link:hover .p-menu-item-icon,
+.p-menu .p-menu-item-link:hover .p-menu-item-label {
+  color: var(--sv-text) !important;
+}
+.p-menu .p-menu-separator {
+  border-top: 1px solid var(--sv-border) !important;
 }

@@ -6,7 +6,6 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
-import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../core/services/auth.service';
 import { PocketBaseService } from '../../core/services/pocketbase.service';
 import { QuickActionDialogComponent, QuickActionDialogOption } from '../../shared/components/quick-action-dialog/quick-action-dialog.component';
@@ -150,10 +149,8 @@ type RoomSearchRecord = {
     CardModule,
     TableModule,
     TagModule,
-    ToastModule,
     QuickActionDialogComponent,
   ],
-  providers: [MessageService],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
@@ -861,9 +858,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private async prefillKeyHolder(roomId: string): Promise<void> {
     try {
+      // A room has at most one open distribution (the workflow prevents a second
+      // and closes it on return), so no sort is needed — and this collection has
+      // no `created` field to sort on anyway.
       const records = await this.pb.collection('room_key_events').getList(1, 1, {
         filter: this.roomKeyHolderFilter(roomId),
-        sort: '-created',
         expand: 'user',
         requestKey: null,
       });
