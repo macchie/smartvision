@@ -302,6 +302,7 @@
     "dashboard.status.emptyKeys": "No hay llaves distribuidas",
     "dashboard.status.viaFoot": "A pie",
     "dashboard.status.viaVehicle": "En vehículo",
-    "dashboard.status.unknownDriver": "Conductor no registrado"
+    "dashboard.status.unknownDriver": "Conductor no registrado",
+    "dashboard.status.assignDriver": "Asignar conductor"
   }
 }

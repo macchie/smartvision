@@ -302,6 +302,7 @@
     "dashboard.status.emptyKeys": "Aucune clé distribuée",
     "dashboard.status.viaFoot": "À pied",
     "dashboard.status.viaVehicle": "En véhicule",
-    "dashboard.status.unknownDriver": "Conducteur non enregistré"
+    "dashboard.status.unknownDriver": "Conducteur non enregistré",
+    "dashboard.status.assignDriver": "Attribuer un conducteur"
   }
 }

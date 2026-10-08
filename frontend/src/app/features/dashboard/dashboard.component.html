@@ -102,7 +102,13 @@
                 <div class="status-row">
                   <div class="status-row-main">
                     <span class="status-row-title">{{ v.number }}</span>
-                    <span class="status-row-sub"><i class="pi pi-user"></i>{{ v.driver || ui.statusUnknownDriver }}</span>
+                    @if (v.driver) {
+                      <span class="status-row-sub"><i class="pi pi-user"></i>{{ v.driver }}</span>
+                    } @else {
+                      <button type="button" class="status-row-assign" (click)="openAssignDriver(v)">
+                        <i class="pi pi-user-plus"></i><span>{{ ui.assignDriver }}</span>
+                      </button>
+                    }
                   </div>
                   <div class="status-row-meta">
                     @if (v.gate) {
@@ -198,7 +204,15 @@
             <ng-template pTemplate="body" let-row>
               <tr>
                 <td><span class="font-semibold text-slate-900">{{ row.subject }}</span></td>
-                <td>{{ row.actor }}</td>
+                <td>
+                  @if (canAssignRowDriver(row)) {
+                    <button type="button" class="status-row-assign" (click)="assignRowDriver(row)">
+                      <i class="pi pi-user-plus"></i><span>{{ ui.assignDriver }}</span>
+                    </button>
+                  } @else {
+                    {{ row.actor }}
+                  }
+                </td>
                 <td>{{ row.gate }}</td>
                 <td>
                   <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
@@ -352,3 +366,50 @@
   [submitLabel]="ui.collect"
   (submitted)="submitKeyCollect()"
 ></app-quick-action-dialog>
+
+<!-- Assign driver (vehicle owner) for a present vehicle with no driver yet -->
+<p-dialog
+  [(visible)]="assignDialogVisible"
+  [header]="ui.assignDriver"
+  [modal]="true"
+  styleClass="sv-dialog"
+  appendTo="body"
+  [breakpoints]="{ '1280px': '60vw', '960px': '78vw', '640px': '96vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col gap-4 py-2">
+    @if (assignTarget) {
+      <p class="text-sm text-slate-600">
+        <span i18n="@@field.vehicle">Vehicle</span>: <span class="font-semibold text-slate-900">{{ assignTarget.number }}</span>
+      </p>
+    }
+    <div class="flex flex-col gap-2">
+      <label for="dash-assign-owner" class="text-sm font-semibold text-slate-700">{{ ui.ownerLabel }} <span class="font-normal text-[--sv-text-muted]">{{ ui.ownerHint }}</span></label>
+      <p-autoComplete
+        id="dash-assign-owner"
+        [(ngModel)]="assignOwnerRecord"
+        [suggestions]="assignSuggestions()"
+        (completeMethod)="searchAssignOwners($event)"
+        field="displayName"
+        optionLabel="displayName"
+        dataKey="id"
+        [placeholder]="ui.searchUsers"
+        [dropdown]="true"
+        [completeOnFocus]="true"
+        appendTo="body"
+        styleClass="w-full"
+        [fluid]="true"
+      >
+        <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+      </p-autoComplete>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button [label]="ui.cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="assignDialogVisible = false" />
+      <p-button [label]="ui.assignDriver" icon="pi pi-check" (onClick)="confirmAssignDriver()" [loading]="assigning()" [disabled]="!assignOwnerRecord" />
+    </div>
+  </ng-template>
+</p-dialog>

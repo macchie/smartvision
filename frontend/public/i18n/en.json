@@ -302,6 +302,7 @@
     "dashboard.status.emptyKeys": "No keys distributed",
     "dashboard.status.viaFoot": "On foot",
     "dashboard.status.viaVehicle": "By vehicle",
-    "dashboard.status.unknownDriver": "Driver not recorded"
+    "dashboard.status.unknownDriver": "Driver not recorded",
+    "dashboard.status.assignDriver": "Assign driver"
   }
 }

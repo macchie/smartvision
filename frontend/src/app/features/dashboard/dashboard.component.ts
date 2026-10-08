@@ -2,12 +2,16 @@ import { CommonModule } from '@angular/common';
 import { Component, NgZone, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
+import { DialogModule } from 'primeng/dialog';
+import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { AuthService } from '../../core/services/auth.service';
 import { PocketBaseService } from '../../core/services/pocketbase.service';
+import { OwnerOption, VehicleOwnerService } from '../../core/services/vehicle-owner.service';
 import { QuickActionDialogComponent, QuickActionDialogOption } from '../../shared/components/quick-action-dialog/quick-action-dialog.component';
 
 type AccessType = 'vehicle' | 'user';
@@ -23,6 +27,8 @@ type AccessRow = {
   reason: string;
   eventTime: string;
   createdAt: string;
+  vehicleId?: string;
+  vehicleOwnerId?: string;
 };
 
 type GateDirection = AccessRow['direction'];
@@ -78,6 +84,8 @@ type DashboardSummaryResponse = {
     didLeave: boolean;
     reason: string;
     createdAt: string;
+    vehicleId?: string;
+    vehicleOwnerId?: string;
   }>;
 };
 
@@ -171,8 +179,11 @@ type RoomSearchRecord = {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+    AutoCompleteModule,
     ButtonModule,
     CardModule,
+    DialogModule,
     TableModule,
     TagModule,
     QuickActionDialogComponent,
@@ -204,6 +215,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     keyDistributeFailed: $localize`:@@dashboard.msg.keyDistributeFailed:Failed to distribute key.`,
     keyCollected: $localize`:@@dashboard.msg.keyCollected:Key collected.`,
     keyCollectFailed: $localize`:@@dashboard.msg.keyCollectFailed:Failed to collect key.`,
+    ownerAssigned: $localize`:@@vehicles.msg.ownerAssigned:Owner assigned; related records updated.`,
+    assignFailed: $localize`:@@vehicles.msg.assignFailed:Failed to assign owner.`,
     keyAlreadyDistributed: $localize`:@@key.alreadyDistributed:This room's key is already distributed.`,
     realtimePaused: $localize`:@@dashboard.err.realtimePaused:Realtime paused because the current session is not authenticated.`,
     sessionExpired: $localize`:@@dashboard.err.sessionExpired:Session expired. Please sign in again.`,
@@ -250,6 +263,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     statusViaFoot: $localize`:@@dashboard.status.viaFoot:On foot`,
     statusViaVehicle: $localize`:@@dashboard.status.viaVehicle:By vehicle`,
     statusUnknownDriver: $localize`:@@dashboard.status.unknownDriver:Driver not recorded`,
+    assignDriver: $localize`:@@dashboard.status.assignDriver:Assign driver`,
+    ownerLabel: $localize`:@@vehicles.col.owner:Owner`,
+    ownerHint: $localize`:@@vehicles.lbl.ownerHint:(Person or Company)`,
+    searchUsers: $localize`:@@vehicles.ph.owner:Search users...`,
+    cancel: $localize`:@@common.cancel:Cancel`,
   };
 
   /** Localized user-type labels surfaced in the key dialogs' user dropdown. */
@@ -270,6 +288,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly presentVehicles = signal<PresentVehicle[]>([]);
   protected readonly presentPeople = signal<PresentPerson[]>([]);
   protected readonly distributedKeys = signal<DistributedKey[]>([]);
+
+  // Quick "assign driver" dialog for present vehicles with no owner/driver yet.
+  protected assignDialogVisible = false;
+  protected readonly assigning = signal(false);
+  protected assignTarget: { id: string; number: string } | null = null;
+  protected assignOwnerRecord: OwnerOption | null = null;
+  protected readonly assignSuggestions = signal<OwnerOption[]>([]);
 
   /** Status rows with a freshly-computed relative "since" label for display. */
   protected readonly presentVehicleRows = computed(() =>
@@ -403,6 +428,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private pocketBaseService: PocketBaseService,
     private messageService: MessageService,
+    private ownerService: VehicleOwnerService,
     private ngZone: NgZone,
   ) {}
 
@@ -1263,6 +1289,50 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.scheduleAccessReconcile();
   }
 
+  protected openAssignDriver(target: { id: string; number: string }): void {
+    this.assignTarget = { id: target.id, number: target.number };
+    this.assignOwnerRecord = null;
+    this.assignSuggestions.set([]);
+    this.assignDialogVisible = true;
+  }
+
+  /** Latest-vehicle-access row can get a driver when its vehicle has no owner yet. */
+  protected canAssignRowDriver(row: AccessRow): boolean {
+    return row.accessType === 'vehicle' && !!row.vehicleId && !row.vehicleOwnerId;
+  }
+
+  protected assignRowDriver(row: AccessRow): void {
+    if (!row.vehicleId) {
+      return;
+    }
+    this.openAssignDriver({ id: row.vehicleId, number: row.subject });
+  }
+
+  protected async searchAssignOwners(event: AutoCompleteCompleteEvent): Promise<void> {
+    this.assignSuggestions.set(await this.ownerService.searchOwners(event.query || ''));
+  }
+
+  protected async confirmAssignDriver(): Promise<void> {
+    const vehicleId = this.assignTarget?.id;
+    const ownerId = this.assignOwnerRecord?.id;
+    if (!vehicleId || !ownerId) {
+      return;
+    }
+
+    this.assigning.set(true);
+    try {
+      await this.ownerService.assignOwner(vehicleId, ownerId);
+      this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.ownerAssigned });
+      this.assignDialogVisible = false;
+      this.assignTarget = null;
+      this.triggerAccessRefresh();
+    } catch (e: any) {
+      this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e?.message || this.msg.assignFailed });
+    } finally {
+      this.assigning.set(false);
+    }
+  }
+
   private triggerAccessRefresh(): void {
     if (this.accessLoadInFlight) {
       this.pendingAccessRefresh = true;
@@ -1467,6 +1537,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       reason: record.reason || '-',
       eventTime: this.formatRelativeTime(createdAt),
       createdAt,
+      vehicleId: accessType === 'vehicle' ? (record.vehicle || '') : '',
+      vehicleOwnerId: accessType === 'vehicle' ? (expandedVehicle?.owner || '') : '',
     };
   }
 

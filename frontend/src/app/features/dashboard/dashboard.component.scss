@@ -385,6 +385,30 @@
 .status-row-sub i { font-size: 0.68rem; flex-shrink: 0; }
 .status-row-sub span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Compact inline action shown when a present vehicle has no driver assigned. */
+.status-row-assign {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.05rem;
+  padding: 0.12rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.36);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.status-row-assign:hover {
+  background: rgba(245, 158, 11, 0.24);
+  border-color: rgba(245, 158, 11, 0.55);
+}
+.status-row-assign i { font-size: 0.68rem; flex-shrink: 0; }
+
 .status-row-meta {
   flex-shrink: 0;
   display: flex;
