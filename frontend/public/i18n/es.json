@@ -201,6 +201,8 @@
     "vehicles.delete.header": "Eliminar vehículo",
     "vehicles.delete.message": "¿Seguro que quieres eliminar este vehículo?",
     "users.add": "Añadir usuario",
+    "users.printBadge": "Imprimir credencial",
+    "users.msg.badgeFailed": "No se pudo generar la credencial.",
     "users.edit": "Editar usuario",
     "users.search": "Busca usuarios libremente...",
     "users.empty": "No se encontraron usuarios.",

@@ -201,6 +201,8 @@
     "vehicles.delete.header": "Elimina veicolo",
     "vehicles.delete.message": "Sei sicuro di voler eliminare questo veicolo?",
     "users.add": "Aggiungi utente",
+    "users.printBadge": "Stampa badge",
+    "users.msg.badgeFailed": "Impossibile generare il badge.",
     "users.edit": "Modifica utente",
     "users.search": "Cerca liberamente tra gli utenti...",
     "users.empty": "Nessun utente trovato.",

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { BadgeService } from '../../../core/services/badge.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -146,6 +147,8 @@ export class Users implements OnInit {
     person: $localize`:@@field.person:Person`,
     employee: $localize`:@@userType.employee:Employee`,
     company: $localize`:@@userType.company:Company`,
+    printBadge: $localize`:@@users.printBadge:Print Badge`,
+    badgeFailed: $localize`:@@users.msg.badgeFailed:Failed to generate badge.`,
   };
 
   // Access control
@@ -156,7 +159,8 @@ export class Users implements OnInit {
     private pb: PocketBaseService,
     private authService: AuthService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private badgeService: BadgeService
   ) {}
 
   ngOnInit(): void {
@@ -295,6 +299,18 @@ export class Users implements OnInit {
         }
       },
     });
+  }
+
+  protected printBadge(user: User): void {
+    try {
+      this.badgeService.downloadUserBadge({
+        id: user.id,
+        displayName: this.getDisplayName(user),
+        typeLabel: this.getUserTypeLabel(user),
+      });
+    } catch (e: any) {
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: e?.message || this.t.badgeFailed });
+    }
   }
 
   protected getRoleSeverity(role: string) {
