@@ -358,12 +358,36 @@
 }
 .status-row:last-child { border-bottom: none; }
 
+.status-row-lead {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
 .status-row-main {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.12rem;
 }
+
+/* Circular direction glyph on the left of latest-access rows. */
+.status-row-dir {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--sv-radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  border: 1px solid transparent;
+}
+.status-row-dir--in { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
+.status-row-dir--checkpoint { color: #b45309; background: #fff7ed; border-color: #fed7aa; }
+.status-row-dir--out { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
 
 .status-row-title {
   font-weight: 700;
@@ -514,6 +538,10 @@
   .status-chip--in { color: #6ee7b7; background: rgba(16, 185, 129, 0.14); border-color: rgba(16, 185, 129, 0.35); }
   .status-chip--checkpoint { color: #fcd34d; background: rgba(245, 158, 11, 0.14); border-color: rgba(245, 158, 11, 0.35); }
   .status-chip--out { color: #fca5a5; background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.35); }
+
+  .status-row-dir--in { color: #6ee7b7; background: rgba(16, 185, 129, 0.14); border-color: rgba(16, 185, 129, 0.35); }
+  .status-row-dir--checkpoint { color: #fcd34d; background: rgba(245, 158, 11, 0.14); border-color: rgba(245, 158, 11, 0.35); }
+  .status-row-dir--out { color: #fca5a5; background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.35); }
 }
 
 /* Specific styling for the quick action buttons to fit Apple aesthetics */

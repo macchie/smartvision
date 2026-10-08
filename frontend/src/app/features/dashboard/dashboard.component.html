@@ -101,9 +101,9 @@
               @for (v of presentVehicleRows(); track v.id) {
                 <div class="status-row">
                   <div class="status-row-main">
-                    <span class="status-row-title">{{ v.number }}</span>
+                    <span class="status-row-title">{{ v.driver }}</span>
                     @if (v.driver) {
-                      <span class="status-row-sub"><i class="pi pi-user"></i>{{ v.driver }}</span>
+                      <span class="status-row-sub"><i class="pi pi-car"></i>{{ v.number }}</span>
                     } @else {
                       <button type="button" class="status-row-assign" (click)="openAssignDriver(v)">
                         <i class="pi pi-user-plus"></i><span>{{ ui.assignDriver }}</span>
@@ -193,19 +193,24 @@
           <div class="status-list">
             @for (row of vehicleRows(); track row.id) {
               <div class="status-row">
-                <div class="status-row-main">
-                  <span class="status-row-title">{{ row.subject }}</span>
-                  @if (canAssignRowDriver(row)) {
-                    <button type="button" class="status-row-assign" (click)="assignRowDriver(row)">
-                      <i class="pi pi-user-plus"></i><span>{{ ui.assignDriver }}</span>
-                    </button>
-                  } @else {
-                    <span class="status-row-sub"><i class="pi pi-user"></i>{{ row.actor }}</span>
-                  }
+                <div class="status-row-lead">
+                  <span class="status-row-dir status-row-dir--{{ row.direction }}" [title]="directionLabel(row.direction)">
+                    <i class="pi" [ngClass]="directionIcon(row.direction)"></i>
+                  </span>
+                  <div class="status-row-main">
+                    <span class="status-row-title">{{ row.actor }}</span>
+                    @if (canAssignRowDriver(row)) {
+                      <button type="button" class="status-row-assign" (click)="assignRowDriver(row)">
+                        <i class="pi pi-user-plus"></i><span>{{ ui.assignDriver }}</span>
+                      </button>
+                    } @else {
+                      <span class="status-row-sub"><i class="pi pi-car"></i>{{ row.subject }}</span>
+                    }
+                  </div>
                 </div>
                 <div class="status-row-meta">
                   @if (row.gate) {
-                    <span class="status-chip status-chip--{{ row.direction }}" [title]="directionLabel(row.direction)"><i class="pi pi-map-marker"></i>{{ row.gate }}</span>
+                    <span class="status-chip status-chip--{{ row.direction }}"><i class="pi pi-map-marker"></i>{{ row.gate }}</span>
                   }
                   <span class="status-time">{{ row.eventTime }}</span>
                 </div>
