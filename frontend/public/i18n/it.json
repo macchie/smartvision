@@ -62,7 +62,7 @@
     "dashboard.overview": "Panoramica",
     "dashboard.updated": "Aggiornato",
     "dashboard.loading": "Caricamento dei dati della dashboard da PocketBase...",
-    "dashboard.lastGate": "Ultima varco",
+    "dashboard.lastGate": "Ultimo evento",
     "dashboard.metric.vehiclesInside": "Veicoli all'interno",
     "dashboard.metric.vehiclesHint": "Veicoli attivi che non sono ancora usciti.",
     "dashboard.metric.peopleInside": "Persone all'interno",
@@ -72,7 +72,7 @@
     "dashboard.gate.waitIngress": "In attesa del primo evento di ingresso veicolo.",
     "dashboard.gate.waitCheckpoint": "In attesa del primo evento di checkpoint veicolo.",
     "dashboard.gate.waitEgress": "In attesa del primo evento di uscita veicolo.",
-    "dashboard.gate.noEvent": "Nessun evento varco",
+    "dashboard.gate.noEvent": "Nessun evento",
     "dashboard.gate.noRecent": "Nessun evento recente",
     "dashboard.gate.vehicleNA": "Veicolo non disponibile",
     "dashboard.gate.driverNA": "Conducente non disponibile",
@@ -130,7 +130,7 @@
     "userType.employee": "Dipendente",
     "gates.add": "Aggiungi varco",
     "gates.edit": "Modifica varco",
-    "gates.search": "Cerca liberamente tra le varchi...",
+    "gates.search": "Cerca...",
     "gates.empty": "Nessuna varco trovata. Aggiungine una per iniziare.",
     "triggers.col.triggers": "Trigger",
     "triggers.section.title": "Trigger",
@@ -167,7 +167,7 @@
     "gates.lbl.metadata": "Metadati (JSON)",
     "gates.ph.name": "es. Ingresso principale",
     "gates.ph.notes": "Dettagli facoltativi su posizione o scopo...",
-    "gates.msg.loadFailed": "Impossibile caricare le varchi.",
+    "gates.msg.loadFailed": "Impossibile caricare i varchi.",
     "gates.msg.required": "Il nome e l'ID della varco sono obbligatori.",
     "gates.msg.metadataInvalid": "I metadati devono essere JSON valido.",
     "gates.msg.created": "Varco creata.",
@@ -305,6 +305,10 @@
     "dashboard.status.viaFoot": "A piedi",
     "dashboard.status.viaVehicle": "In veicolo",
     "dashboard.status.unknownDriver": "Conducente non registrato",
-    "dashboard.status.assignDriver": "Assegna conducente"
+    "dashboard.status.assignDriver": "Assegna conducente",
+
+    "scan.hint": "Scansiona un badge o incolla un codice per selezionare subito.",
+    "scan.userSelected": "Badge riconosciuto; utente selezionato.",
+    "scan.userNotFound": "Nessun utente trovato per il badge scansionato."
   }
 }

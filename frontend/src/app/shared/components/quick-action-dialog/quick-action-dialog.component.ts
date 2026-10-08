@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TextareaModule } from 'primeng/textarea';
+import { BadgeScanDirective } from '../../directives/badge-scan.directive';
 
 export type QuickActionDialogOption = {
   id: string;
@@ -15,7 +16,7 @@ export type QuickActionDialogOption = {
 @Component({
   selector: 'app-quick-action-dialog',
   standalone: true,
-  imports: [FormsModule, DialogModule, AutoCompleteModule, SelectButtonModule, TextareaModule, ButtonModule],
+  imports: [FormsModule, DialogModule, AutoCompleteModule, SelectButtonModule, TextareaModule, ButtonModule, BadgeScanDirective],
   template: `
     <p-dialog
       [header]="title()"
@@ -26,7 +27,11 @@ export type QuickActionDialogOption = {
       appendTo="body"
       [breakpoints]="{ '1280px': '68vw', '960px': '82vw', '640px': '96vw' }"
     >
-      <div class="mt-2 flex flex-col gap-4">
+      <div
+        class="mt-2 flex flex-col gap-4"
+        [appBadgeScan]="visible() && secondaryScannable()"
+        (badgeScanned)="secondaryScanned.emit($event)"
+      >
         <div class="flex flex-col gap-2">
           <label [for]="primaryId()" class="text-sm font-semibold">{{ primaryLabel() }}</label>
           @if (primaryVariant() === 'selectButton') {
@@ -81,6 +86,12 @@ export type QuickActionDialogOption = {
           >
             <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
           </p-autoComplete>
+          @if (secondaryScannable()) {
+            <p class="flex items-center gap-1.5 text-xs text-[--sv-text-muted]">
+              <i class="pi pi-qrcode"></i>
+              <span i18n="@@scan.hint">Scan a badge or paste a code to select instantly.</span>
+            </p>
+          }
         </div>
 
         <div class="flex flex-col gap-2">
@@ -123,6 +134,8 @@ export class QuickActionDialogComponent {
   readonly secondarySuggestions = input<QuickActionDialogOption[]>([]);
   readonly secondaryCompleteOnFocus = input(false);
   readonly secondaryValue = model<QuickActionDialogOption | null>(null);
+  /** When true, listens for badge scans/pastes while open and shows a scan hint (for user selections). */
+  readonly secondaryScannable = input(false);
 
   readonly reasonId = input.required<string>();
   readonly reasonLabel = input($localize`:@@common.reasonNotes:Reason / Notes`);
@@ -136,6 +149,8 @@ export class QuickActionDialogComponent {
   readonly primarySearch = output<string>();
   readonly secondarySearch = output<string>();
   readonly submitted = output<void>();
+  /** Emits the raw scanned badge code (a user id) for the parent to resolve. */
+  readonly secondaryScanned = output<string>();
 
   protected handlePrimarySearch(event: AutoCompleteCompleteEvent): void {
     this.primarySearch.emit((event.query || '').trim());

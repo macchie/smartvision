@@ -305,6 +305,10 @@
     "dashboard.status.viaFoot": "A pie",
     "dashboard.status.viaVehicle": "En vehículo",
     "dashboard.status.unknownDriver": "Conductor no registrado",
-    "dashboard.status.assignDriver": "Asignar conductor"
+    "dashboard.status.assignDriver": "Asignar conductor",
+
+    "scan.hint": "Escanea una credencial o pega un código para seleccionar al instante.",
+    "scan.userSelected": "Credencial reconocida; usuario seleccionado.",
+    "scan.userNotFound": "No se encontró ningún usuario para la credencial escaneada."
   }
 }

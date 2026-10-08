@@ -305,6 +305,10 @@
     "dashboard.status.viaFoot": "Zu Fuß",
     "dashboard.status.viaVehicle": "Mit Fahrzeug",
     "dashboard.status.unknownDriver": "Fahrer nicht erfasst",
-    "dashboard.status.assignDriver": "Fahrer zuweisen"
+    "dashboard.status.assignDriver": "Fahrer zuweisen",
+
+    "scan.hint": "Ausweis scannen oder Code einfügen, um sofort auszuwählen.",
+    "scan.userSelected": "Ausweis erkannt; Benutzer ausgewählt.",
+    "scan.userNotFound": "Kein Benutzer für den gescannten Ausweis gefunden."
   }
 }

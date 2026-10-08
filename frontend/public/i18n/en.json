@@ -305,6 +305,10 @@
     "dashboard.status.viaFoot": "On foot",
     "dashboard.status.viaVehicle": "By vehicle",
     "dashboard.status.unknownDriver": "Driver not recorded",
-    "dashboard.status.assignDriver": "Assign driver"
+    "dashboard.status.assignDriver": "Assign driver",
+
+    "scan.hint": "Scan a badge or paste a code to select instantly.",
+    "scan.userSelected": "Badge matched; user selected.",
+    "scan.userNotFound": "No user found for the scanned badge."
   }
 }

@@ -60,6 +60,20 @@ export class VehicleOwnerService {
     }
   }
 
+  /** Resolves a scanned badge code (a user id) to an owner option, or null if not found. */
+  async resolveOwnerById(id: string): Promise<OwnerOption | null> {
+    const ownerId = (id || '').trim();
+    if (!ownerId) {
+      return null;
+    }
+    try {
+      const r: any = await this.pb.collection('users').getOne(ownerId);
+      return { id: r.id, displayName: this.getOwnerDisplayName(r) || r.email || r.id };
+    } catch {
+      return null;
+    }
+  }
+
   assignOwner(vehicleId: string, ownerId: string): Promise<AssignOwnerResult> {
     return this.pb.send('/api/vehicles/assign-owner', {
       method: 'POST',

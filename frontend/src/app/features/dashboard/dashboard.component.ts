@@ -225,6 +225,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     loadAccessFailed: $localize`:@@dashboard.err.loadAccessFailed:Unable to load the latest access data from PocketBase.`,
     loadEventsFailed: $localize`:@@dashboard.err.loadEventsFailed:Unable to load latest access events from PocketBase.`,
     loadKeyFailed: $localize`:@@dashboard.err.loadKeyFailed:Unable to load key distribution metric from PocketBase.`,
+    scanUserSelected: $localize`:@@scan.userSelected:Badge matched; user selected.`,
+    scanUserNotFound: $localize`:@@scan.userNotFound:No user found for the scanned badge.`,
   };
 
   /** Localized labels bound into component inputs (PrimeNG props / fallbacks). */
@@ -686,6 +688,51 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.patchQuickActionFormState({ user: option as UserOption | null });
   }
 
+  /**
+   * Resolve a scanned badge code (the user id encoded in the badge barcode) to a
+   * user and select them in the active dialog. `context` picks the option shape:
+   * the user-access dialog surfaces an eligibility-aware label, the key dialogs
+   * use the key-holder label.
+   */
+  protected async resolveScannedUser(code: string, context: 'user_access' | 'key'): Promise<void> {
+    const id = (code || '').trim();
+    if (!id) {
+      return;
+    }
+
+    try {
+      const record = await this.pb.collection('users').getOne<UserSearchRecord>(id);
+      const option = context === 'user_access'
+        ? this.buildUserAccessOption(record)
+        : this.buildKeyUserOption(record);
+      this.setUserSelection(option);
+      this.messageService.add({ severity: 'success', summary: this.msg.success, detail: this.msg.scanUserSelected });
+    } catch (error) {
+      console.error('Failed to resolve scanned badge', error);
+      this.messageService.add({ severity: 'error', summary: this.msg.error, detail: this.msg.scanUserNotFound });
+    }
+  }
+
+  /** Builds the user-access dialog option (name + email + localized type suffix). */
+  private buildUserAccessOption(record: UserSearchRecord): UserOption {
+    const email = (record.email || '').trim();
+    const companyName = (record.name || '').trim();
+    const firstName = (record.first_name || '').trim();
+    const lastName = (record.last_name || '').trim();
+    const fullName = `${firstName} ${lastName}`.trim();
+
+    const base = record.user_type === 'company' && companyName
+      ? `${companyName}${email ? ` (${email})` : ''}`
+      : `${fullName || email || 'Unknown user'}${fullName && email ? ` (${email})` : ''}`;
+
+    return {
+      id: record.id,
+      displayName: `${base} · ${this.keyUserTypeLabel(record.user_type)}`,
+      email,
+      user_type: record.user_type,
+    };
+  }
+
   protected setVehicleSelection(option: QuickActionDialogOption | null): void {
     this.patchQuickActionFormState({ vehicle: option as VehicleOption | null });
   }
@@ -750,25 +797,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return true;
       });
 
-      this.suggestedUsers.set(eligible.slice(0, 10).map((record) => {
-        const email = (record.email || '').trim();
-        const companyName = (record.name || '').trim();
-        const firstName = (record.first_name || '').trim();
-        const lastName = (record.last_name || '').trim();
-        const fullName = `${firstName} ${lastName}`.trim();
-
-        const base = record.user_type === 'company' && companyName
-          ? `${companyName}${email ? ` (${email})` : ''}`
-          : `${fullName || email || 'Unknown user'}${fullName && email ? ` (${email})` : ''}`;
-        const displayName = `${base} · ${this.keyUserTypeLabel(record.user_type)}`;
-
-        return {
-          id: record.id,
-          displayName,
-          email,
-          user_type: record.user_type,
-        };
-      }));
+      this.suggestedUsers.set(eligible.slice(0, 10).map((record) => this.buildUserAccessOption(record)));
     } catch (error) {
       console.error(error);
     }

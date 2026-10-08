@@ -148,7 +148,7 @@
   [draggable]="false"
   [resizable]="false"
 >
-  <div class="flex flex-col gap-4 py-4" *ngIf="formState">
+  <div class="flex flex-col gap-4 py-4" *ngIf="formState" [appBadgeScan]="dialogVisible" (badgeScanned)="resolveScannedOwner($event, 'form')">
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
         <label for="number" class="text-sm font-semibold text-slate-700"><span i18n="@@vehicles.col.plate">Plate Number</span> <span class="text-red-500">*</span></label>
@@ -180,6 +180,10 @@
       >
         <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
       </p-autoComplete>
+      <p class="flex items-center gap-1.5 text-xs text-[--sv-text-muted]">
+        <i class="pi pi-qrcode"></i>
+        <span i18n="@@scan.hint">Scan a badge or paste a code to select instantly.</span>
+      </p>
     </div>
 
     <div class="flex flex-col gap-2">
@@ -212,7 +216,7 @@
   [draggable]="false"
   [resizable]="false"
 >
-  <div class="flex flex-col gap-4 py-4">
+  <div class="flex flex-col gap-4 py-4" [appBadgeScan]="assignDialogVisible" (badgeScanned)="resolveScannedOwner($event, 'assign')">
     @if (assignTarget) {
       <p class="text-sm text-slate-600">
         <span i18n="@@vehicles.col.plate">Plate Number</span>: <span class="font-semibold text-slate-900">{{ assignTarget.number }}</span>
@@ -238,6 +242,10 @@
       >
         <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
       </p-autoComplete>
+      <p class="flex items-center gap-1.5 text-xs text-[--sv-text-muted]">
+        <i class="pi pi-qrcode"></i>
+        <span i18n="@@scan.hint">Scan a badge or paste a code to select instantly.</span>
+      </p>
     </div>
   </div>
 

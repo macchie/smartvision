@@ -470,6 +470,19 @@ export class Gates implements OnInit {
     }
   }
 
+  /** Tag colour per direction: green ingress, orange checkpoint, red egress. */
+  protected directionSeverity(direction: Gate['direction']): 'success' | 'warn' | 'danger' {
+    switch (direction) {
+      case 'out':
+        return 'danger';
+      case 'checkpoint':
+        return 'warn';
+      case 'in':
+      default:
+        return 'success';
+    }
+  }
+
   private normalizeDirection(direction: unknown): Gate['direction'] {
     if (direction === 'out') {
       return 'out';

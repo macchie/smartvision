@@ -305,6 +305,10 @@
     "dashboard.status.viaFoot": "À pied",
     "dashboard.status.viaVehicle": "En véhicule",
     "dashboard.status.unknownDriver": "Conducteur non enregistré",
-    "dashboard.status.assignDriver": "Attribuer un conducteur"
+    "dashboard.status.assignDriver": "Attribuer un conducteur",
+
+    "scan.hint": "Scannez un badge ou collez un code pour sélectionner instantanément.",
+    "scan.userSelected": "Badge reconnu ; utilisateur sélectionné.",
+    "scan.userNotFound": "Aucun utilisateur trouvé pour le badge scanné."
   }
 }

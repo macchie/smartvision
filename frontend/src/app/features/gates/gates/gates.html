@@ -81,12 +81,7 @@
         <tr>
           <td class="font-medium text-slate-900">{{ gate.name }}</td>
           <td>
-            <span
-              class="text-sm font-semibold"
-              [ngClass]="gate.direction === 'out' ? 'text-orange-600' : (gate.direction === 'checkpoint' ? 'text-blue-600' : 'text-emerald-600')"
-            >
-              {{ directionLabel(gate.direction) }}
-            </span>
+            <p-tag [value]="directionLabel(gate.direction)" [severity]="directionSeverity(gate.direction)"></p-tag>
           </td>
           <td>
             <p-tag [value]="gate.enabled ? t.yes : t.no" [severity]="gate.enabled ? 'success' : 'secondary'"></p-tag>

@@ -14,6 +14,7 @@ import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { formatDateTime, resolveTimestamp } from '../../../shared/utils/date-time.utils';
 import { compareBoolean, compareText, getSortIcon, toggleSortState } from '../../../shared/utils/sort.utils';
+import { BadgeScanDirective } from '../../../shared/directives/badge-scan.directive';
 
 interface Vehicle {
   id: string;
@@ -46,7 +47,8 @@ interface Vehicle {
     InputTextModule,
     TextareaModule,
     CardModule,
-    TagModule
+    TagModule,
+    BadgeScanDirective
   ],
   templateUrl: './vehicles.html',
   styleUrls: ['./vehicles.scss']
@@ -148,6 +150,8 @@ export class Vehicles implements OnInit {
     assignOwner: $localize`:@@vehicles.assignOwner:Assign Owner`,
     ownerAssigned: $localize`:@@vehicles.msg.ownerAssigned:Owner assigned; related records updated.`,
     assignFailed: $localize`:@@vehicles.msg.assignFailed:Failed to assign owner.`,
+    scanUserSelected: $localize`:@@scan.userSelected:Badge matched; user selected.`,
+    scanUserNotFound: $localize`:@@scan.userNotFound:No user found for the scanned badge.`,
   };
 
   constructor(
@@ -276,6 +280,23 @@ export class Vehicles implements OnInit {
 
   protected async searchAssignOwners(event: AutoCompleteCompleteEvent) {
     this.assignSuggestions.set(await this.ownerService.searchOwners(event.query || ''));
+  }
+
+  /** Resolve a scanned badge (user id) to an owner and set it on the given field. */
+  protected async resolveScannedOwner(code: string, target: 'form' | 'assign') {
+    const owner = await this.ownerService.resolveOwnerById(code);
+    if (!owner) {
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.scanUserNotFound });
+      return;
+    }
+    if (target === 'form') {
+      this.formState.ownerRecord = owner;
+      this.suggestedOwners.set([owner]);
+    } else {
+      this.assignOwnerRecord = owner;
+      this.assignSuggestions.set([owner]);
+    }
+    this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.scanUserSelected });
   }
 
   protected async confirmAssignOwner() {

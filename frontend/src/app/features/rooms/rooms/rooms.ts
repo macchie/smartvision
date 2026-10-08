@@ -13,6 +13,7 @@ import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { formatDateTime, resolveTimestamp } from '../../../shared/utils/date-time.utils';
 import { getSortIcon, toggleSortState } from '../../../shared/utils/sort.utils';
+import { BadgeScanDirective } from '../../../shared/directives/badge-scan.directive';
 
 interface RoomGroup {
   id: string;
@@ -71,7 +72,8 @@ type RoomGroupMap = Map<string, RoomGroup>;
     InputTextModule,
     TextareaModule,
     CardModule,
-    TagModule
+    TagModule,
+    BadgeScanDirective
   ],
   templateUrl: './rooms.html',
   styleUrls: ['./rooms.scss']
@@ -275,6 +277,8 @@ export class Rooms implements OnInit {
     collect: $localize`:@@dashboard.action.collect:Collect`,
     user: $localize`:@@field.user:User`,
     confirmReturn: $localize`:@@dashboard.dlg.confirmReturnByUser:Confirm Return by User`,
+    scanUserSelected: $localize`:@@scan.userSelected:Badge matched; user selected.`,
+    scanUserNotFound: $localize`:@@scan.userNotFound:No user found for the scanned badge.`,
     unknownEmployee: $localize`:@@common.unknownEmployee:Unknown employee`,
     person: $localize`:@@field.person:Person`,
     employee: $localize`:@@userType.employee:Employee`,
@@ -606,6 +610,24 @@ export class Rooms implements OnInit {
       this.suggestedUsers.set(records.items.map(record => this.toUserOption(record)));
     } catch (e) {
       console.error(e);
+    }
+  }
+
+  /** Resolve a scanned badge (user id) to the key holder and select them. */
+  protected async resolveScannedKeyUser(code: string): Promise<void> {
+    const id = (code || '').trim();
+    if (!id) {
+      return;
+    }
+    try {
+      const record = await this.pb.pb.collection('users').getOne(id);
+      const option = this.toUserOption(record);
+      this.suggestedUsers.set([option]);
+      this.updateRoomKeyForm({ user: option });
+      this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.scanUserSelected });
+    } catch (e) {
+      console.error('Failed to resolve scanned badge', e);
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: this.t.scanUserNotFound });
     }
   }
 
