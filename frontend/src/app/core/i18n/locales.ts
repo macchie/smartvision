@@ -7,7 +7,7 @@
  * `public/i18n/<lang>.json`, so switching language only needs a page reload —
  * no per-locale builds.
  */
-export type AppLanguage = 'en' | 'it' | 'es' | 'fr';
+export type AppLanguage = 'en' | 'it' | 'es' | 'fr' | 'de';
 
 export const DEFAULT_LANGUAGE: AppLanguage = 'en';
 
@@ -23,6 +23,7 @@ export const SUPPORTED_LANGUAGES: readonly LanguageOption[] = [
   { code: 'it', label: 'Italiano', flag: '🇮🇹' },
   { code: 'es', label: 'Español', flag: '🇪🇸' },
   { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
 ] as const;
 
 /** localStorage key holding the locale to load at boot (read by main.ts). */
