@@ -778,13 +778,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const options = filter ? { filter } : {};
 
       // Over-fetch, then keep only people eligible for the chosen gate:
-      // ingress → people currently out, egress → people currently inside,
-      // checkpoint (or no gate yet) → no inside/outside constraint.
+      // ingress → people currently out, egress/checkpoint → people currently
+      // inside, no gate yet → no inside/outside constraint.
       const direction = this.gateDirectionKind(this.quickActionForm().gate);
       const inside = this.insideUserIds();
       const records = await this.pb.collection('users').getList<UserSearchRecord>(1, 30, options);
       const eligible = records.items.filter((record) => {
-        if (direction === 'out') {
+        if (direction === 'out' || direction === 'checkpoint') {
           return inside.has(record.id);
         }
         if (direction === 'in') {
@@ -859,13 +859,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
 
       // Over-fetch, then keep only vehicles eligible for the chosen gate:
-      // ingress → vehicles currently out, egress → vehicles currently inside,
-      // checkpoint (or no gate yet) → no inside/outside constraint.
+      // ingress → vehicles currently out, egress/checkpoint → vehicles currently
+      // inside, no gate yet → no inside/outside constraint.
       const direction = this.gateDirectionKind(this.quickActionForm().gate);
       const inside = this.insideVehicleIds();
       const records = await this.pb.collection('vehicles').getList<VehicleSearchRecord>(1, 30, options);
       const eligible = records.items.filter((record) => {
-        if (direction === 'out') {
+        if (direction === 'out' || direction === 'checkpoint') {
           return inside.has(record.id);
         }
         if (direction === 'in') {
