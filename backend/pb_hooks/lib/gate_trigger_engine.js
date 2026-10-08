@@ -234,9 +234,12 @@ function processPlateDetection($app, gate, plateNumber) {
     $app.save(prev)
   }
 
-  if (ownerId && direction !== "checkpoint") {
-    createUserAccess($app, ownerId, gate)
-  }
+  // Note: we intentionally do NOT create a separate user-type access for the
+  // vehicle's owner. The owner is recorded on the vehicle access itself (as
+  // driver_user / made_by_user); the dashboard counts an assigned driver as a
+  // present person by unioning the drivers of currently-present vehicles with
+  // the people who walked in on their own user accesses. Fabricating a user
+  // access here would duplicate that and clutter the access log.
 
   return {
     status: "created",
@@ -270,50 +273,6 @@ function handleGateEvent($app, gateExternalId, plateNumber) {
   }
 
   return processPlateDetection($app, gates[0], plate)
-}
-
-function createUserAccess($app, userId, gate) {
-  const direction = normalizeGateDirection(gate.getString("direction"))
-  if (direction === "checkpoint") {
-    return
-  }
-
-  const lastUserAccess = $app.findRecordsByFilter(
-    "accesses",
-    "access_type = 'user' && user = {:uid}",
-    "-created_at", 1, 0,
-    { uid: userId },
-  )
-
-  if (lastUserAccess.length > 0) {
-    const last = lastUserAccess[0]
-    const elapsed = (Date.now() - new Date(last.getString("created_at")).getTime()) / 1000
-    const lastDirection = getGateDirectionById($app, last.getString("gate"))
-    if (elapsed < MIN_STAY_SEC || lastDirection === direction) {
-      return
-    }
-  } else if (direction !== "in") {
-    return
-  }
-
-  const col = $app.findCollectionByNameOrId("accesses")
-  const rec = new Record(col)
-  rec.set("access_type", "user")
-  rec.set("user", userId)
-  rec.set("gate", gate.id)
-  rec.set("did_leave", direction === "out")
-  rec.set("deletable", false)
-  rec.set("enabled", true)
-  stampNew(rec)
-  $app.save(rec)
-
-  if (direction === "out" && lastUserAccess.length > 0) {
-    const prev = lastUserAccess[0]
-    prev.set("did_leave", true)
-    prev.set("closed_by_access", rec.id)
-    stampUpdate(prev)
-    $app.save(prev)
-  }
 }
 
 function getGateDirectionById($app, gateId) {
