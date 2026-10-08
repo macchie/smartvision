@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { jsPDF } from 'jspdf';
 import JsBarcode from 'jsbarcode';
 
+export type BadgeUserType = 'person' | 'employee' | 'company';
+
 export interface BadgeInput {
   /** Encoded in the Code128 barcode and shown small in the corner. */
   id: string;
@@ -9,6 +11,8 @@ export interface BadgeInput {
   displayName: string;
   /** Localized user-type label (Person / Employee / Company). */
   typeLabel: string;
+  /** Drives the header/pill colour. */
+  type: BadgeUserType;
 }
 
 /** Hex → [r,g,b] so jsPDF colour setters always get numeric channels. */
@@ -23,11 +27,16 @@ function rgb(hex: string): [number, number, number] {
 
 // Palette lifted from the app UI (styles.css :root) so the badge matches the product.
 const ACCENT = rgb('#007aff');
-const ACCENT_SOFT = rgb('#e5f0ff');
 const TEXT_DARK = rgb('#1d1d1f');
-const MUTED = rgb('#86868b');
 const WHITE = rgb('#ffffff');
 const BARCODE = rgb('#1d1d1f');
+
+// Header (and type-pill) colour per user type: blue person, orange employee, dark company.
+const HEADER_COLORS: Record<BadgeUserType, [number, number, number]> = {
+  person: ACCENT,
+  employee: rgb('#ff9500'),
+  company: rgb('#131c30'),
+};
 
 /**
  * Generates a CR80 credit-card-sized (85.6 × 54 mm) PDF badge for a user and
@@ -48,8 +57,9 @@ export class BadgeService {
     pdf.setFillColor(...WHITE);
     pdf.rect(0, 0, W, H, 'F');
 
-    // Accent header band with the product name and the small id in the corner.
-    pdf.setFillColor(...ACCENT);
+    // Header band tinted by user type, with the product name and small id.
+    const headerColor = HEADER_COLORS[input.type] ?? ACCENT;
+    pdf.setFillColor(...headerColor);
     pdf.rect(0, 0, W, headerH, 'F');
 
     pdf.setTextColor(...WHITE);
@@ -69,7 +79,7 @@ export class BadgeService {
     pdf.setFontSize(nameSize);
     pdf.text(input.displayName, margin, headerH + 9, { maxWidth: maxTextWidth });
 
-    // Type pill (accent-soft background, accent text).
+    // Type pill (solid in the header colour, white text) — only for non-persons.
     const typeLabel = (input.typeLabel || '').toUpperCase();
     if (typeLabel) {
       pdf.setFont('helvetica', 'bold');
@@ -78,9 +88,9 @@ export class BadgeService {
       const pillH = 5.4;
       const pillTop = headerH + 12;
       const pillW = pdf.getTextWidth(typeLabel) + padX * 2;
-      pdf.setFillColor(...ACCENT_SOFT);
+      pdf.setFillColor(...headerColor);
       pdf.roundedRect(margin, pillTop, pillW, pillH, 1.6, 1.6, 'F');
-      pdf.setTextColor(...ACCENT);
+      pdf.setTextColor(...WHITE);
       pdf.text(typeLabel, margin + padX, pillTop + pillH / 2 + 1.1);
     }
 
@@ -90,11 +100,6 @@ export class BadgeService {
     const bcW = W - margin * 2;
     const bcY = H - margin - bcH;
     pdf.addImage(barcodeDataUrl, 'PNG', margin, bcY, bcW, bcH);
-
-    // Thin framing line above the barcode for a finished look.
-    pdf.setDrawColor(...MUTED);
-    pdf.setLineWidth(0.1);
-    pdf.line(margin, bcY - 2, W - margin, bcY - 2);
 
     pdf.save(this.fileName(input));
   }

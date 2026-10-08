@@ -303,10 +303,13 @@ export class Users implements OnInit {
 
   protected printBadge(user: User): void {
     try {
+      // Only surface the type for non-regular users (employees / companies).
+      const type = this.normalizeUserType(user['user_type']);
       this.badgeService.downloadUserBadge({
         id: user.id,
         displayName: this.getDisplayName(user),
-        typeLabel: this.getUserTypeLabel(user),
+        type,
+        typeLabel: type === 'person' ? '' : this.getUserTypeLabel(user),
       });
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: this.t.error, detail: e?.message || this.t.badgeFailed });
