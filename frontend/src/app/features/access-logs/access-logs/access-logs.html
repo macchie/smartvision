@@ -118,12 +118,7 @@
               <i class="pi text-[11px]" [ngClass]="getSortIcon('status')"></i>
             </button>
           </th>
-          <th>
-            <button type="button" class="inline-flex items-center gap-1.5" (click)="toggleSort('reason')">
-              <span i18n="@@accessLogs.col.reason">Reason</span>
-              <i class="pi text-[11px]" [ngClass]="getSortIcon('reason')"></i>
-            </button>
-          </th>
+          <th class="table-actions-col" style="width: 110px" i18n="@@common.actions">Actions</th>
         </tr>
       </ng-template>
 
@@ -134,7 +129,20 @@
             <p-tag [value]="row.accessType === 'vehicle' ? t.vehicle : t.person" [severity]="accessTypeSeverity(row.accessType)" />
           </td>
           <td class="font-semibold text-slate-900">{{ row.subject }}</td>
-          <td>{{ row.actor }}</td>
+          <td>
+            @if (canAssignOwner(row)) {
+              <p-button
+                [label]="t.assignOwner"
+                icon="pi pi-user-plus"
+                size="small"
+                severity="warn"
+                [text]="true"
+                (onClick)="openAssignOwner(row)"
+              />
+            } @else {
+              {{ row.actor }}
+            }
+          </td>
           <td>{{ row.gate }}</td>
           <td>
             <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
@@ -142,8 +150,27 @@
           <td>
             <p-tag [value]="row.didLeave ? t.outside : t.inside" [severity]="statusSeverity(row.didLeave)" />
           </td>
-          <td>
-            <span class="text-sm text-slate-600 line-clamp-1 max-w-[300px]">{{ row.reason }}</span>
+          <td class="table-actions-col">
+            <div class="flex gap-1">
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                severity="info"
+                (onClick)="openDetail(row)"
+              />
+              @if (canDelete(row)) {
+                <p-button
+                  icon="pi pi-trash"
+                  [rounded]="true"
+                  [text]="true"
+                  size="small"
+                  severity="danger"
+                  (onClick)="deleteLogConfirm(row)"
+                />
+              }
+            </div>
           </td>
         </tr>
       </ng-template>
@@ -159,3 +186,124 @@
     </p-table>
   </p-card>
 </div>
+
+<!-- Quick Assign Owner Dialog -->
+<p-dialog
+  [(visible)]="assignDialogVisible"
+  [header]="t.assignOwner"
+  [modal]="true"
+  styleClass="sv-dialog"
+  appendTo="body"
+  [breakpoints]="{ '1280px': '68vw', '960px': '82vw', '640px': '96vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col gap-4 py-4">
+    @if (assignTarget) {
+      <p class="text-sm text-slate-600">
+        <span i18n="@@field.vehicle">Vehicle</span>: <span class="font-semibold text-slate-900">{{ assignTarget.subject }}</span>
+      </p>
+    }
+    <div class="flex flex-col gap-2">
+      <label for="log-assign-owner" class="text-sm font-semibold text-slate-700"><span i18n="@@vehicles.col.owner">Owner</span> <span class="text-[--sv-text-muted] font-normal" i18n="@@vehicles.lbl.ownerHint">(Person or Company)</span></label>
+      <p-autoComplete
+        id="log-assign-owner"
+        [(ngModel)]="assignOwnerRecord"
+        [suggestions]="assignSuggestions()"
+        (completeMethod)="searchAssignOwners($event)"
+        field="displayName"
+        optionLabel="displayName"
+        dataKey="id"
+        placeholder="Search users..."
+        i18n-placeholder="@@vehicles.ph.owner"
+        [dropdown]="true"
+        [completeOnFocus]="true"
+        appendTo="body"
+        styleClass="w-full"
+        [fluid]="true"
+      >
+        <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+      </p-autoComplete>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" i18n-label="@@common.cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="assignDialogVisible = false" />
+      <p-button [label]="t.assignOwner" icon="pi pi-check" (onClick)="confirmAssignOwner()" [loading]="assigning()" [disabled]="!assignOwnerRecord" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Event Detail Dialog -->
+<p-dialog
+  [(visible)]="detailDialogVisible"
+  [header]="t.detailHeader"
+  [modal]="true"
+  styleClass="sv-dialog"
+  appendTo="body"
+  [breakpoints]="{ '1280px': '56vw', '960px': '78vw', '640px': '96vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  @if (detailRow; as row) {
+    <div class="flex flex-col gap-5 py-2">
+      <!-- Subject hero -->
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex flex-col gap-1">
+          <span class="text-xs uppercase tracking-wide text-slate-400">
+            @if (row.accessType === 'vehicle') {
+              <ng-container i18n="@@accessLogs.col.subject">Plate</ng-container>
+            } @else {
+              <ng-container i18n="@@field.person">Person</ng-container>
+            }
+          </span>
+          <span class="text-xl font-semibold text-slate-900">{{ row.subject }}</span>
+        </div>
+        <p-tag [value]="row.accessType === 'vehicle' ? t.vehicle : t.person" [severity]="accessTypeSeverity(row.accessType)" />
+      </div>
+
+      <!-- Direction / presence status -->
+      <div class="flex flex-wrap gap-2">
+        <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
+        <p-tag [value]="row.didLeave ? t.outside : t.inside" [severity]="statusSeverity(row.didLeave)" />
+      </div>
+
+      <!-- Detail grid -->
+      <div class="grid grid-cols-1 gap-x-6 gap-y-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-medium uppercase tracking-wide text-slate-400" i18n="@@field.when">When</span>
+          <span class="text-sm text-slate-800">{{ formatDateTime(row.createdAt) }}</span>
+        </div>
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-medium uppercase tracking-wide text-slate-400" i18n="@@field.gate">Gate</span>
+          <span class="text-sm text-slate-800">{{ row.gate }}</span>
+        </div>
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-medium uppercase tracking-wide text-slate-400">
+            @if (row.accessType === 'vehicle') {
+              <ng-container i18n="@@accessLogs.col.actor">Driver</ng-container>
+            } @else {
+              {{ t.detailActor }}
+            }
+          </span>
+          <span class="text-sm text-slate-800">{{ row.actor }}</span>
+        </div>
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-medium uppercase tracking-wide text-slate-400">{{ t.reason }}</span>
+          <span class="text-sm text-slate-800 whitespace-pre-wrap break-words">{{ row.reason }}</span>
+        </div>
+        <div class="flex flex-col gap-0.5 sm:col-span-2">
+          <span class="text-xs font-medium uppercase tracking-wide text-slate-400">{{ t.recordId }}</span>
+          <span class="font-mono text-xs text-slate-500 break-all">{{ row.id }}</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end">
+      <p-button label="Close" i18n-label="@@common.close" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="detailDialogVisible = false" />
+    </div>
+  </ng-template>
+</p-dialog>

@@ -87,7 +87,18 @@
           <td class="font-medium text-slate-900">{{ vehicle.number }}</td>
           <td>{{ vehicle.country || '-' }}</td>
           <td>
-            <span class="text-sm text-slate-600">{{ vehicle.ownerLabel || '-' }}</span>
+            @if (vehicle.ownerRecord) {
+              <span class="text-sm text-slate-600">{{ vehicle.ownerLabel }}</span>
+            } @else {
+              <p-button
+                [label]="t.assignOwner"
+                icon="pi pi-user-plus"
+                size="small"
+                severity="warn"
+                [text]="true"
+                (onClick)="openAssignOwner(vehicle)"
+              />
+            }
           </td>
           <td>
             <p-tag [value]="vehicle.enabled ? t.yes : t.no" [severity]="vehicle.enabled ? 'success' : 'secondary'"></p-tag>
@@ -186,6 +197,54 @@
     <div class="flex justify-end gap-2">
       <p-button label="Cancel" i18n-label="@@common.cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideDialog()" />
       <p-button label="Save" i18n-label="@@common.save" icon="pi pi-check" (onClick)="saveVehicle()" [loading]="saving()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Quick Assign Owner Dialog -->
+<p-dialog
+  [(visible)]="assignDialogVisible"
+  [header]="t.assignOwner"
+  [modal]="true"
+  styleClass="sv-dialog"
+  appendTo="body"
+  [breakpoints]="{ '1280px': '68vw', '960px': '82vw', '640px': '96vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col gap-4 py-4">
+    @if (assignTarget) {
+      <p class="text-sm text-slate-600">
+        <span i18n="@@vehicles.col.plate">Plate Number</span>: <span class="font-semibold text-slate-900">{{ assignTarget.number }}</span>
+      </p>
+    }
+    <div class="flex flex-col gap-2">
+      <label for="assign-owner" class="text-sm font-semibold text-slate-700"><span i18n="@@vehicles.col.owner">Owner</span> <span class="text-[--sv-text-muted] font-normal" i18n="@@vehicles.lbl.ownerHint">(Person or Company)</span></label>
+      <p-autoComplete
+        id="assign-owner"
+        [(ngModel)]="assignOwnerRecord"
+        [suggestions]="assignSuggestions()"
+        (completeMethod)="searchAssignOwners($event)"
+        field="displayName"
+        optionLabel="displayName"
+        dataKey="id"
+        placeholder="Search users..."
+        i18n-placeholder="@@vehicles.ph.owner"
+        [dropdown]="true"
+        [completeOnFocus]="true"
+        appendTo="body"
+        styleClass="w-full"
+        [fluid]="true"
+      >
+        <ng-template let-item pTemplate="item">{{ item.displayName }}</ng-template>
+      </p-autoComplete>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" i18n-label="@@common.cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="assignDialogVisible = false" />
+      <p-button [label]="t.assignOwner" icon="pi pi-check" (onClick)="confirmAssignOwner()" [loading]="assigning()" [disabled]="!assignOwnerRecord" />
     </div>
   </ng-template>
 </p-dialog>

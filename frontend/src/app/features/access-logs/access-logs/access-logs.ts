@@ -1,14 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
+import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
+import { OwnerOption, VehicleOwnerService } from '../../../core/services/vehicle-owner.service';
 import { formatDateTime } from '../../../shared/utils/date-time.utils';
 import { compareText, getSortIcon, toggleSortState } from '../../../shared/utils/sort.utils';
 
@@ -26,6 +29,8 @@ type AccessLogRow = {
   reason: string;
   createdAt: string;
   updatedAt: string;
+  vehicleId: string;
+  vehicleOwnerId: string;
 };
 
 type DashboardSummaryEvent = {
@@ -43,9 +48,11 @@ type DashboardSummaryEvent = {
   created_at?: string;
   updatedAt?: string;
   updated_at?: string;
+  vehicleId?: string;
+  vehicleOwnerId?: string;
 };
 
-type SortField = 'when' | 'accessType' | 'subject' | 'actor' | 'gate' | 'direction' | 'status' | 'reason';
+type SortField = 'when' | 'accessType' | 'subject' | 'actor' | 'gate' | 'direction' | 'status';
 
 @Component({
   selector: 'app-access-logs',
@@ -53,7 +60,9 @@ type SortField = 'when' | 'accessType' | 'subject' | 'actor' | 'gate' | 'directi
   imports: [
     CommonModule,
     FormsModule,
+    AutoCompleteModule,
     CardModule,
+    DialogModule,
     TableModule,
     TagModule,
     ButtonModule,
@@ -88,12 +97,37 @@ export class AccessLogs implements OnInit {
   /** Localized strings bound in the template or used in toasts. */
   protected readonly t = {
     error: $localize`:@@common.error:Error`,
+    success: $localize`:@@common.success:Success`,
     vehicle: $localize`:@@field.vehicle:Vehicle`,
     person: $localize`:@@field.person:Person`,
     inside: $localize`:@@accessLogs.status.inside:Inside`,
     outside: $localize`:@@accessLogs.status.outside:Outside`,
     loadFailed: $localize`:@@accessLogs.msg.loadFailed:Failed to load access logs.`,
+    assignOwner: $localize`:@@vehicles.assignOwner:Assign Owner`,
+    ownerAssigned: $localize`:@@vehicles.msg.ownerAssigned:Owner assigned; related records updated.`,
+    assignFailed: $localize`:@@vehicles.msg.assignFailed:Failed to assign owner.`,
+    deleteHeader: $localize`:@@accessLogs.delete.header:Delete Access Record`,
+    deleteMessage: $localize`:@@accessLogs.delete.message:Are you sure you want to delete this access record?`,
+    deleteLabel: $localize`:@@common.delete:Delete`,
+    cancel: $localize`:@@common.cancel:Cancel`,
+    deleted: $localize`:@@accessLogs.msg.deleted:Access record deleted.`,
+    deleteFailed: $localize`:@@accessLogs.msg.deleteFailed:Failed to delete access record.`,
+    detailHeader: $localize`:@@accessLogs.detail.header:Access Event Details`,
+    detailActor: $localize`:@@accessLogs.detail.actor:Actor`,
+    recordId: $localize`:@@accessLogs.detail.recordId:Record ID`,
+    reason: $localize`:@@accessLogs.col.reason:Reason`,
   };
+
+  // Event detail dialog state.
+  protected detailDialogVisible = false;
+  protected detailRow: AccessLogRow | null = null;
+
+  // Quick "assign owner" dialog state (shown for vehicle rows with no owner).
+  protected assignDialogVisible = false;
+  protected readonly assigning = signal(false);
+  protected assignTarget: AccessLogRow | null = null;
+  protected assignOwnerRecord: OwnerOption | null = null;
+  protected readonly assignSuggestions = signal<OwnerOption[]>([]);
 
   protected readonly filteredLogs = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
@@ -159,9 +193,6 @@ export class AccessLogs implements OnInit {
         case 'status':
           result = Number(a.didLeave) - Number(b.didLeave);
           break;
-        case 'reason':
-          result = compareText(a.reason, b.reason);
-          break;
         default:
           result = 0;
       }
@@ -175,6 +206,8 @@ export class AccessLogs implements OnInit {
   constructor(
     private pbService: PocketBaseService,
     private messageService: MessageService,
+    private confirmationService: ConfirmationService,
+    private ownerService: VehicleOwnerService,
   ) {}
 
   ngOnInit(): void {
@@ -272,6 +305,78 @@ export class AccessLogs implements OnInit {
     return formatDateTime(value);
   }
 
+  protected openDetail(row: AccessLogRow): void {
+    this.detailRow = row;
+    this.detailDialogVisible = true;
+  }
+
+  /** Synthetic summary rows (no backing record id) cannot be deleted. */
+  protected canDelete(row: AccessLogRow): boolean {
+    return !!row.id && !row.id.startsWith('summary-');
+  }
+
+  protected deleteLogConfirm(row: AccessLogRow): void {
+    if (!this.canDelete(row)) {
+      return;
+    }
+
+    this.confirmationService.confirm({
+      header: this.t.deleteHeader,
+      message: this.t.deleteMessage,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: this.t.deleteLabel,
+      rejectLabel: this.t.cancel,
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await this.pb.collection('accesses').delete(row.id);
+          this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.deleted });
+          await this.loadAccessLogs();
+        } catch (error: any) {
+          this.messageService.add({ severity: 'error', summary: this.t.error, detail: error?.message || this.t.deleteFailed });
+        }
+      },
+    });
+  }
+
+  /** A vehicle row can have its owner assigned when the vehicle has none yet. */
+  protected canAssignOwner(row: AccessLogRow): boolean {
+    return row.accessType === 'vehicle' && !!row.vehicleId && !row.vehicleOwnerId;
+  }
+
+  protected openAssignOwner(row: AccessLogRow): void {
+    this.assignTarget = row;
+    this.assignOwnerRecord = null;
+    this.assignSuggestions.set([]);
+    this.assignDialogVisible = true;
+  }
+
+  protected async searchAssignOwners(event: AutoCompleteCompleteEvent): Promise<void> {
+    this.assignSuggestions.set(await this.ownerService.searchOwners(event.query || ''));
+  }
+
+  protected async confirmAssignOwner(): Promise<void> {
+    const vehicleId = this.assignTarget?.vehicleId;
+    const ownerId = this.assignOwnerRecord?.id;
+    if (!vehicleId || !ownerId) {
+      return;
+    }
+
+    this.assigning.set(true);
+    try {
+      await this.ownerService.assignOwner(vehicleId, ownerId);
+      this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.ownerAssigned });
+      this.assignDialogVisible = false;
+      this.assignTarget = null;
+      await this.loadAccessLogs();
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: error?.message || this.t.assignFailed });
+    } finally {
+      this.assigning.set(false);
+    }
+  }
+
   private get pb() {
     return this.pbService.pb;
   }
@@ -313,6 +418,8 @@ export class AccessLogs implements OnInit {
       reason: record.reason || '-',
       createdAt,
       updatedAt,
+      vehicleId: accessType === 'vehicle' ? (record.vehicle || '') : '',
+      vehicleOwnerId: accessType === 'vehicle' ? (expandedVehicle?.owner || '') : '',
     };
   }
 
@@ -333,6 +440,8 @@ export class AccessLogs implements OnInit {
       reason: event.reason || '-',
       createdAt,
       updatedAt,
+      vehicleId: accessType === 'vehicle' ? (event.vehicleId || '') : '',
+      vehicleOwnerId: accessType === 'vehicle' ? (event.vehicleOwnerId || '') : '',
     };
   }
 

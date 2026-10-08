@@ -2,6 +2,7 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PocketBaseService } from '../../../core/services/pocketbase.service';
+import { OwnerOption, VehicleOwnerService } from '../../../core/services/vehicle-owner.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { TableModule } from 'primeng/table';
@@ -113,6 +114,15 @@ export class Vehicles implements OnInit {
   protected dialogVisible = false;
   protected dialogMode: 'create' | 'edit' = 'create';
   protected formState: Partial<Vehicle> = { number: '', country: '', notes: '', ownerRecord: null };
+  /** Owner id a vehicle had when the edit dialog opened — used to cascade changes. */
+  private editingOwnerId = '';
+
+  // Quick "assign owner" dialog state (shown for vehicles with no owner yet).
+  protected assignDialogVisible = false;
+  protected readonly assigning = signal(false);
+  protected assignTarget: Vehicle | null = null;
+  protected assignOwnerRecord: OwnerOption | null = null;
+  protected readonly assignSuggestions = signal<OwnerOption[]>([]);
 
   /** Localized strings bound in the template or used in toasts/dialogs. */
   protected readonly t = {
@@ -135,12 +145,16 @@ export class Vehicles implements OnInit {
     cancel: $localize`:@@common.cancel:Cancel`,
     company: $localize`:@@userType.company:Company`,
     person: $localize`:@@field.person:Person`,
+    assignOwner: $localize`:@@vehicles.assignOwner:Assign Owner`,
+    ownerAssigned: $localize`:@@vehicles.msg.ownerAssigned:Owner assigned; related records updated.`,
+    assignFailed: $localize`:@@vehicles.msg.assignFailed:Failed to assign owner.`,
   };
 
   constructor(
     private pb: PocketBaseService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private ownerService: VehicleOwnerService,
   ) {}
 
   ngOnInit(): void {
@@ -200,6 +214,7 @@ export class Vehicles implements OnInit {
       notes: vehicle.notes ?? vehicle.note ?? '',
       ownerRecord: vehicle.ownerRecord ?? null,
     };
+    this.editingOwnerId = vehicle.ownerRecord?.id ?? vehicle.owner ?? '';
     this.suggestedOwners.set(vehicle.ownerRecord ? [vehicle.ownerRecord] : []);
     this.dialogMode = 'edit';
     this.dialogVisible = true;
@@ -211,29 +226,7 @@ export class Vehicles implements OnInit {
   }
 
   protected async searchOwners(event: AutoCompleteCompleteEvent) {
-    try {
-      const query = (event.query || '').trim();
-      const escapedQuery = query.replace(/"/g, '\\"');
-      const baseFilter = 'role = "regular" && (user_type = "person" || user_type = "employee" || user_type = "company")';
-      const queryFilter = query
-        ? ` && (first_name ~ "${escapedQuery}" || last_name ~ "${escapedQuery}" || name ~ "${escapedQuery}" || email ~ "${escapedQuery}")`
-        : '';
-      const filter = `${baseFilter}${queryFilter}`;
-
-      const records = await this.pb.pb.collection('users').getList(1, 10, {
-        filter,
-        sort: 'name,first_name,last_name,email',
-      });
-
-      this.suggestedOwners.set(
-        records.items.map((record: any) => ({
-          id: record.id,
-          displayName: this.getOwnerDisplayName(record),
-        })),
-      );
-    } catch {
-      this.suggestedOwners.set([]);
-    }
+    this.suggestedOwners.set(await this.ownerService.searchOwners(event.query || ''));
   }
 
   protected async saveVehicle() {
@@ -258,6 +251,11 @@ export class Vehicles implements OnInit {
         this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.created });
       } else {
         await this.pb.pb.collection('vehicles').update(this.formState.id!, payload);
+        // When the owner changed, cascade it onto the vehicle's access history so
+        // the access log / dashboard reflect the new owner (not just the record).
+        if (payload.owner && payload.owner !== this.editingOwnerId) {
+          await this.ownerService.assignOwner(this.formState.id!, payload.owner);
+        }
         this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.updated });
       }
       this.dialogVisible = false;
@@ -266,6 +264,38 @@ export class Vehicles implements OnInit {
       this.messageService.add({ severity: 'error', summary: this.t.error, detail: e.message || this.t.saveFailed });
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  protected openAssignOwner(vehicle: Vehicle) {
+    this.assignTarget = vehicle;
+    this.assignOwnerRecord = null;
+    this.assignSuggestions.set([]);
+    this.assignDialogVisible = true;
+  }
+
+  protected async searchAssignOwners(event: AutoCompleteCompleteEvent) {
+    this.assignSuggestions.set(await this.ownerService.searchOwners(event.query || ''));
+  }
+
+  protected async confirmAssignOwner() {
+    const vehicleId = this.assignTarget?.id;
+    const ownerId = this.assignOwnerRecord?.id;
+    if (!vehicleId || !ownerId) {
+      return;
+    }
+
+    this.assigning.set(true);
+    try {
+      await this.ownerService.assignOwner(vehicleId, ownerId);
+      this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.ownerAssigned });
+      this.assignDialogVisible = false;
+      this.assignTarget = null;
+      this.loadVehicles();
+    } catch (e: any) {
+      this.messageService.add({ severity: 'error', summary: this.t.error, detail: e?.message || this.t.assignFailed });
+    } finally {
+      this.assigning.set(false);
     }
   }
 

@@ -1,4 +1,4 @@
-.PHONY: all dev build backend frontend install clean docker docker-down docker-logs docker-logs-bridge
+.PHONY: all dev build backend frontend bridge install clean docker docker-down docker-logs docker-logs-bridge
 
 POCKETBASE_VERSION ?= 0.36.9
 DEMO_DATA ?= TRUE
@@ -22,6 +22,13 @@ backend:
 
 frontend:
 	cd frontend && bun run start
+
+# Runs the gate-bridge real-time watcher against the local PocketBase.
+# Copy extensions/gate-bridge/.env.example to .env and set PB_URL / credentials
+# first. Deps are installed on demand; config is re-read while running.
+bridge:
+	@echo "Starting gate-bridge (→ $${PB_URL:-http://127.0.0.1:8090})..."
+	cd extensions/gate-bridge && npm install && npm start
 
 # ─── Production Build ───
 

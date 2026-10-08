@@ -367,20 +367,26 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
             }
         }
 
-        const getVehicleNumber = (vehicleId) => {
-            if (!vehicleId) return "Unknown vehicle"
+        const getVehicleData = (vehicleId) => {
+            if (!vehicleId) return { number: "Unknown vehicle", ownerId: "" }
             if (vehiclesCache[vehicleId]) return vehiclesCache[vehicleId]
 
             try {
                 const vehicle = $app.findRecordById("vehicles", vehicleId)
-                const number = vehicle.getString("number") || vehicleId
-                vehiclesCache[vehicleId] = number
-                return number
+                const data = {
+                    number: vehicle.getString("number") || vehicleId,
+                    ownerId: vehicle.getString("owner") || "",
+                }
+                vehiclesCache[vehicleId] = data
+                return data
             } catch (_) {
-                vehiclesCache[vehicleId] = vehicleId
-                return vehicleId
+                const fallback = { number: vehicleId, ownerId: "" }
+                vehiclesCache[vehicleId] = fallback
+                return fallback
             }
         }
+
+        const getVehicleNumber = (vehicleId) => getVehicleData(vehicleId).number
 
         // A subject is "inside" when its most recent ingress/egress event was an
         // ingress. Each ingress event enters and each egress event leaves; checkpoint
@@ -551,6 +557,8 @@ routerAdd("GET", "/api/dashboard/summary", (e) => {
                 didLeave: didLeave,
                 reason: getStr(access, "reason") || "-",
                 createdAt: getCreatedAt(access),
+                vehicleId: accessType === "vehicle" ? vehicleId : "",
+                vehicleOwnerId: accessType === "vehicle" ? getVehicleData(vehicleId).ownerId : "",
             })
         }
 

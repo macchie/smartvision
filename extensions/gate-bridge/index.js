@@ -247,7 +247,10 @@ function startFolderWatcher(trigger) {
     if (extensions.length > 0 && extensions.indexOf(fileExtension(name)) === -1) {
       return;
     }
-    const plate = extractPlate(regex, name);
+    // Match the plate against the filename stem only; the extension is never
+    // part of a plate, so it must not leak into the regex match.
+    const stem = path.basename(name, path.extname(name));
+    const plate = extractPlate(regex, stem);
     if (!plate) {
       log('no plate extracted from filename:', name);
       return;

@@ -156,8 +156,25 @@ function processPlateDetection($app, gate, plateNumber) {
     vehicle.set("number", plateNumber)
     vehicle.set("enabled", true)
     stampNew(vehicle)
-    $app.save(vehicle)
-    created = true
+    try {
+      $app.save(vehicle)
+      created = true
+    } catch (err) {
+      // Lost the race to the unique index on `number`: the real-time bridge and
+      // this safety-net cron can detect the same new plate near-simultaneously.
+      // Re-read and reuse the record the other writer just created.
+      const existing = $app.findRecordsByFilter(
+        "vehicles",
+        "number = {:num}",
+        "-created_at", 1, 0,
+        { num: plateNumber },
+      )
+      if (existing && existing.length > 0) {
+        vehicle = existing[0]
+      } else {
+        throw err
+      }
+    }
   } else {
     vehicle = vehicles[0]
   }
