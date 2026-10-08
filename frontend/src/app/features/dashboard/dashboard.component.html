@@ -111,9 +111,6 @@
                     }
                   </div>
                   <div class="status-row-meta">
-                    @if (v.gate) {
-                      <span class="status-chip"><i class="pi pi-map-marker"></i>{{ v.gate }}</span>
-                    }
                     <span class="status-time">{{ v.sinceLabel }}</span>
                   </div>
                 </div>
@@ -187,76 +184,67 @@
       </section>
 
       <div class="grid gap-6 lg:grid-cols-2">
-        <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-sm overflow-hidden">
-          <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-car"></i> <ng-container i18n="@@dashboard.table.latestVehicle">Latest Vehicle Accesses</ng-container></span>
-          </ng-template>
-          <p-table [value]="vehicleRows()" responsiveLayout="scroll" styleClass="dashboard-table p-datatable-sm">
-            <ng-template pTemplate="header">
-              <tr>
-                <th i18n="@@field.vehicle">Vehicle</th>
-                <th i18n="@@field.driver">Driver</th>
-                <th i18n="@@field.gate">Gate</th>
-                <th i18n="@@field.direction">Direction</th>
-                <th i18n="@@field.when">When</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-row>
-              <tr>
-                <td><span class="font-semibold text-slate-900">{{ row.subject }}</span></td>
-                <td>
+        <p-card styleClass="dashboard-card glass-surface status-card status-vehicles h-full shadow-sm">
+          <div class="status-head">
+            <span class="status-ico"><i class="pi pi-car"></i></span>
+            <span class="status-title" i18n="@@dashboard.table.latestVehicle">Latest Vehicle Accesses</span>
+            <span class="status-count">{{ vehicleRows().length }}</span>
+          </div>
+          <div class="status-list">
+            @for (row of vehicleRows(); track row.id) {
+              <div class="status-row">
+                <div class="status-row-main">
+                  <span class="status-row-title">{{ row.subject }}</span>
                   @if (canAssignRowDriver(row)) {
                     <button type="button" class="status-row-assign" (click)="assignRowDriver(row)">
                       <i class="pi pi-user-plus"></i><span>{{ ui.assignDriver }}</span>
                     </button>
                   } @else {
-                    {{ row.actor }}
+                    <span class="status-row-sub"><i class="pi pi-user"></i>{{ row.actor }}</span>
                   }
-                </td>
-                <td>{{ row.gate }}</td>
-                <td>
-                  <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
-                </td>
-                <td>{{ row.eventTime }}</td>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="5" class="text-center text-sm text-slate-500" i18n="@@dashboard.table.emptyVehicle">No recent vehicle accesses.</td>
-              </tr>
-            </ng-template>
-          </p-table>
+                </div>
+                <div class="status-row-meta">
+                  @if (row.gate) {
+                    <span class="status-chip status-chip--{{ row.direction }}" [title]="directionLabel(row.direction)"><i class="pi pi-map-marker"></i>{{ row.gate }}</span>
+                  }
+                  <span class="status-time">{{ row.eventTime }}</span>
+                </div>
+              </div>
+            } @empty {
+              <div class="status-empty">
+                <i class="pi pi-car"></i>
+                <span i18n="@@dashboard.table.emptyVehicle">No recent vehicle accesses.</span>
+              </div>
+            }
+          </div>
         </p-card>
 
-        <p-card styleClass="dashboard-card glass-surface border border-slate-200/90 shadow-sm overflow-hidden">
-          <ng-template pTemplate="title">
-            <span class="title-with-icon"><i class="pi pi-users"></i> <ng-container i18n="@@dashboard.table.latestPeople">Latest People Accesses</ng-container></span>
-          </ng-template>
-          <p-table [value]="userRows()" responsiveLayout="scroll" styleClass="dashboard-table p-datatable-sm">
-            <ng-template pTemplate="header">
-              <tr>
-                <th i18n="@@field.person">Person</th>
-                <th i18n="@@field.gate">Gate</th>
-                <th i18n="@@field.direction">Direction</th>
-                <th i18n="@@field.when">When</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-row>
-              <tr>
-                <td><span class="font-semibold text-slate-900">{{ row.subject }}</span></td>
-                <td>{{ row.gate }}</td>
-                <td>
-                  <p-tag [value]="directionLabel(row.direction)" [severity]="directionSeverity(row.direction)" />
-                </td>
-                <td>{{ row.eventTime }}</td>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="4" class="text-center text-sm text-slate-500" i18n="@@dashboard.table.emptyPeople">No recent people accesses.</td>
-              </tr>
-            </ng-template>
-          </p-table>
+        <p-card styleClass="dashboard-card glass-surface status-card status-people h-full shadow-sm">
+          <div class="status-head">
+            <span class="status-ico"><i class="pi pi-users"></i></span>
+            <span class="status-title" i18n="@@dashboard.table.latestPeople">Latest People Accesses</span>
+            <span class="status-count">{{ userRows().length }}</span>
+          </div>
+          <div class="status-list">
+            @for (row of userRows(); track row.id) {
+              <div class="status-row">
+                <div class="status-row-main">
+                  <span class="status-row-title">{{ row.subject }}</span>
+                </div>
+                <div class="status-row-meta">
+                  @if (row.gate) {
+                    <span class="status-chip status-chip--{{ row.direction }}" [title]="directionLabel(row.direction)"><i class="pi pi-map-marker"></i>{{ row.gate }}</span>
+                  }
+                  <span class="status-time">{{ row.eventTime }}</span>
+                </div>
+              </div>
+            } @empty {
+              <div class="status-empty">
+                <i class="pi pi-users"></i>
+                <span i18n="@@dashboard.table.emptyPeople">No recent people accesses.</span>
+              </div>
+            }
+          </div>
         </p-card>
       </div>
     }

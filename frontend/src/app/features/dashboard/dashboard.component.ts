@@ -7,8 +7,6 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
-import { TableModule } from 'primeng/table';
-import { TagModule } from 'primeng/tag';
 import { AuthService } from '../../core/services/auth.service';
 import { PocketBaseService } from '../../core/services/pocketbase.service';
 import { OwnerOption, VehicleOwnerService } from '../../core/services/vehicle-owner.service';
@@ -184,8 +182,6 @@ type RoomSearchRecord = {
     ButtonModule,
     CardModule,
     DialogModule,
-    TableModule,
-    TagModule,
     QuickActionDialogComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -1141,18 +1137,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } catch (e: any) {
       this.messageService.add({ severity: 'error', summary: this.msg.error, detail: e.message || this.msg.keyCollectFailed });
     }
-  }
-
-  protected directionSeverity(direction: AccessRow['direction']): 'success' | 'danger' | 'warn' {
-    if (direction === 'out') {
-      return 'danger';
-    }
-
-    if (direction === 'checkpoint') {
-      return 'warn';
-    }
-
-    return 'success';
   }
 
   private isEgressGate(gate: GateOption): boolean {
