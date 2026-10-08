@@ -462,10 +462,18 @@ export class AccessLogs implements OnInit {
       return 'out';
     }
 
+    if (rawDirection === 'in' || rawDirection === 'ingress') {
+      return 'in';
+    }
+
     if (rawDirection === 'checkpoint') {
       return 'checkpoint';
     }
 
+    // Gate direction unknown (e.g. relation not expanded): fall back to the
+    // record's did_leave flag. Note did_leave is also set on an ingress record
+    // when a later egress closes it, so it must never override a known gate
+    // direction above — otherwise closed ingress events render as egress.
     return didLeaveFallback ? 'out' : 'in';
   }
 
