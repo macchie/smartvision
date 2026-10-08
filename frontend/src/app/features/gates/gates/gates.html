@@ -73,6 +73,7 @@
               <i class="pi text-[11px]" [ngClass]="getSortIcon('enabled')"></i>
             </button>
           </th>
+          <th i18n="@@triggers.col.triggers">Triggers</th>
           <th class="table-actions-col" style="width: 120px" i18n="@@common.actions">Actions</th>
         </tr>
       </ng-template>
@@ -89,6 +90,12 @@
           </td>
           <td>
             <p-tag [value]="gate.enabled ? t.yes : t.no" [severity]="gate.enabled ? 'success' : 'secondary'"></p-tag>
+          </td>
+          <td>
+            <span class="inline-flex items-center gap-1.5 text-sm text-slate-600">
+              <i class="pi pi-bolt text-[11px] text-slate-400"></i>
+              {{ gate.triggerCount || 0 }}
+            </span>
           </td>
           <td class="table-actions-col">
             <div class="flex gap-2">
@@ -114,7 +121,7 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="4" class="text-center py-8 text-slate-500">
+          <td colspan="5" class="text-center py-8 text-slate-500">
             <i class="pi pi-gate text-3xl mb-3 text-slate-300 block"></i>
             <span i18n="@@gates.empty">No gates found. Add one to get started.</span>
           </td>
@@ -175,6 +182,47 @@
       <input type="checkbox" id="gate_enabled" [(ngModel)]="formState['enabled']" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
       <label for="gate_enabled" class="text-sm font-semibold text-slate-700" i18n="@@common.enabled">Enabled</label>
     </div>
+
+    <!-- Triggers -->
+    <div class="flex flex-col gap-2 border-t border-slate-200 pt-4">
+      <div class="flex items-center justify-between">
+        <div class="flex flex-col">
+          <span class="text-sm font-semibold text-slate-700" i18n="@@triggers.section.title">Triggers</span>
+          <span class="text-xs text-slate-500" i18n="@@triggers.section.hint">Folder watchers and TCP sources that record events for this gate.</span>
+        </div>
+        <p-button
+          label="Add Trigger"
+          i18n-label="@@triggers.add"
+          icon="pi pi-plus"
+          size="small"
+          [outlined]="true"
+          severity="secondary"
+          (onClick)="openNewTrigger()"
+        />
+      </div>
+
+      <div *ngIf="triggers().length === 0" class="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-center text-sm text-slate-500" i18n="@@triggers.empty">
+        No triggers yet. Add a folder watcher or TCP source.
+      </div>
+
+      <div *ngFor="let trigger of triggers(); let i = index" class="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
+        <div class="flex min-w-0 items-center gap-3">
+          <i class="pi" [ngClass]="trigger.type === 'tcp_socket' ? 'pi-sitemap' : 'pi-folder-open'" [class.text-slate-400]="true"></i>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="truncate font-medium text-slate-800">{{ trigger.name }}</span>
+              <span class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ triggerTypeLabel(trigger.type) }}</span>
+              <span *ngIf="!trigger.enabled" class="rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600" i18n="@@triggers.disabled">Disabled</span>
+            </div>
+            <span class="block truncate text-xs text-slate-500">{{ triggerSummary(trigger) }}</span>
+          </div>
+        </div>
+        <div class="flex shrink-0 gap-1">
+          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" severity="info" (onClick)="editTrigger(trigger, i)" />
+          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger" (onClick)="removeTrigger(i)" />
+        </div>
+      </div>
+    </div>
   </div>
 
   <ng-template pTemplate="footer">
@@ -184,3 +232,11 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<!-- Add/Edit Trigger Dialog -->
+<app-gate-trigger-dialog
+  [(visible)]="triggerDialogVisible"
+  [mode]="triggerDialogMode"
+  [trigger]="editingTrigger"
+  (save)="onTriggerSaved($event)"
+/>

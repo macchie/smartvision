@@ -1,4 +1,4 @@
-.PHONY: all dev build backend frontend install clean docker docker-down
+.PHONY: all dev build backend frontend install clean docker docker-down docker-logs docker-logs-bridge
 
 POCKETBASE_VERSION ?= 0.36.9
 DEMO_DATA ?= TRUE
@@ -31,6 +31,8 @@ build:
 
 # ─── Docker ───
 
+# Builds and starts both services: smartvision (PocketBase + frontend) and
+# the gate-bridge real-time watcher.
 docker:
 	docker compose up --build -d
 
@@ -39,6 +41,9 @@ docker-down:
 
 docker-logs:
 	docker compose logs -f smartvision
+
+docker-logs-bridge:
+	docker compose logs -f gate-bridge
 
 # ─── Utilities ───
 

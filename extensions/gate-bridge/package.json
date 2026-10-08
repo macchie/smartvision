@@ -1,0 +1,17 @@
+{
+  "name": "smartvision-gate-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Real-time watcher bridge for SmartVision gate_triggers (folder watch + TCP) that forwards plate detections to PocketBase /api/gate-event.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0"
+  }
+}

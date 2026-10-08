@@ -88,7 +88,7 @@ function getLatestKeyDistributeEvent(roomId) {
     const records = $app.findRecordsByFilter(
         "room_key_events",
         filter,
-        "-created",
+        "-created_at",
         1,
         0,
         { room: roomId },

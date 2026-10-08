@@ -32,10 +32,10 @@ routerAdd("POST", "/api/reports/generate", (e) => {
     }
 
     // Parse body
-    const body = $apis.requestInfo(e).body
+    const body = e.requestInfo().body
     const entity = body["entity"]
     const filter = body["filter"] || ""
-    const sort   = body["sort"]   || "-created"
+    const sort   = body["sort"]   || "-created_at"
 
     const VALID_ENTITIES = ["accesses", "room_key_events"]
     if (!VALID_ENTITIES.includes(entity)) {

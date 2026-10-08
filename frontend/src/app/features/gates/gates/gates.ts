@@ -13,6 +13,7 @@ import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { formatDateTime, resolveTimestamp } from '../../../shared/utils/date-time.utils';
 import { compareBoolean, compareText, getSortIcon, toggleSortState } from '../../../shared/utils/sort.utils';
+import { GateTrigger, GateTriggerDialogComponent, createEmptyTrigger } from '../gate-trigger-dialog/gate-trigger-dialog.component';
 
 interface Gate {
   id: string;
@@ -24,6 +25,7 @@ interface Gate {
   notes?: string;
   description?: string;
   enabled?: boolean;
+  triggerCount?: number;
   created: string;
   updated: string;
   created_at?: string;
@@ -43,7 +45,8 @@ interface Gate {
     TextareaModule,
     CardModule,
     SelectModule,
-    TagModule
+    TagModule,
+    GateTriggerDialogComponent
   ],
   templateUrl: './gates.html',
   styleUrls: ['./gates.scss']
@@ -117,6 +120,14 @@ export class Gates implements OnInit {
   protected dialogVisible = false;
   protected dialogMode: 'create' | 'edit' = 'create';
   protected formState: Partial<Gate> = { name: '', gate_id: '', direction: 'in', metadataText: '', notes: '' };
+
+  // Trigger management (buffered in the gate dialog, reconciled on save)
+  protected readonly triggers = signal<GateTrigger[]>([]);
+  private deletedTriggerIds: string[] = [];
+  protected triggerDialogVisible = false;
+  protected triggerDialogMode: 'create' | 'edit' = 'create';
+  protected editingTrigger: GateTrigger | null = null;
+  private editingTriggerIndex: number | null = null;
   protected readonly directionOptions = [
     { label: $localize`:@@gates.opt.in:Entry (in)`, value: 'in' },
     { label: $localize`:@@gates.opt.out:Exit (out)`, value: 'out' },
@@ -143,6 +154,9 @@ export class Gates implements OnInit {
     deleteMessage: $localize`:@@gates.delete.message:Are you sure you want to delete this gate?`,
     deleteLabel: $localize`:@@common.delete:Delete`,
     cancel: $localize`:@@common.cancel:Cancel`,
+    triggerSaveFailed: $localize`:@@triggers.msg.saveFailed:Gate saved, but one or more triggers failed to save.`,
+    typeFolder: $localize`:@@triggers.type.folder:Folder watch`,
+    typeTcp: $localize`:@@triggers.type.tcp:TCP socket`,
   };
 
   constructor(
@@ -158,14 +172,16 @@ export class Gates implements OnInit {
   protected async loadGates() {
     this.loading.set(true);
     try {
-      const records = await this.pb.pb.collection('gates').getFullList<Gate>({
-        sort: '-id',
-      });
+      const [records, triggerCounts] = await Promise.all([
+        this.pb.pb.collection('gates').getFullList<Gate>({ sort: '-id' }),
+        this.loadTriggerCounts(),
+      ]);
       this.gates.set(records.map(record => ({
         ...record,
         direction: this.normalizeDirection(record.direction),
         metadataText: this.stringifyMetadata(record.metadata),
         notes: record.notes ?? record.description ?? '',
+        triggerCount: triggerCounts.get(record.id) ?? 0,
         created: resolveTimestamp(record, 'created'),
         updated: resolveTimestamp(record, 'updated'),
       })));
@@ -178,19 +194,100 @@ export class Gates implements OnInit {
 
   protected openNewGate() {
     this.formState = { name: '', gate_id: '', direction: 'in', metadataText: '', notes: '', enabled: true };
+    this.triggers.set([]);
+    this.deletedTriggerIds = [];
     this.dialogMode = 'create';
     this.dialogVisible = true;
   }
 
-  protected editGate(gate: Gate) {
+  protected async editGate(gate: Gate) {
     this.formState = {
       ...gate,
       notes: gate.notes ?? gate.description ?? '',
       direction: this.normalizeDirection(gate.direction),
       metadataText: this.stringifyMetadata(gate.metadata),
     };
+    this.triggers.set([]);
+    this.deletedTriggerIds = [];
     this.dialogMode = 'edit';
     this.dialogVisible = true;
+    await this.loadTriggersFor(gate.id);
+  }
+
+  private async loadTriggerCounts(): Promise<Map<string, number>> {
+    const counts = new Map<string, number>();
+    try {
+      const records = await this.pb.pb.collection('gate_triggers').getFullList<{ gate: string }>({
+        fields: 'gate',
+      });
+      for (const record of records) {
+        counts.set(record.gate, (counts.get(record.gate) ?? 0) + 1);
+      }
+    } catch {
+      // gate_triggers may be unavailable (e.g. before migration) — treat as none.
+    }
+    return counts;
+  }
+
+  private async loadTriggersFor(gateId: string): Promise<void> {
+    try {
+      const records = await this.pb.pb.collection('gate_triggers').getFullList<GateTrigger>({
+        filter: `gate = "${gateId}"`,
+        sort: 'name',
+      });
+      this.triggers.set(records.map(record => ({ ...createEmptyTrigger(), ...record })));
+    } catch {
+      this.triggers.set([]);
+    }
+  }
+
+  protected openNewTrigger(): void {
+    this.editingTrigger = createEmptyTrigger();
+    this.editingTriggerIndex = null;
+    this.triggerDialogMode = 'create';
+    this.triggerDialogVisible = true;
+  }
+
+  protected editTrigger(trigger: GateTrigger, index: number): void {
+    this.editingTrigger = { ...trigger };
+    this.editingTriggerIndex = index;
+    this.triggerDialogMode = 'edit';
+    this.triggerDialogVisible = true;
+  }
+
+  protected removeTrigger(index: number): void {
+    const current = this.triggers();
+    const target = current[index];
+    if (!target) {
+      return;
+    }
+    if (target.id) {
+      this.deletedTriggerIds.push(target.id);
+    }
+    this.triggers.set(current.filter((_, i) => i !== index));
+  }
+
+  protected onTriggerSaved(trigger: GateTrigger): void {
+    const current = this.triggers().slice();
+    if (this.editingTriggerIndex === null) {
+      current.push(trigger);
+    } else {
+      current[this.editingTriggerIndex] = { ...current[this.editingTriggerIndex], ...trigger };
+    }
+    this.triggers.set(current);
+    this.editingTrigger = null;
+    this.editingTriggerIndex = null;
+  }
+
+  protected triggerTypeLabel(type: GateTrigger['type']): string {
+    return type === 'tcp_socket' ? this.t.typeTcp : this.t.typeFolder;
+  }
+
+  protected triggerSummary(trigger: GateTrigger): string {
+    if (trigger.type === 'tcp_socket') {
+      return `${trigger.tcp_host || '0.0.0.0'}:${trigger.tcp_port ?? '-'}`;
+    }
+    return trigger.watch_folder || '-';
   }
 
   protected hideDialog() {
@@ -220,13 +317,19 @@ export class Gates implements OnInit {
         enabled: this.formState.enabled ?? true,
       };
 
+      let gateId: string;
       if (this.dialogMode === 'create') {
-        await this.pb.pb.collection('gates').create(payload);
+        const created = await this.pb.pb.collection('gates').create(payload);
+        gateId = created.id;
         this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.created });
       } else {
-        await this.pb.pb.collection('gates').update(this.formState.id!, payload);
+        gateId = this.formState.id!;
+        await this.pb.pb.collection('gates').update(gateId, payload);
         this.messageService.add({ severity: 'success', summary: this.t.success, detail: this.t.updated });
       }
+
+      await this.reconcileTriggers(gateId);
+
       this.dialogVisible = false;
       this.loadGates();
     } catch (e: any) {
@@ -234,6 +337,61 @@ export class Gates implements OnInit {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /** Persists trigger adds/edits/deletes buffered in the gate dialog. */
+  private async reconcileTriggers(gateId: string): Promise<void> {
+    const col = this.pb.pb.collection('gate_triggers');
+    let failed = false;
+
+    for (const id of this.deletedTriggerIds) {
+      try {
+        await col.delete(id);
+      } catch {
+        failed = true;
+      }
+    }
+
+    for (const trigger of this.triggers()) {
+      const payload = this.buildTriggerPayload(trigger, gateId);
+      try {
+        if (trigger.id) {
+          await col.update(trigger.id, payload);
+        } else {
+          await col.create(payload);
+        }
+      } catch {
+        failed = true;
+      }
+    }
+
+    this.deletedTriggerIds = [];
+
+    if (failed) {
+      this.messageService.add({ severity: 'warn', summary: this.t.error, detail: this.t.triggerSaveFailed });
+    }
+  }
+
+  private buildTriggerPayload(trigger: GateTrigger, gateId: string): Record<string, unknown> {
+    const port = trigger.tcp_port === null || trigger.tcp_port === undefined || (trigger.tcp_port as unknown) === ''
+      ? null
+      : Number(trigger.tcp_port);
+
+    return {
+      gate: gateId,
+      name: (trigger.name || '').trim(),
+      type: trigger.type,
+      enabled: trigger.enabled ?? true,
+      plate_regex: (trigger.plate_regex || '').trim(),
+      watch_folder: (trigger.watch_folder || '').trim(),
+      file_extensions: (trigger.file_extensions || '').trim(),
+      processed_action: trigger.processed_action || 'delete',
+      processed_folder: (trigger.processed_folder || '').trim(),
+      tcp_host: (trigger.tcp_host || '').trim(),
+      tcp_port: Number.isFinite(port as number) ? port : null,
+      tcp_delimiter: trigger.tcp_delimiter || '',
+      notes: (trigger.notes || '').trim(),
+    };
   }
 
   private stringifyMetadata(value: unknown): string {

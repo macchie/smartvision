@@ -9,6 +9,11 @@ services:
       - "8090:8090"
     volumes:
       - smartvision_data:/app/pb_data
+      # Camera-drop folders, also mounted into gate-bridge below. The PocketBase
+      # folder-watch cron (fallback sweep) reads the same paths the bridge does,
+      # so a gate_trigger's watch_folder must be the IN-CONTAINER path, e.g.
+      #   /data/cameras/north
+      - ./camera-drop:/data/cameras
     environment:
       - TZ=UTC
     healthcheck:
@@ -17,6 +22,36 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  # Real-time watcher bridge for gate_triggers (folder watch + TCP). It reads the
+  # trigger config from PocketBase and POSTs detections to /api/gate-event the
+  # instant a file lands / a socket message arrives. See extensions/gate-bridge.
+  gate-bridge:
+    build:
+      context: ./extensions/gate-bridge
+      dockerfile: Dockerfile
+    container_name: smartvision-gate-bridge
+    restart: unless-stopped
+    depends_on:
+      smartvision:
+        condition: service_healthy
+    environment:
+      # Reach PocketBase over the compose network by service name.
+      - PB_URL=http://smartvision:8090
+      # Account the bridge authenticates as (admin/operator, or a _superusers
+      # account with PB_AUTH_COLLECTION=_superusers). CHANGE THESE.
+      - PB_IDENTITY=admin@smartvision.local
+      - PB_PASSWORD=Admin123!
+      - PB_AUTH_COLLECTION=users
+      - CONFIG_POLL_SECONDS=15
+      - TZ=UTC
+    volumes:
+      # Same camera-drop mount as smartvision, at the same path, so watch_folder
+      # values resolve identically in both containers.
+      - ./camera-drop:/data/cameras
+    # Expose any tcp_socket trigger ports here, e.g.:
+    # ports:
+    #   - "9000:9000"
 
 volumes:
   smartvision_data:

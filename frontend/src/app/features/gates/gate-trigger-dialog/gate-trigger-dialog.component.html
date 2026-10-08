@@ -1,0 +1,116 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [header]="mode === 'create' ? t.addHeader : t.editHeader"
+  [modal]="true"
+  styleClass="sv-dialog"
+  appendTo="body"
+  [breakpoints]="{ '1280px': '68vw', '960px': '82vw', '640px': '96vw' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onHide()"
+>
+  <div class="flex flex-col gap-4 py-4">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-slate-700"><span i18n="@@triggers.lbl.name">Trigger Name</span> <span class="text-red-500">*</span></label>
+        <input type="text" pInputText [(ngModel)]="form.name" placeholder="e.g. North camera drop" i18n-placeholder="@@triggers.ph.name" />
+        <small *ngIf="submitted && !form.name.trim()" class="text-red-500" i18n="@@triggers.err.name">Name is required.</small>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-slate-700"><span i18n="@@triggers.lbl.type">Type</span> <span class="text-red-500">*</span></label>
+        <p-select
+          [options]="typeOptions"
+          [(ngModel)]="form.type"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold text-slate-700" i18n="@@triggers.lbl.regex">Plate Regex</label>
+      <input type="text" pInputText [(ngModel)]="form.plate_regex" placeholder="e.g. ([A-Z0-9]{5,10})" />
+      <small class="text-slate-500" i18n="@@triggers.hint.regex">First capture group is used (or the whole match). Case-insensitive; leave blank for the default.</small>
+    </div>
+
+    <!-- Folder-watch options -->
+    <div *ngIf="form.type === 'folder_watch'" class="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-slate-700"><span i18n="@@triggers.lbl.folder">Watch Folder</span> <span class="text-red-500">*</span></label>
+        <input type="text" pInputText [(ngModel)]="form.watch_folder" placeholder="/data/cameras/north" />
+        <small *ngIf="submitted && !form.watch_folder?.trim()" class="text-red-500" i18n="@@triggers.err.folder">Watch folder is required.</small>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-slate-700" i18n="@@triggers.lbl.extensions">File Extensions</label>
+        <input type="text" pInputText [(ngModel)]="form.file_extensions" placeholder="jpg,jpeg,png,bmp" />
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-semibold text-slate-700" i18n="@@triggers.lbl.processedAction">After Processing</label>
+          <p-select
+            [options]="processedActionOptions"
+            [(ngModel)]="form.processed_action"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            styleClass="w-full"
+          />
+        </div>
+
+        <div class="flex flex-col gap-2" *ngIf="form.processed_action === 'move'">
+          <label class="text-sm font-semibold text-slate-700" i18n="@@triggers.lbl.processedFolder">Processed Folder</label>
+          <input type="text" pInputText [(ngModel)]="form.processed_folder" placeholder="/data/cameras/north/done" />
+        </div>
+      </div>
+    </div>
+
+    <!-- TCP-socket options -->
+    <div *ngIf="form.type === 'tcp_socket'" class="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+      <div class="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+        <i class="pi pi-info-circle mt-0.5"></i>
+        <span i18n="@@triggers.tcp.note">Configuration is stored here; the live listener runs as an external bridge that forwards detections to the gate-event endpoint.</span>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-semibold text-slate-700" i18n="@@triggers.lbl.host">Host</label>
+          <input type="text" pInputText [(ngModel)]="form.tcp_host" placeholder="0.0.0.0" />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-semibold text-slate-700"><span i18n="@@triggers.lbl.port">Port</span> <span class="text-red-500">*</span></label>
+          <input type="number" pInputText [(ngModel)]="form.tcp_port" placeholder="9000" min="1" max="65535" />
+          <small *ngIf="submitted && !form.tcp_port" class="text-red-500" i18n="@@triggers.err.port">Port is required.</small>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-semibold text-slate-700" i18n="@@triggers.lbl.delimiter">Message Delimiter</label>
+        <input type="text" pInputText [(ngModel)]="form.tcp_delimiter" placeholder="\n" />
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold text-slate-700" i18n="@@common.notes">Notes</label>
+      <textarea pTextarea [(ngModel)]="form.notes" rows="2" placeholder="Optional notes..." i18n-placeholder="@@common.ph.notes"></textarea>
+    </div>
+
+    <div class="flex items-center gap-2 mt-1">
+      <input type="checkbox" id="trigger_enabled" [(ngModel)]="form.enabled" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
+      <label for="trigger_enabled" class="text-sm font-semibold text-slate-700" i18n="@@common.enabled">Enabled</label>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" i18n-label="@@common.cancel" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="onHide()" />
+      <p-button label="Save" i18n-label="@@common.save" icon="pi pi-check" (onClick)="onSubmit()" />
+    </div>
+  </ng-template>
+</p-dialog>
