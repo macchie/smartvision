@@ -52,7 +52,7 @@ export class ThemeService {
     root.classList.toggle(DARK_CLASS, theme === 'dark');
     root.style.colorScheme = theme;
 
-    const themeColor = theme === 'dark' ? '#0b1120' : '#ffffff';
+    const themeColor = theme === 'dark' ? '#0b1120' : '#e4e7ee';
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
   }
 }
