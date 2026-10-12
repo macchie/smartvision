@@ -13,7 +13,7 @@ services:
       # folder-watch cron (fallback sweep) reads the same paths the bridge does,
       # so a gate_trigger's watch_folder must be the IN-CONTAINER path, e.g.
       #   /data/cameras/north
-      - ./camera-drop:/data/cameras
+      - /tmp/camera:/tmp/camera
     environment:
       - TZ=UTC
     healthcheck:
@@ -48,10 +48,28 @@ services:
     volumes:
       # Same camera-drop mount as smartvision, at the same path, so watch_folder
       # values resolve identically in both containers.
-      - ./camera-drop:/data/cameras
+      - /tmp/camera:/tmp/camera
     # Expose any tcp_socket trigger ports here, e.g.:
     # ports:
     #   - "9000:9000"
+
+  # FTP server for file transfers.
+  ftp-server:
+    image: fauria/vsftpd
+    container_name: ftp-server
+    restart: always
+    ports:
+      - "20:20"    # FTP Data Port
+      - "21:21"    # FTP Command Port
+      - "21100-21110:21100-21110"  # Passive Mode Ports
+    environment:
+      - FTP_USER=admin                 # Change to your desired username
+      - FTP_PASS=Admin123! # Change to a strong password
+      - PASV_ADDRESS=12.34.56.78       # VERY IMPORTANT: Replace with your server's public IP or domain name
+      - PASV_MIN_PORT=21100
+      - PASV_MAX_PORT=21110
+    volumes:
+      - /tmp/camera:/home/vsftpd        # Mounts your local directory to the container
 
 volumes:
   smartvision_data:
