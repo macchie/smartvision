@@ -62,7 +62,7 @@
     "dashboard.overview": "Panoramica",
     "dashboard.updated": "Aggiornato",
     "dashboard.loading": "Caricamento dei dati della dashboard da PocketBase...",
-    "dashboard.lastGate": "Ultimo evento",
+    "dashboard.lastGate": "Ultimo evento Veicolo",
     "dashboard.metric.vehiclesInside": "Veicoli all'interno",
     "dashboard.metric.vehiclesHint": "Veicoli attivi che non sono ancora usciti.",
     "dashboard.metric.peopleInside": "Persone all'interno",
