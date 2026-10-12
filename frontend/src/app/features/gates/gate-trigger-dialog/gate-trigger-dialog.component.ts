@@ -17,6 +17,8 @@ export interface GateTrigger {
   type: GateTriggerType;
   enabled: boolean;
   plate_regex: string;
+  /** Example source string (filename/message) persisted for testing plate_regex. */
+  regex_sample?: string;
   // folder_watch
   watch_folder?: string;
   file_extensions?: string;
@@ -52,6 +54,7 @@ export function createEmptyTrigger(): GateTrigger {
     type: 'folder_watch',
     enabled: true,
     plate_regex: '',
+    regex_sample: '',
     watch_folder: '',
     file_extensions: 'jpg,jpeg,png,bmp',
     processed_action: 'delete',
@@ -86,7 +89,6 @@ export class GateTriggerDialogComponent {
   /** Parent passes the trigger to edit (a copy is held locally). */
   @Input() set trigger(value: GateTrigger | null) {
     this.form = value ? { ...createEmptyTrigger(), ...value } : createEmptyTrigger();
-    this.regexSample = '';
     this.previewCache = null;
   }
 
@@ -94,9 +96,6 @@ export class GateTriggerDialogComponent {
 
   protected form: GateTrigger = createEmptyTrigger();
   protected submitted = false;
-
-  /** Ad-hoc sample the user types/pastes to test the regex. Never persisted. */
-  protected regexSample = '';
 
   /** The engine's fallback pattern, mirrored from the backend trigger engine. */
   private static readonly DEFAULT_PLATE_PATTERN = '([A-Z0-9]{4,10})';
@@ -126,7 +125,7 @@ export class GateTriggerDialogComponent {
    * uppercase `[A-Z0-9]`. Memoized on (pattern, sample).
    */
   protected get regexPreview(): RegexPreview {
-    const sample = this.regexSample ?? '';
+    const sample = this.form.regex_sample ?? '';
     const raw = this.form.plate_regex ?? '';
     if (this.previewCache && this.previewCache.regex === raw && this.previewCache.sample === sample) {
       return this.previewCache.result;
@@ -190,7 +189,6 @@ export class GateTriggerDialogComponent {
 
   protected onHide(): void {
     this.visible = false;
-    this.regexSample = '';
     this.previewCache = null;
     this.visibleChange.emit(false);
   }

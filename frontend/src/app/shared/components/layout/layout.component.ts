@@ -3,6 +3,8 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { BadgeService, BadgeUserType } from '../../../core/services/badge.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { ButtonModule } from 'primeng/button';
 import { Menu, MenuModule } from 'primeng/menu';
 import { AvatarModule } from 'primeng/avatar';
@@ -35,6 +37,11 @@ export class LayoutComponent {
       command: () => this.openSettings(),
     },
     {
+      label: $localize`:@@menu.downloadBadge:Download Badge`,
+      icon: 'pi pi-id-card',
+      command: () => this.downloadBadge(),
+    },
+    {
       separator: true,
     },
     {
@@ -47,7 +54,9 @@ export class LayoutComponent {
   constructor(
     public authService: AuthService,
     public themeService: ThemeService,
-    private router: Router
+    private router: Router,
+    private badgeService: BadgeService,
+    private notification: NotificationService
   ) {}
 
   protected toggleUserMenu(event: Event): void {
@@ -56,6 +65,27 @@ export class LayoutComponent {
 
   protected openSettings(): void {
     this.settingsVisible.set(true);
+  }
+
+  protected downloadBadge(): void {
+    const user = this.authService.user();
+    if (!user) return;
+    try {
+      // Console accounts are admins/operators, so the badge is always a plain
+      // person badge with no type pill.
+      const type: BadgeUserType = 'person';
+      this.badgeService.downloadUserBadge({
+        id: user.id,
+        displayName: this.authService.userDisplayName,
+        type,
+        typeLabel: '',
+      });
+    } catch {
+      this.notification.notify(
+        $localize`:@@menu.downloadBadgeFailed:Could not generate the badge`,
+        'error',
+      );
+    }
   }
 
   protected toggleTheme(): void {

@@ -383,6 +383,7 @@ export class Gates implements OnInit {
       type: trigger.type,
       enabled: trigger.enabled ?? true,
       plate_regex: (trigger.plate_regex || '').trim(),
+      regex_sample: (trigger.regex_sample || '').trim(),
       watch_folder: (trigger.watch_folder || '').trim(),
       file_extensions: (trigger.file_extensions || '').trim(),
       processed_action: trigger.processed_action || 'delete',
